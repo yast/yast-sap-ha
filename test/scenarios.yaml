@@ -1,0 +1,40 @@
+- product: 
+    id: HANA
+    string_name: SAP HANA
+    scenarios:
+      - name: Performance-optimized
+        description: |
+          <b>Performance-optimized scenario</b> allows to set up a synchronous system 
+          replication between two nodes, A and B, within the same cluster.
+        number_of_nodes: 2
+        required_rings: 1
+        site_name_primary: WALLDORF
+        site_name_secondary: ROT
+
+      - name: Cost-optimized
+        description: |
+          <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
+          between two nodes, A and B, within the same cluster, while a development 
+          or quality assurance system is running on the node B, and the production database is shrunk.
+        number_of_nodes: 2
+        required_rings: 2
+        site_name_primary: SINGAPORE
+        site_name_secondary: NEWYORK
+
+      - name: Multi-tier/Chained
+        number_of_nodes: 2
+        description: |
+          <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
+          three nodes: A, B and C, with synchronous replication between A and B and asynchronous 
+          between B and C. Note that node C is not managed by the cluster.
+
+- product: 
+    id: NW
+    string_name: NetWeaver
+    scenarios:
+      - name: Simple Stack
+      - name: Simple Stack with Enqueue Replication
+      - name: Simple Stack with Enqueue Replication (external DB)
+
+- weird:
+    id: BOO
