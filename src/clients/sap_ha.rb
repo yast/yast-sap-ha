@@ -5,6 +5,7 @@ require 'sap_ha/helpers'
 require 'sap_ha/gui'
 require 'sap_ha_wizard/node_configuration_page'
 require 'sap_ha_wizard/comm_configuration_page'
+require 'sap_ha_wizard/join_cluster_page'
 require 'sap_ha/scenario_configuration'
 
 # YaST module
@@ -18,7 +19,6 @@ module Yast
     include Yast::Logger
 
     def initialize
-      # TODO: stub
       @config = ScenarioConfiguration.new
     end
 
@@ -44,7 +44,8 @@ module Yast
           next:              "scenario_setup",
           config_members:    "configure_members",
           config_network:    "configure_network",
-          config_components: "configure_components"
+          config_components: "configure_components",
+          join_cluster:      "join_cluster"
           },
         "scenario_setup"        => {
           abort:             :abort,
@@ -68,6 +69,11 @@ module Yast
           next:              "general_setup",
           back:              "general_setup",
           abort:             :abort
+          },
+        "join_cluster"          => {
+          next:              "general_setup",
+          back:              "general_setup",
+          abort:             :abort
           }
         }
 
@@ -80,7 +86,8 @@ module Yast
         'configure_components'  => -> { configure_components },
         'general_setup'         => -> { general_setup },
         'scenario_setup'        => -> { scenario_setup },
-        'summary'               => -> { show_summary }
+        'summary'               => -> { show_summary },
+        'join_cluster'          => -> { join_existing_cluster }
       }
 
       Wizard.CreateDialog
@@ -181,14 +188,17 @@ module Yast
 
     def configure_members
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      # SAPHAGUI.node_definition_page()
       NodeConfigurationPage.new(@config).run
     end
 
     def configure_network
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      # SAPHAGUI.network_definition_page
       CommLayerConfigurationPage.new(@config).run
+    end
+
+    def join_existing_cluster
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      JoinClusterPage.new(@config).run
     end
 
   end

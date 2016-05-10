@@ -21,9 +21,9 @@
         <td>Communication layer:&nbsp;</td>
         <td>
             <% if !@config.conf_communication.configured? %>
-            <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_existing_cluster">join an existing cluster</a>)' %>
+            <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_existing_cluster">join an existing cluster</a>)<br>' %>
+            <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join an existing cluster</a>)<br>' %>
             <%= @config.conf_communication.description %>
             <% end %>
         </td>

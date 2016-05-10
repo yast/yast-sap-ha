@@ -10,6 +10,8 @@ module Yast
     include Yast::I18n
     include Yast::UIShortcuts
 
+    attr_accessor :model
+
     # Initialize the Wizard page
     def initialize(model)
       log.debug "--- called #{self.class}.#{__callee__} ---"
@@ -37,6 +39,15 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} : UserInput returned input=#{input} ---"
     end
 
+    # Set the contents and run the loop
+    def run
+      log.debug "--- #{self.class}.#{__callee__} ---"
+      set_contents
+      main_loop
+    end
+
+    protected
+
     # Run the main input processing loop
     # Ideally, this method should not be redefined (if we lived in a perfect world)
     def main_loop
@@ -53,13 +64,6 @@ module Yast
           handle_user_input(input)
         end
       end
-    end
-
-    # Set the contents and run the loop
-    def run
-      log.debug "--- #{self.class}.#{__callee__} ---"
-      set_contents
-      main_loop
     end
 
     private
@@ -90,10 +94,10 @@ module Yast
     end
 
     # A dynamic popup showing the message and the widgets.
-    # Runs the validators lambda to check user input
-    # @parameter message [String] a message to display
-    # @parameter validators [Lambda] validation routine
-    # @parameter widgets [Array] widgets to show
+    # Runs the validators method to check user input
+    # @param message [String] a message to display
+    # @param validators [Lambda] validation routine
+    # @param widgets [Array] widgets to show
     def base_popup(message, validators, *widgets)
       log.debug "--- #{self.class}.#{__callee__} ---"
       UI.OpenDialog(
