@@ -1,33 +1,50 @@
 <% textdomain "sap-ha" %>
 <h2>Installation summary</h2>
+<table cellpadding="5">
+    <tr>
+        <td>Product:&nbsp;</td>
+        <td><%= @config.product_name %></td>
+    </tr>
+    <tr>
+        <td>Scenario:&nbsp;</td>
+        <td><%= @config.scenario_name %></td>
+    </tr>
+</table>
+<br><br>
+<%= @config.scenario['description']%>
 <br>
-<table>
+<table border="1" cellpadding="5">
     <tr>
-        <td>Product:</td>
-        <td><%= @product_name %></td>
+        <th colspan="2">Configuration steps</th>
     </tr>
     <tr>
-        <td>Scenario:</td>
-        <td><%= @scenario_name %></td>
-    </tr>
-    <tr>
-        <td colspan="2"><%= @scenario['description']%></td>
+        <td>Communication layer:&nbsp;</td>
+        <td>
+            <% if !@config.conf_communication.configured? %>
+            <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_existing_cluster">join an existing cluster</a>)' %>
+            <% else %>
+            <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_existing_cluster">join an existing cluster</a>)<br>' %>
+            <%= @config.conf_communication.description %>
+            <% end %>
+        </td>
     </tr>
     <tr>
         <td>Cluster members:</td>
-        <td></td>
+        <td>
+            <% if !@config.conf_nodes.configured? %>
+            <%= 'Not configured (<a href="config_members">configure</a>)' %>
+            <% else %>
+            <%= 'Configured (<a href="config_members">reconfigure</a>)<br>' %>
+            <%= @config.conf_nodes.description %>
+            <% end %>
+        </td>
     </tr>
     <tr>
-        <td>Network:</td>
-        <td></td>
+        <td>Components:&nbsp;</td>
+        <td>Not configured (<a href="config_components">configure</a>)</td>
     </tr>
     <tr>
-        <td>Components:</td>
-        <td></td>
+        <td>Something else:&nbsp;</td>
+        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ac erat sed nunc vehicula ultricies. Pellentesque luctus ut sapien in sodales. Nunc iaculis magna nulla, ut molestie elit malesuada et. Etiam consectetur et leo sed faucibus. Nam maximus placerat magna eu auctor. Vivamus interdum sapien ullamcorper diam mollis euismod. Etiam eget dapibus leo, eget egestas tellus. Fusce nec tristique turpis. In hac habitasse platea dictumst.</td>
     </tr>
-    <tr>
-        <td></td>
-        <td></td>
-    </tr>
-
 </table>
