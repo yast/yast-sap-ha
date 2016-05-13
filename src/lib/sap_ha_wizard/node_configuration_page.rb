@@ -68,7 +68,7 @@ module Yast
     def node_configuration_popup(values)
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
-        "Configuration for Node #{values[:node_name]}",
+        "Configuration for Node #{values[:node_id]}",
         -> (args) { node_configuration_validators(args) },
         InputField(Id(:host_name), 'Host name:', values[:host_name] || ""),
         InputField(Id(:ip_ring1), 'IP Ring 1:', values[:ip_ring1] || ""),

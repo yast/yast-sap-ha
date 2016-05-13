@@ -8,3 +8,5 @@ Session.vim
 *.html
 
 .idea
+yast-sap-ha.sublime-project
+yast-sap-ha.sublime-workspace

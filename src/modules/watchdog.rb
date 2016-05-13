@@ -1,0 +1,100 @@
+require 'yast'
+require 'open3'
+Yast.import 'Kernel'
+
+module Yast
+  class WatchdogException < Exception
+  end
+
+  # Class for handling the Watchdog modules
+  class Watchdog
+    include Singleton
+    include Yast::Logger
+        
+    MODULES_PATH = '/usr/src/linux/drivers/watchdog'.freeze
+
+    # Add the watchdog with the given name to the /etc/modules-load.d
+    # @param watchdog [String]
+    # @return [Boolean]
+    def install(watchdog)
+      return true if installed?(watchdog)
+      return false unless can_install?(watchdog)
+      Kernel.AddModuleToLoad(watchdog)
+      true
+    end
+
+    # Check if any of the known watchdogs are loaded into the current kernel
+    # @return [Boolean]
+    def any_loaded?
+      !loaded_watchdogs.empty?
+    end
+
+    # Check if the watchdog with the given name is loaded into the current kernel
+    # @param watchdog [String]
+    # @return [Boolean]
+    def loaded?(watchdog)
+      !([watchdog] & lsmod).empty?
+    end
+
+    # List all watchdog modules loaded into the current kernel
+    def loaded_watchdogs
+      list_watchdogs & lsmod
+    end
+
+    # Check if any of the known watchdogs are added to the /etc/modules-load.d
+    def watchdog_installed?
+      !installed_watchdogs.empty?
+    end
+
+    # Check if the watchdog with the given name is added to the /etc/modules-load.d
+    # @param watchdog [String]
+    # @return [Boolean]
+    def installed?(watchdog)
+      if can_install? watchdog
+        !([watchdog] & modules_to_load).empty?
+      else
+        false
+      end
+    end
+
+    # Check if the given kernel module a known watchdog module
+    # @param watchdog [String]
+    # @return [Boolean]
+    def watchdog?(watchdog)
+      if ([watchdog] & list_watchdogs).empty?
+        log.error "Cannot install module '#{watchdog}': this is not a watchdog!"
+        return false
+      end
+      true
+    end
+
+    # List all watchdog modules from the /etc/modules-load.d
+    def installed_watchdogs
+      list_watchdogs & modules_to_load
+    end
+
+    # Get the list of all watchdog available in the system
+    def list_watchdogs
+      unless Dir.exist?(MODULES_PATH)
+        log.error "Could not find the modules source directory #{MODULES_PATH}"
+        raise "Could not find the modules source directory #{MODULES_PATH}"
+      end
+      Dir.glob(MODULES_PATH + '/*.c').map { |path| File.basename(path, '.c') }
+    end
+
+    # Look into the /etc/modules-load.d and list all of the modules
+    def modules_to_load
+      mods = []
+      Kernel.modules_to_load.each { |_, v| mods.concat(v) }
+      mods
+    end
+  
+    private
+
+    def lsmod
+      Open3.popen3("lsmod") do |_, stdout, _, _|
+        stdout.map { |l| l.split[0] }[1..-1]
+      end
+    end
+  end # class
+end # module
