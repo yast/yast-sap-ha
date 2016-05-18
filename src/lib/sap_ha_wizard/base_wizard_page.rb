@@ -112,7 +112,7 @@ module Yast
         case ui
         when :ok
           parameters = {}
-          widgets.select { |w| [:InputField, :TextEntry].include? w.value }.each do |w|
+          widgets.select { |w| [:InputField, :TextEntry, :SelectionBox].include? w.value }.each do |w|
             id = w.params.find do |parameter|
               parameter.respond_to?(:value) && parameter.value == :id
             end.params[0]

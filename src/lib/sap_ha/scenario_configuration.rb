@@ -4,6 +4,8 @@ require 'erb'
 require 'sap_ha_configuration/base_component_configuration.rb'
 require 'sap_ha_configuration/nodes_configuration.rb'
 require 'sap_ha_configuration/communication_configuration.rb'
+require 'sap_ha_configuration/stonith_configuration.rb'
+require 'sap_ha_configuration/watchdog_configuration.rb'
 
 module Yast
   # Exception
@@ -21,7 +23,9 @@ module Yast
                   # nodes configuration
                   :conf_nodes,
                   # communication layer
-                  :conf_communication
+                  :conf_communication,
+                  :stonith,
+                  :watchdog
 
     include Yast::Logger
     include Yast::I18n
@@ -36,6 +40,8 @@ module Yast
       @conf_nodes = nil
       @conf_communication = nil
       @yaml_configuration = load_configuration
+      @stonith = StonithConfiguration.new
+      @watchdog = WatchdogConfiguration.new
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found in the YAML file

@@ -31,7 +31,8 @@ module Yast
             ),
             HBox(
               Label('Number of rings:'),
-              ComboBox('', ['1', '2'])
+              IntField(Id(:number_of_rings), '', 1, 3, 1)
+              # MinWidth(2, ComboBox('', ['1', '2', '3']))
             ),
             HBox(
               HSpacing(10),

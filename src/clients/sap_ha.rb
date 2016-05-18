@@ -6,6 +6,8 @@ require 'sap_ha/gui'
 require 'sap_ha_wizard/node_configuration_page'
 require 'sap_ha_wizard/comm_configuration_page'
 require 'sap_ha_wizard/join_cluster_page'
+require 'sap_ha_wizard/fencing_page'
+require 'sap_ha_wizard/watchdog_page'
 require 'sap_ha/scenario_configuration'
 
 # YaST module
@@ -26,7 +28,8 @@ module Yast
       textdomain 'sap-ha'
 
       @sequence = {
-        "ws_start"              => "product_check",
+        # "ws_start"              => "product_check",
+        "ws_start"              => "general_setup", # TODO: debug
         "product_check"         =>  {
           abort:             :abort,
           hana:              "scenario_selection",
@@ -45,7 +48,9 @@ module Yast
           config_members:    "configure_members",
           config_network:    "configure_network",
           config_components: "configure_components",
-          join_cluster:      "join_cluster"
+          join_cluster:      "join_cluster",
+          fencing:           "fencing",
+          watchdog:          "watchdog"
           },
         "scenario_setup"        => {
           abort:             :abort,
@@ -74,6 +79,16 @@ module Yast
           next:              "general_setup",
           back:              "general_setup",
           abort:             :abort
+          },
+        "fencing"               => {
+          next:              "general_setup",
+          back:              "general_setup",
+          abort:             :abort
+          },
+        "watchdog"              => {
+          next:              "general_setup",
+          back:              "general_setup",
+          abort:             :abort
           }
         }
 
@@ -87,7 +102,9 @@ module Yast
         'general_setup'         => -> { general_setup },
         'scenario_setup'        => -> { scenario_setup },
         'summary'               => -> { show_summary },
-        'join_cluster'          => -> { join_existing_cluster }
+        'join_cluster'          => -> { join_existing_cluster },
+        'fencing'               => -> { fencing_mechanism },
+        'watchdog'              => -> { watchdog },
       }
 
       Wizard.CreateDialog
@@ -162,6 +179,9 @@ module Yast
 
     def general_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      # TODO: debug
+      @config.product_id = "HANA"
+      @config.scenario_name = 'Performance-optimized'
       SAPHAGUI.richt_text(
         "General Configuration",
         SAPHAHelpers.render_template('setup_summary_gui.erb', binding),
@@ -201,8 +221,22 @@ module Yast
       JoinClusterPage.new(@config).run
     end
 
+    def fencing_mechanism
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      FencingConfigurationPage.new(@config).run
+    end
+
+    def watchdog
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      WatchdogConfigurationPage.new(@config).run
+    end
+
   end
 
   SAPHA = SAPHAClass.new
   SAPHA.main
+
+  # Wizard.CreateDialog
+  # SAPHA.fencing_mechanism
+  # Wizard.CloseDialog
 end
