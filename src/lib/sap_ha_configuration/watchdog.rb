@@ -1,8 +1,6 @@
 require 'yast'
-# require 'sap_ha_system/watchdog'
-require_relative '../sap_ha_system/watchdog.rb'
+require 'sap_ha_system/watchdog'
 require_relative 'base_component_configuration.rb'
-# Yast.import 'UI'
 
 module Yast
   class WatchdogConfiguration < BaseComponentConfiguration
@@ -27,15 +25,15 @@ module Yast
       s = []
       unless @installed.empty?
         wd = @installed.join(', ')
-        s << "Configured modules: #{wd}."
+        s << "&nbsp; Configured modules: #{wd}."
       end
       unless @loaded.empty?
         wd = @loaded.join(', ')
-        s << "Already loaded modules: #{wd}."
+        s << "&nbsp; Already loaded modules: #{wd}."
       end
       unless @to_install.empty?
         wd = @to_install.join(', ')
-        s << "Modules to install: #{wd}."
+        s << "&nbsp; Modules to install: #{wd}."
       end
       return '' if s.empty?
       s.join('<br>')

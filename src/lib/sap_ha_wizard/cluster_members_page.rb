@@ -7,23 +7,25 @@ Yast.import 'Report'
 
 module Yast
   # Cluster Nodes Configuration Page
-  class NodeConfigurationPage < BaseWizardPage
+  class ClusterMembersConfigurationPage < BaseWizardPage
     def initialize(model)
       super(model)
+      @my_model = @model.cluster_members
+      log.info "--- #{self.class}.#{__callee__}: number_of_rings == #{@my_model.number_of_rings} ---"
     end
 
     def set_contents
+      # TODO: allow adding nodes if !@my_model.fixed_number_of_nodes?
       super
       Wizard.SetContents(
-        _('Cluster Definition'),
+        _('Cluster Members'),
         base_layout_with_label(
-          _('Define cluster nodes'),
+          _('Define cluster member nodes'),
           VBox(
-            Table(
-              Id(:node_definition_table),
-              Opt(:keepSorting),
-              Header(_('Host name'), _('IP Ring 1'), _('IP Ring 2'), _('Node ID')),
-              []
+            HBox(
+              HSpacing(20),
+              table_widget,
+              HSpacing(20)
             ),
             PushButton(Id(:edit_node), _('Edit selected'))
             )
@@ -36,16 +38,34 @@ module Yast
     end
 
     def can_go_next
-      flag = @model.conf_nodes.nodes.all? { |_, v| node_configuration_validators(v, false) }
+      flag = @my_model.nodes.all? { |_, v| node_configuration_validators(v, false) }
       Report.Error("Configuration is invalid. Please review the parameters.") unless flag
       flag
     end
 
     def refresh_view
       super
-      entries = @model.conf_nodes.table_items.map { |entry| Item(Id(entry[0]), *entry[1..-1]) }
-      log.info "Table items: #{entries.inspect}"
-      UI.ChangeWidget(Id(:node_definition_table), :Items, entries)
+      UI.ChangeWidget(Id(:node_definition_table), :Items, @my_model.table_items)
+    end
+
+    def table_widget
+      Table(
+          Id(:node_definition_table),
+          Opt(:keepSorting),
+          header,
+          []
+        )
+    end
+
+    def header
+      case @my_model.number_of_rings
+      when 1
+        Header(_('Host name'), _('IP Ring 1'), _('Node ID'))
+      when 2
+        Header(_('Host name'), _('IP Ring 1'), _('IP Ring 2'), _('Node ID'))
+      when 3
+        Header(_('Host name'), _('IP Ring 1'), _('IP Ring 3'), _('IP Ring 3'), _('Node ID'))
+      end
     end
 
     def handle_user_input(input)
@@ -53,11 +73,11 @@ module Yast
       case input
       when :edit_node
         item_id = UI.QueryWidget(Id(:node_definition_table), :Value)
-        values = node_configuration_popup(@model.conf_nodes.node_parameters(item_id))
+        values = node_configuration_popup(@my_model.node_parameters(item_id))
         Report.ClearErrors
         log.info "Return from ring_configuration_popup: #{values}"
         if !values.nil? && !values.empty?
-          @model.conf_nodes.update_values(item_id, values)
+          @my_model.update_values(item_id, values)
           refresh_view
         end
       else
@@ -72,7 +92,8 @@ module Yast
         -> (args) { node_configuration_validators(args) },
         InputField(Id(:host_name), 'Host name:', values[:host_name] || ""),
         InputField(Id(:ip_ring1), 'IP Ring 1:', values[:ip_ring1] || ""),
-        InputField(Id(:ip_ring2), 'IP Ring 2:', values[:ip_ring2] || ""),
+        @my_model.number_of_rings > 1 ? InputField(Id(:ip_ring2), 'IP Ring 2:', values[:ip_ring2] || "") : Empty(),
+        @my_model.number_of_rings > 2 ? InputField(Id(:ip_ring3), 'IP Ring 3:', values[:ip_ring3] || "") : Empty(),
         InputField(Id(:node_id), 'Node ID:', values[:node_id] || "")
       )
     end
@@ -82,7 +103,11 @@ module Yast
         Report.Error("Invalid entry for IP Ring 1: #{IP.Valid4}") if report
         return false
       end
-      if !IP.Check4(values[:ip_ring2])
+      if @my_model.number_of_rings > 1 && !IP.Check4(values[:ip_ring2])
+        Report.Error("Invalid entry for IP Ring 2: #{IP.Valid4}") if report
+        return false
+      end
+      if @my_model.number_of_rings > 2 && !IP.Check4(values[:ip_ring3])
         Report.Error("Invalid entry for IP Ring 2: #{IP.Valid4}") if report
         return false
       end

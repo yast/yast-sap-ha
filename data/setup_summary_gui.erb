@@ -1,5 +1,5 @@
 <% textdomain "sap-ha" %>
-<h2>Installation summary</h2>
+<!--<h2>Installation summary</h2>-->
 <table cellpadding="5">
     <tr>
         <td><b>Product:</b></td>
@@ -9,9 +9,13 @@
         <td><b>Scenario:</b></td>
         <td><%= @config.scenario_name %></td>
     </tr>
+    <tr>
+      <td colspan="2">
+        <%= @config.scenario['description']%>
+      </td>
+    </tr>
 </table>
-<br><br>
-<%= @config.scenario['description']%>
+
 <br>
 <table border="1" cellpadding="5">
     <tr>
@@ -20,22 +24,22 @@
     <tr>
         <td>Communication layer:&nbsp;</td>
         <td>
-            <% if !@config.conf_communication.configured? %>
+            <% if !@config.communication_layer.configured? %>
             <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
             <% else %>
             <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join an another cluster</a>)<br>' %>
-            <%= @config.conf_communication.description %>
+            <%= @config.communication_layer.description %>
             <% end %>
         </td>
     </tr>
     <tr>
         <td>Cluster members:</td>
         <td>
-            <% if !@config.conf_nodes.configured? %>
+            <% if !@config.cluster_members.configured? %>
             <%= 'Not configured (<a href="config_members">configure</a>)' %>
             <% else %>
             <%= 'Configured (<a href="config_members">reconfigure</a>)<br>' %>
-            <%= @config.conf_nodes.description %>
+            <%= @config.cluster_members.description %>
             <% end %>
         </td>
     </tr>
@@ -61,4 +65,17 @@
             <% end %>
         </td>
     </tr>
+    <% if @config.product_id == 'HANA' %>
+    <tr>
+        <td>HANA configuration:</td>
+        <td>
+            <% if !@config.hana.configured? %>
+            <%= 'Not configured (<a href="hana">configure</a>)' %>
+            <% else %>
+            <%= 'Configured (<a href="hana">reconfigure</a>)<br>' %>
+            <%= @config.hana.description %>
+            <% end %>
+        </td>
+    </tr>
+    <% end %>
 </table>

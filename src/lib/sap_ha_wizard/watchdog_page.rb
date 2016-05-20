@@ -37,6 +37,7 @@ module Yast
     end
 
     def can_go_next
+      true
     end
 
     def refresh_view

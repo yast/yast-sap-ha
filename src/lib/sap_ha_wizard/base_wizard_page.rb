@@ -39,7 +39,7 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} : UserInput returned input=#{input} ---"
     end
 
-    # Set the contents and run the loop
+    # Set the contents of the Wizard's page and run the event loop
     def run
       log.debug "--- #{self.class}.#{__callee__} ---"
       set_contents
@@ -118,6 +118,7 @@ module Yast
             end.params[0]
             parameters[id] = UI.QueryWidget(Id(id), :Value)
           end
+          log.info "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
           if validators
             ret = validators.call(parameters)
             next unless ret
@@ -129,6 +130,19 @@ module Yast
           return nil
         end
       end
+    end
+
+    # Create a true/false combo box
+    # @param id_ [Symbol] widget's ID
+    # @param label [String] combo's label
+    # @param true_ [Boolean] 'true' option is selected
+    def base_true_false_combo(id_, label='', true_=true)
+      ComboBox(Id(id_), label,
+        [
+          Item(Id(:true), 'true', true_),
+          Item(Id(:false), 'false', !true_),
+        ]
+      )
     end
   end
 end

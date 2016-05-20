@@ -3,12 +3,13 @@ require 'yaml'
 require 'sap_ha/sap_ha_dialogs'
 require 'sap_ha/helpers'
 require 'sap_ha/gui'
-require 'sap_ha_wizard/node_configuration_page'
-require 'sap_ha_wizard/comm_configuration_page'
+require 'sap_ha_wizard/cluster_members_page'
+require 'sap_ha_wizard/comm_layer_page'
 require 'sap_ha_wizard/join_cluster_page'
 require 'sap_ha_wizard/fencing_page'
 require 'sap_ha_wizard/watchdog_page'
-require 'sap_ha/scenario_configuration'
+require 'sap_ha_wizard/hana_page'
+require 'sap_ha/configuration'
 
 # YaST module
 module Yast
@@ -27,9 +28,82 @@ module Yast
     def main
       textdomain 'sap-ha'
 
-      @sequence = {
-        # "ws_start"              => "product_check",
-        "ws_start"              => "general_setup", # TODO: debug
+      # @sequence = {
+      #   # "ws_start"              => "product_check",
+      #   "ws_start"              => "debug_run", # TODO: debug
+      #   "product_check"         =>  {
+      #     abort:             :abort,
+      #     hana:              "scenario_selection",
+      #     nw:                "scenario_selection",
+      #     unknown:           "product_not_supported",
+      #     next:              "product_not_supported"
+      #     },
+      #   "scenario_selection"    => {
+      #     abort:             :abort,
+      #     next:              "general_setup", # TODO: here be magic that restructures this
+      #     unknown:           "product_not_supported"
+      #     },
+      #   "general_setup"         => {
+      #     abort:             :abort,
+      #     next:              "scenario_setup",
+      #     config_members:    "configure_members",
+      #     config_network:    "configure_network",
+      #     config_components: "configure_components",
+      #     join_cluster:      "join_cluster",
+      #     fencing:           "fencing",
+      #     watchdog:          "watchdog",
+      #     hana:              "hana"
+      #     },
+      #   "scenario_setup"        => {
+      #     abort:             :abort,
+      #     next:              :next
+      #     },
+      #   "summary"               => {
+      #     next:              :abort,
+      #     abort:             :abort
+      #     },
+      #   "configure_members"     => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "configure_network"     => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "configure_components"  => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "join_cluster"          => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "fencing"               => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "watchdog"              => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "hana"                  => {
+      #     next:              "general_setup",
+      #     back:              "general_setup",
+      #     abort:             :abort
+      #     },
+      #   "debug_run"             => {
+      #     general_setup:     "general_setup"
+      #     }
+      #   }
+
+            @sequence = {
+        "ws_start"              => "product_check",
         "product_check"         =>  {
           abort:             :abort,
           hana:              "scenario_selection",
@@ -39,7 +113,7 @@ module Yast
           },
         "scenario_selection"    => {
           abort:             :abort,
-          next:              "general_setup",
+          next:              "configure_network", # TODO: here be magic that restructures this
           unknown:           "product_not_supported"
           },
         "general_setup"         => {
@@ -50,7 +124,8 @@ module Yast
           config_components: "configure_components",
           join_cluster:      "join_cluster",
           fencing:           "fencing",
-          watchdog:          "watchdog"
+          watchdog:          "watchdog",
+          hana:              "hana"
           },
         "scenario_setup"        => {
           abort:             :abort,
@@ -61,13 +136,13 @@ module Yast
           abort:             :abort
           },
         "configure_members"     => {
-          next:              "general_setup",
-          back:              "general_setup",
+          next:              "fencing",
+          back:              "configure_network",
           abort:             :abort
           },
         "configure_network"     => {
-          next:              "general_setup",
-          back:              "general_setup",
+          next:              "configure_members",
+          back:              "scenario_selection",
           abort:             :abort
           },
         "configure_components"  => {
@@ -81,14 +156,22 @@ module Yast
           abort:             :abort
           },
         "fencing"               => {
-          next:              "general_setup",
-          back:              "general_setup",
+          next:              "watchdog",
+          back:              "configure_members",
           abort:             :abort
           },
         "watchdog"              => {
-          next:              "general_setup",
-          back:              "general_setup",
+          next:              "hana",
+          back:              "fencing",
           abort:             :abort
+          },
+        "hana"                  => {
+          next:              "general_setup",
+          back:              "watchdog",
+          abort:             :abort
+          },
+        "debug_run"             => {
+          general_setup:     "general_setup"
           }
         }
 
@@ -97,7 +180,7 @@ module Yast
         'scenario_selection'    => -> { scenario_selection },
         'product_not_supported' => -> { product_not_supported },
         'configure_members'     => -> { configure_members },
-        'configure_network'     => -> { configure_network },
+        'configure_network'     => -> { configure_comm_layer },
         'configure_components'  => -> { configure_components },
         'general_setup'         => -> { general_setup },
         'scenario_setup'        => -> { scenario_setup },
@@ -105,6 +188,8 @@ module Yast
         'join_cluster'          => -> { join_existing_cluster },
         'fencing'               => -> { fencing_mechanism },
         'watchdog'              => -> { watchdog },
+        'hana'                  => -> { hana_configuration },
+        'debug_run'             => -> { debug_run }
       }
 
       Wizard.CreateDialog
@@ -178,12 +263,9 @@ module Yast
     end
 
     def general_setup
-      log.debug "--- called #{self.class}.#{__callee__} ---"
-      # TODO: debug
-      @config.product_id = "HANA"
-      @config.scenario_name = 'Performance-optimized'
       SAPHAGUI.richt_text(
-        "General Configuration",
+        "High-Availability Setup Summary",
+        UI.TextMode ? SAPHAHelpers.render_template('setup_summary_ncurses.erb', binding) :
         SAPHAHelpers.render_template('setup_summary_gui.erb', binding),
         SAPHAHelpers.load_html_help('setup_summary_help.html'),
         true,
@@ -208,10 +290,10 @@ module Yast
 
     def configure_members
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      NodeConfigurationPage.new(@config).run
+      ClusterMembersConfigurationPage.new(@config).run
     end
 
-    def configure_network
+    def configure_comm_layer
       log.debug "--- called #{self.class}.#{__callee__} ---"
       CommLayerConfigurationPage.new(@config).run
     end
@@ -231,12 +313,20 @@ module Yast
       WatchdogConfigurationPage.new(@config).run
     end
 
+    def hana_configuration
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      HANAConfigurationPage.new(@config).run
+    end
+
+
+    def debug_run
+      @config.product_id = "HANA"
+      @config.scenario_name = 'Performance-optimized'
+      :general_setup
+    end
   end
 
   SAPHA = SAPHAClass.new
   SAPHA.main
 
-  # Wizard.CreateDialog
-  # SAPHA.fencing_mechanism
-  # Wizard.CloseDialog
 end

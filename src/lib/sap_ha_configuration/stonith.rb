@@ -1,4 +1,5 @@
 require 'yast'
+require_relative 'base_component_configuration.rb'
 Yast.import 'UI'
 
 module Yast
@@ -18,7 +19,7 @@ module Yast
 
     def description
       ds = @devices.map { |d| d[:name] }.join(', ')
-      "Configured devices: #{ds}."
+      "&nbsp; Configured devices: #{ds}."
     end
 
     def combo_items

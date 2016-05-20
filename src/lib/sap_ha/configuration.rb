@@ -1,11 +1,11 @@
 require 'yast'
 require 'erb'
 
-require 'sap_ha_configuration/base_component_configuration.rb'
-require 'sap_ha_configuration/nodes_configuration.rb'
-require 'sap_ha_configuration/communication_configuration.rb'
-require 'sap_ha_configuration/stonith_configuration.rb'
-require 'sap_ha_configuration/watchdog_configuration.rb'
+require 'sap_ha_configuration/cluster_members.rb'
+require 'sap_ha_configuration/communication_layer.rb'
+require 'sap_ha_configuration/stonith.rb'
+require 'sap_ha_configuration/watchdog.rb'
+require 'sap_ha_configuration/hana.rb'
 
 module Yast
   # Exception
@@ -17,15 +17,17 @@ module Yast
 
   # Scenario Configuration class
   class ScenarioConfiguration
-    attr_accessor :product_id,
-                  :product_name, :product,
-                  :scenario_name, :scenario, :scenario_summary,
-                  # nodes configuration
-                  :conf_nodes,
-                  # communication layer
-                  :conf_communication,
+    attr_reader   :product_id,
+                  :scenario_name
+    attr_accessor :product_name,
+                  :product,
+                  :scenario,
+                  :scenario_summary,
+                  :cluster_members,
+                  :communication_layer,
                   :stonith,
-                  :watchdog
+                  :watchdog,
+                  :hana
 
     include Yast::Logger
     include Yast::I18n
@@ -37,11 +39,13 @@ module Yast
       @scenario_name = nil
       @scenario = nil
       @scenario_summary = nil
-      @conf_nodes = nil
-      @conf_communication = nil
+      @cluster_members = nil # This depends on the scenario configuration
+      @communication_layer = CommunicationLayerConfiguration.new
       @yaml_configuration = load_configuration
       @stonith = StonithConfiguration.new
       @watchdog = WatchdogConfiguration.new
+      # TODO: if product is HANA
+      @hana = HANAConfiguration.new
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found in the YAML file
@@ -59,15 +63,14 @@ module Yast
     # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found in the YAML file
     # @param [String] value scenario name
     def scenario_name=(value)
-      log.info "Selected scenario is '#{@value}'"
+      log.info "Selected scenario is '#{value}' for product '#{@product_name}'"
       @scenario_name = value
       @scenario = @product['scenarios'].find { |s| s['name'] == @scenario_name }
       if !@scenario
         log.error("Scenario name '#{@scenario_name}' not found in the scenario list")
         raise ScenarioNotFoundException
       end
-      @conf_nodes = NodesConfiguration.new(@scenario['number_of_nodes'])
-      @conf_communication = CommunicationConfiguration.new
+      @cluster_members = ClusterMembersConfiguration.new(@scenario['number_of_nodes'])
     end
 
     def all_scenarios

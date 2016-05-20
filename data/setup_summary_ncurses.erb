@@ -1,0 +1,50 @@
+<% textdomain "sap-ha" %>
+
+<b>Product:</b> <%= @config.product_name %> <br>
+<b>Scenario:</b> <%= @config.scenario_name %>
+<br>
+<%= @config.scenario['description']%>
+<br>
+<br>
+<h3>Configuration steps</h3>
+<b>Communication layer:</b><br>
+  <% if !@config.communication_layer.configured? %>
+  <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
+  <% else %>
+  <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join an another cluster</a>)<br>' %>
+  <%= @config.communication_layer.description %>
+  <% end %>
+<br><br>
+<b>Cluster members:</b><br>
+  <% if !@config.cluster_members.configured? %>
+  <%= 'Not configured (<a href="config_members">configure</a>)' %>
+  <% else %>
+  <%= 'Configured (<a href="config_members">reconfigure</a>)<br>' %>
+  <%= @config.cluster_members.description %>
+  <% end %>
+<br><br>
+<b>Fencing (STONITH):</b><br>
+  <% if !@config.stonith.configured? %>
+  <%= 'Not configured (<a href="fencing">configure</a>)' %>
+  <% else %>
+  <%= 'Configured (<a href="fencing">reconfigure</a>)<br>' %>
+  <%= @config.stonith.description %>
+  <% end %>
+<br><br>
+<b>Watchdog:</b><br>
+  <% if !@config.watchdog.configured? %>
+  <%= 'Not configured (<a href="watchdog">configure</a>)' %>
+  <% else %>
+  <%= 'Configured (<a href="watchdog">reconfigure</a>)<br>' %>
+  <%= @config.watchdog.description %>
+  <% end %>
+<br><br>
+<% if @config.product_id == 'HANA' %>
+  <b>HANA configuration:</b><br>
+    <% if !@config.hana.configured? %>
+    <%= 'Not configured (<a href="hana">configure</a>)' %>
+    <% else %>
+    <%= 'Configured (<a href="hana">reconfigure</a>)<br>' %>
+    <%= @config.hana.description %>
+    <% end %>
+<% end %>
