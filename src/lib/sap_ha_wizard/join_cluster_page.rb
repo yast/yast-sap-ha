@@ -31,6 +31,7 @@ module Yast
 
 
     def can_go_next
+      return true if @model.no_validators
       super
     end
   end

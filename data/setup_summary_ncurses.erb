@@ -6,6 +6,14 @@
 <%= @config.scenario['description']%>
 <br>
 <br>
+<b>Overall status:</b>&nbsp; 
+<% if !@config.can_install? %>
+  <%= "<font color=\"red\">Configuration is incomplete.</font>" %>
+<% else %>
+<%= "<font color=\"green\">Configuration is complete.</font>" %>
+<% end %>
+<br>
+<br>
 <h3>Configuration steps</h3>
 <b>Communication layer:</b><br>
   <% if !@config.communication_layer.configured? %>

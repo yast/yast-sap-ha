@@ -1,5 +1,6 @@
 require 'yast'
 require 'erb'
+require 'yaml'
 
 require 'sap_ha_configuration/cluster_members.rb'
 require 'sap_ha_configuration/communication_layer.rb'
@@ -8,7 +9,7 @@ require 'sap_ha_configuration/watchdog.rb'
 require 'sap_ha_configuration/hana.rb'
 
 module Yast
-  # Exception
+  # Exceptions
   class ProductNotFoundException < Exception
   end
 
@@ -19,7 +20,9 @@ module Yast
   class ScenarioConfiguration
     attr_reader   :product_id,
                   :scenario_name
-    attr_accessor :product_name,
+    attr_accessor :debug,
+                  :no_validators,
+                  :product_name,
                   :product,
                   :scenario,
                   :scenario_summary,
@@ -33,6 +36,8 @@ module Yast
     include Yast::I18n
 
     def initialize
+      @debug = false
+      @no_validators = false
       @product_id = nil
       @product_name = nil
       @product = nil
@@ -41,10 +46,9 @@ module Yast
       @scenario_summary = nil
       @cluster_members = nil # This depends on the scenario configuration
       @communication_layer = CommunicationLayerConfiguration.new
-      @yaml_configuration = load_configuration
+      @yaml_configuration = load_scenarios
       @stonith = StonithConfiguration.new
       @watchdog = WatchdogConfiguration.new
-      # TODO: if product is HANA
       @hana = HANAConfiguration.new
     end
 
@@ -55,7 +59,7 @@ module Yast
       product = @yaml_configuration.find do |p|
         p['product'] && p['product'].fetch('id', '') == @product_id
       end
-      raise ScenarioNotFoundException, "Could not find product1 with ID '#{value}'" unless product
+      raise ProductNotFoundException, "Could not find product1 with ID '#{value}'" unless product
       @product = product['product']
       @product_name = @product['string_name']
     end
@@ -77,15 +81,35 @@ module Yast
       @product['scenarios'].map { |s| s['name'] }
     end
 
+    # Generate help string for all scenarios
     def scenarios_help
       (@product['scenarios'].map { |s| s['description'] }).join('<br><br>')
     end
 
+    # Can the cluster be set up?
+    def can_install?
+      configs = [:@cluster_members, :@communication_layer, :@stonith, :@watchdog]
+      case @product_id # TODO: product-specific setups
+      when "HANA"
+        configs << :@hana
+      when "NW" 
+        configs << :@nw
+      end
+      configs.map do |config|
+        next unless instance_variable_defined?(config)
+        conf = instance_variable_get(config)
+        next if conf.nil?
+        conf.configured?
+      end.all?
+    end
+
     private
 
-    def load_configuration
+    # Load scenarios from the YAML configuration file
+    def load_scenarios
       # TODO: check the file path
       YAML.load_file('data/scenarios.yaml')
     end
+
   end # class ScenarioConfiguration
 end # module Yast

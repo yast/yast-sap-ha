@@ -37,6 +37,7 @@ module Yast
     end
 
     def can_go_next
+      return true if @model.no_validators
       true
     end
 
@@ -54,6 +55,10 @@ module Yast
         return if to_add.nil?
         @model.watchdog.add_to_config(to_add[:selected])
         refresh_view
+      when :remove_wd
+        to_remove = UI.QueryWidget(Id(:configured_wd), :CurrentItem)
+        @model.watchdog.remove_from_config(to_remove)
+        refresh_view
       else
         log.warn "--- #{self.class}.#{__callee__}: Unexpected user input: #{input} ---"
       end
@@ -67,21 +72,5 @@ module Yast
         SelectionBox(Id(:selected), 'Available modules:', @model.watchdog.proposals)
       )
     end
-
-    # def node_configuration_validators(values, report = true)
-    #   if !IP.Check4(values[:ip_ring1])
-    #     Report.Error("Invalid entry for IP Ring 1: #{IP.Valid4}") if report
-    #     return false
-    #   end
-    #   if !IP.Check4(values[:ip_ring2])
-    #     Report.Error("Invalid entry for IP Ring 2: #{IP.Valid4}") if report
-    #     return false
-    #   end
-    #   if !Hostname.Check(values[:host_name])
-    #     Report.Error("Invalid entry for Hostname: #{Hostname.ValidHost}") if report
-    #     return false
-    #   end
-    #   true
-    # end
   end
 end

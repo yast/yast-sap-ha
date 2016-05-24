@@ -36,7 +36,7 @@ module Yast
     # Handle custom user input
     # @param input [Symbol]
     def handle_user_input(input)
-      log.debug "--- #{self.class}.#{__callee__} : UserInput returned input=#{input} ---"
+      log.debug "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect} ---"
     end
 
     # Set the contents of the Wizard's page and run the event loop
@@ -56,7 +56,9 @@ module Yast
         input = Wizard.UserInput
         log.debug "--- #{self.class}.#{__callee__} ---"
         case input
-        when :abort, :back
+        # TODO: return only :abort and :back from here. If the page needs anything else
+        # it should redefine the main_loop
+        when :abort, :back, :summary, :join_cluster
           return input
         when :next
           return :next if can_go_next
@@ -100,6 +102,7 @@ module Yast
     # @param widgets [Array] widgets to show
     def base_popup(message, validators, *widgets)
       log.debug "--- #{self.class}.#{__callee__} ---"
+      input_widgets = [:InputField, :TextEntry, :SelectionBox, :MinWidth, :MinHeight, :MinSize]
       UI.OpenDialog(
         VBox(
           Label(message),
@@ -112,14 +115,22 @@ module Yast
         case ui
         when :ok
           parameters = {}
-          widgets.select { |w| [:InputField, :TextEntry, :SelectionBox].include? w.value }.each do |w|
+          widgets.select { |w| input_widgets.include? w.value }.each do |w|
+            # if the actual widget is wrapped within a size widget
+            if w.value == :MinWidth || w.value == :MinHeight
+              w = w.params[1]
+            elsif w.value == :MinSize
+              w = w.params[2]
+            end
+            # TODO: check once more, just to be sure :)
+            # next unless input_widgets.include? w
             id = w.params.find do |parameter|
               parameter.respond_to?(:value) && parameter.value == :id
             end.params[0]
             parameters[id] = UI.QueryWidget(Id(id), :Value)
           end
-          log.info "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
-          if validators
+          log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
+          if validators && !@model.no_validators
             ret = validators.call(parameters)
             next unless ret
           end
@@ -130,6 +141,24 @@ module Yast
           return nil
         end
       end
+    end
+
+    # Create a Wizard page with just a RichText widget on it
+    # @param title [String]
+    # @param contents [Yast::UI::Term]
+    # @param help [String]
+    # @param allow_back [Boolean]
+    # @param allow_next [Boolean]
+    def base_rich_text(title, contents, help, allow_back, allow_next)
+      Wizard.SetContents(
+        title,
+        base_layout(
+          RichText(contents)
+        ),
+        help,
+        allow_back,
+        allow_next
+      )
     end
 
     # Create a true/false combo box

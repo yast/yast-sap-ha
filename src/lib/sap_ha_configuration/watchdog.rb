@@ -44,6 +44,12 @@ module Yast
       @installed = @system.installed_watchdogs.concat(@to_install)
     end
 
+    def remove_from_config(wdt_module)
+      return unless @to_install.include? wdt_module
+      @to_install -= [wdt_module]
+      @installed = @system.installed_watchdogs.concat(@to_install)
+    end
+
     def combo_items
       @proposals
     end

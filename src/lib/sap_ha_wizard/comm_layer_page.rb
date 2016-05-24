@@ -8,6 +8,8 @@ Yast.import 'Report'
 module Yast
   # Communication Layer Configuration Page
   class CommLayerConfigurationPage < BaseWizardPage
+    # TODO: upon initialization, simply set as many rings as there are interfaces,
+    # putting X.X.0.0 as the bind IP address
     def initialize(model)
       super(model)
       @my_model = model.communication_layer
@@ -21,7 +23,8 @@ module Yast
         base_layout_with_label(
           'Define the communication layer',
           VBox(
-            HBox(
+            Left(PushButton(Id(:join_cluster), 'Join existing cluster')),
+            VBox(
               Label('Transport mode:'),
               RadioButtonGroup(
                 Id(:transport_mode),
@@ -31,21 +34,25 @@ module Yast
                 )
               )
             ),
-            HBox(
-              Label('Number of rings:'),
-              ComboBox(Id(:number_of_rings), Opt(:notify), '', ['1', '2', '3'])
+
+            Frame('',
+              VBox(
+                ComboBox(Id(:number_of_rings), Opt(:notify), 'Number of rings:', ['1', '2', '3']),
+                HBox(
+                  HSpacing(25),
+                  ReplacePoint(Id(:rp_table), Empty()),
+                  HSpacing(25)
+                ),
+                PushButton(Id(:edit_ring), _('Edit selected'))
+              ),
             ),
             HBox(
-              HSpacing(20),
-              ReplacePoint(Id(:rp_table), Empty()),
-              HSpacing(20)
-            ),
-            PushButton(Id(:edit_ring), _('Edit selected')),
             InputField(Id(:cluster_name), _('Cluster name:'), ''),
             InputField(Id(:expected_votes), _('Expected votes:'), '')
+            )
           )
         ),
-        SAPHAHelpers.load_html_help('help_comm_layer.html'),
+        SAPHAHelpers.instance.load_html_help('help_comm_layer.html'),
         true,
         true
       )
@@ -53,7 +60,19 @@ module Yast
     end
 
     def can_go_next
-      super
+      # super
+      return true if @model.no_validators
+      if !@model.cluster_members.configured?
+        @my_model.all_rings.each do |ring_id, ring|
+          @model.cluster_members.nodes.each do |node_id, values|
+            v = values.dup
+            nring_id = ('ip_' + ring_id.to_s).to_sym
+            v[nring_id] = (ring[:address].split('.')[0..2] << 'X').join('.')
+            @model.cluster_members.update_values(node_id, v)
+          end
+        end
+      end
+      true
     end
 
     protected
@@ -67,20 +86,24 @@ module Yast
       UI.ReplaceWidget(Id(:rp_table), table_widget)
       end
       UI.ChangeWidget(Id(:ring_definition_table), :Items, @my_model.table_items)
-      log.warn "--- #{self.class}.#{__callee__}: table items #{@my_model.table_items} ---"
       UI.ChangeWidget(Id(:cluster_name), :Value, @my_model.cluster_name)
       UI.ChangeWidget(Id(:expected_votes), :Value, @my_model.expected_votes.to_s)
     end
 
     def table_widget
-      Table(
-        Id(:ring_definition_table),
-        Opt(:keepSorting, :immediate),
-        multicast? ? 
-          Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address')) 
-          : Header(_('Ring'), _('Address'), _('Port')),
-        []
-      )
+      log.debug "--- #{self.class}.#{__callee__} ---"
+        MinSize(
+          @my_model.transport_mode == :multicast ? 26 : 21, # Width: ring name 5 + address 15 + port 5
+          Integer(@my_model.number_of_rings)*1.5, 
+          Table(
+            Id(:ring_definition_table),
+            Opt(:keepSorting),
+            multicast? ? 
+              Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address')) 
+              : Header(_('Ring'), _('Address'), _('Port')),
+            []
+          )
+        )
     end
 
     def multicast?
@@ -103,11 +126,14 @@ module Yast
         log.warn "--- #{self.class}.#{__callee__}: calling @my_model.number_of_rings= ---"
         @my_model.number_of_rings = number
         @model.cluster_members.number_of_rings = number
+        @recreate_table = true
         refresh_view
       when :multicast, :unicast
         @my_model.transport_mode = input
         @recreate_table = true
         refresh_view
+      when :join_cluster # won't happen ever
+        return :join_cluster
       else
         log.warn "--- #{self.class}.#{__callee__}: Unexpected user input: #{input} ---"
       end
@@ -120,10 +146,10 @@ module Yast
       base_popup(
         "Configuration for Ring #{ring[:id]}",
         nil,
-        InputField(Id(:address), 'Address:', ring[:address]),
-        InputField(Id(:port), 'Port:', ring[:port]),
+        MinWidth(15, InputField(Id(:address), 'Address:', ring[:address])),
+        MinWidth(5, InputField(Id(:port), 'Port:', ring[:port])),
         multicast? ? 
-          InputField(Id(:mcast), 'Multicast Address', ring[:mcast])
+          MinWidth(15, InputField(Id(:mcast), 'Multicast Address', ring[:mcast]))
           : Empty()
       )
     end

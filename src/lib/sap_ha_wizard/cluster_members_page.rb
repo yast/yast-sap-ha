@@ -27,9 +27,13 @@ module Yast
               table_widget,
               HSpacing(20)
             ),
-            PushButton(Id(:edit_node), _('Edit selected'))
+            HBox(
+              PushButton(Id(:add_node), _('Add node')),
+              PushButton(Id(:edit_node), _('Edit selected')),
+              PushButton(Id(:delete_node), _('Delete node'))
             )
-          ),
+          )
+        ),
         '',
         true,
         true
@@ -38,6 +42,7 @@ module Yast
     end
 
     def can_go_next
+      return true if @model.no_validators
       flag = @my_model.nodes.all? { |_, v| node_configuration_validators(v, false) }
       Report.Error("Configuration is invalid. Please review the parameters.") unless flag
       flag
@@ -45,6 +50,10 @@ module Yast
 
     def refresh_view
       super
+      if @my_model.fixed_number_of_nodes?
+        UI.ChangeWidget(Id(:add_node), :Enabled, false)
+        UI.ChangeWidget(Id(:delete_node), :Enabled, false)
+      end
       UI.ChangeWidget(Id(:node_definition_table), :Items, @my_model.table_items)
     end
 

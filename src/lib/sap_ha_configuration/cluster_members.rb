@@ -4,6 +4,9 @@ require_relative 'base_component_configuration.rb'
 Yast.import 'UI'
 
 module Yast
+  class ClusterMembersConfigurationException < StandardError
+  end
+
   class ClusterMembersConfiguration < BaseComponentConfiguration
     attr_reader :nodes, :number_of_rings
 

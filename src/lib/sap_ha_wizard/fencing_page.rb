@@ -26,14 +26,14 @@ module Yast
                 )
               ),
             HBox(
-              HSpacing(10),
+              HSpacing(20),
               Table(
                 Id(:sbd_dev_list_table),
                 Opt(:keepSorting, :immediate),
-                Header(_('#'), _('Type'), _('Mount Point'), _('UUID')),
+                Header(_('#'), _('Mount Point'), _('Type'), _('UUID')),
                 @model.stonith.table_items
               ),
-              HSpacing(10)
+              HSpacing(20)
             ),
             HBox(
               PushButton(Id(:add_sbd_device), _('Add')),
@@ -52,6 +52,7 @@ module Yast
     end
 
     def can_go_next
+      return true if @model.debug
       true
     end
 

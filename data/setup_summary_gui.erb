@@ -17,7 +17,18 @@
 </table>
 
 <br>
+
 <table border="1" cellpadding="5">
+    <tr>
+        <td>Overall status:</td>
+        <td>
+            <% if !@config.can_install? %>
+               <%= "<font color=\"red\">Configuration is incomplete.</font>" %>
+            <% else %>
+               <%= "<font color=\"green\">Configuration is complete.</font>" %>
+            <% end %>
+        </td>
+    </tr>
     <tr>
         <th colspan="2">Configuration steps</th>
     </tr>

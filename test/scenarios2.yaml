@@ -27,8 +27,8 @@ product: HANA
         three nodes: A, B and C, with synchronous replication between A and B and asynchronous 
         between B and C. Note that node C is not managed by the cluster.
 
-product: NW
-  string_name: NetWeaver
+product: NETWEAVER
+  string_name: SAP NetWeaver
   scenarios:
     - name: Simple Stack
     - name: Simple Stack with Enqueue Replication

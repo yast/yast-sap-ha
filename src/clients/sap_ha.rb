@@ -9,6 +9,7 @@ require 'sap_ha_wizard/join_cluster_page'
 require 'sap_ha_wizard/fencing_page'
 require 'sap_ha_wizard/watchdog_page'
 require 'sap_ha_wizard/hana_page'
+require 'sap_ha_wizard/summary_page'
 require 'sap_ha/configuration'
 
 # YaST module
@@ -22,7 +23,11 @@ module Yast
     include Yast::Logger
 
     def initialize
+      log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
       @config = ScenarioConfiguration.new
+      # TODO: debug
+      @config.debug = WFM.Args.include? 'debug'
+      @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
     end
 
     def main
@@ -102,7 +107,7 @@ module Yast
       #     }
       #   }
 
-            @sequence = {
+      @sequence = {
         "ws_start"              => "product_check",
         "product_check"         =>  {
           abort:             :abort,
@@ -114,7 +119,8 @@ module Yast
         "scenario_selection"    => {
           abort:             :abort,
           next:              "configure_network", # TODO: here be magic that restructures this
-          unknown:           "product_not_supported"
+          unknown:           "product_not_supported",
+          summary:           "general_setup"
           },
         "general_setup"         => {
           abort:             :abort,
@@ -125,55 +131,68 @@ module Yast
           join_cluster:      "join_cluster",
           fencing:           "fencing",
           watchdog:          "watchdog",
-          hana:              "hana"
+          hana:              "hana",
+          install:           "installation",
+          back:              :back
           },
         "scenario_setup"        => {
           abort:             :abort,
-          next:              :next
-          },
-        "summary"               => {
-          next:              :abort,
-          abort:             :abort
+          next:              :next,
+          summary:           "general_setup"
           },
         "configure_members"     => {
           next:              "fencing",
-          back:              "configure_network",
-          abort:             :abort
+          back:              :back,
+          abort:             :abort,
+          summary:           "general_setup"
           },
         "configure_network"     => {
           next:              "configure_members",
-          back:              "scenario_selection",
-          abort:             :abort
+          back:              :back,
+          abort:             :abort,
+          summary:           "general_setup",
+          join_cluster:      "join_cluster"
           },
         "configure_components"  => {
           next:              "general_setup",
-          back:              "general_setup",
+          back:              :back,
           abort:             :abort
           },
         "join_cluster"          => {
-          next:              "general_setup",
-          back:              "general_setup",
-          abort:             :abort
+          next:              "configure_members",
+          back:              :back,
+          abort:             :abort,
+          summary:           "general_setup"
           },
         "fencing"               => {
           next:              "watchdog",
-          back:              "configure_members",
-          abort:             :abort
+          back:              :back,
+          abort:             :abort,
+          summary:           "general_setup"
           },
         "watchdog"              => {
           next:              "hana",
-          back:              "fencing",
-          abort:             :abort
+          back:              :back,
+          abort:             :abort,
+          summary:           "general_setup"
           },
         "hana"                  => {
           next:              "general_setup",
-          back:              "watchdog",
-          abort:             :abort
+          back:              :back,
+          abort:             :abort,
+          summary:           "general_setup"
           },
         "debug_run"             => {
           general_setup:     "general_setup"
+          },
+        "installation"          => {
+          abort:             :abort
           }
         }
+
+      if @config.debug
+        @sequence["ws_start"] = "debug_run"
+      end
 
       @aliases = {
         'product_check'         => -> { product_check },
@@ -184,12 +203,12 @@ module Yast
         'configure_components'  => -> { configure_components },
         'general_setup'         => -> { general_setup },
         'scenario_setup'        => -> { scenario_setup },
-        'summary'               => -> { show_summary },
         'join_cluster'          => -> { join_existing_cluster },
         'fencing'               => -> { fencing_mechanism },
         'watchdog'              => -> { watchdog },
         'hana'                  => -> { hana_configuration },
-        'debug_run'             => -> { debug_run }
+        'debug_run'             => -> { debug_run },
+        'installation'             => -> { run_installation }
       }
 
       Wizard.CreateDialog
@@ -200,9 +219,11 @@ module Yast
       end
     end
 
+    # Check the product ID. If it is unknown, show the bye-bye message.
     def product_check
       log.debug "--- called #{self.class}.#{__callee__} ---"
       # TODO: here we need to know what product we are installing
+      # TODO: allow a bogus product setup if we are in debug mode
       begin
         @config.product_id = "HANA"
       rescue ProductNotFoundException => e
@@ -239,7 +260,21 @@ module Yast
     def product_not_supported
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SAPHAGUI.richt_text(
-        'No HA scenarios found',
+        'Product not supported',
+        SAPHAHelpers.instance.load_html_help('help_product_not_found.html'),
+        SAPHAHelpers.instance.load_html_help('help_product_not_found.html'),
+        false,
+        false
+      )
+      log.error("No HA scenarios found for product #{@product_name}")
+      UI.UserInput()
+      return :abort
+    end
+
+    def scenarios_not_found
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      SAPHAGUI.richt_text(
+        'Scenarios not found',
         "There were no HA scenarios found for the product #{@product_name}",
         "The product you are installing is not supported by this module.<br>You can set up a cluster manually using the Cluster YaST module.",
         false,
@@ -248,7 +283,7 @@ module Yast
       log.error("No HA scenarios found for product #{@product_name}")
       UI.UserInput()
       return :abort
-    end
+    end    
 
     def scenario_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
@@ -263,20 +298,8 @@ module Yast
     end
 
     def general_setup
-      SAPHAGUI.richt_text(
-        "High-Availability Setup Summary",
-        UI.TextMode ? SAPHAHelpers.render_template('setup_summary_ncurses.erb', binding) :
-        SAPHAHelpers.render_template('setup_summary_gui.erb', binding),
-        SAPHAHelpers.load_html_help('setup_summary_help.html'),
-        true,
-        true
-      )
-      ret = UI.UserInput()
-      return ret.to_sym
-    end
-
-    def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      SetupSummaryPage.new(@config).run
     end
 
     def configure_components
@@ -317,7 +340,6 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       HANAConfigurationPage.new(@config).run
     end
-
 
     def debug_run
       @config.product_id = "HANA"

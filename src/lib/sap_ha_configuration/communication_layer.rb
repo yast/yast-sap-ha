@@ -14,7 +14,7 @@ module Yast
     include Yast::UIShortcuts
     include Yast::Logger # TODO: rm
 
-    def initialize(number_of_rings=1)
+    def initialize(number_of_rings = 1)
       @rings = {}
       @transport_mode = :unicast
       @number_of_rings = number_of_rings
@@ -67,6 +67,10 @@ module Yast
       @rings[ring_id]
     end
 
+    def all_rings
+      @rings.dup
+    end
+
     def update_ring(ring_id, values)
       [:address, :port].each { |e| @rings[ring_id][e] = values[e] }
       if @transport_mode == :multicast
@@ -96,6 +100,10 @@ module Yast
         a << "&nbsp; Ring #{r[:id]}: #{r[:address]}:#{r[:port]}#{add}"
       end
       a.join('<br>')
+    end
+
+    def list_interfaces
+      # TODO: list the interfaces      
     end
   end
 end

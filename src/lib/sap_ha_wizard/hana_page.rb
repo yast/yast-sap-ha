@@ -60,7 +60,7 @@ module Yast
       @my_model.virtual_ip = UI.QueryWidget(Id(:hana_vip), :Value)
       @my_model.prefer_takeover = UI.QueryWidget(Id(:site_takover), :Value)
       @my_model.auto_register = UI.QueryWidget(Id(:auto_reg), :Value)
-
+      return true if @model.no_validators
     end
 
     def refresh_view

@@ -1,0 +1,140 @@
+#!/usr/bin/expect -f
+
+# Arguments
+# 0: action
+#    either "check", "copy", "authorize"
+# 1: host name
+# 2: [password] (only if action==copy)
+# 3: [path] (only if action==copy)
+# Retcodes:
+# 0 - all is peachy
+# 5 - timeout
+# 10 - password required
+# 11 - password is incorrect
+# 51 - remote host reset the connection
+# 52 - name or service not known
+# 53 - no route to host
+# 54 - connection refused
+# 55 - unknown error
+
+set have_password 0
+set timeout 5
+set action ""
+set host ""
+set password ""
+set path ""
+set password_sent 0
+
+# for {set i 0} {$i < [llength $argv]} {incr i} {
+#     puts "index=$i [lindex $argv $i]"
+# }
+
+proc usage {{msg ""}} {
+    global argv0
+    if {$msg ne ""} {
+        puts "Error: $msg"
+    }
+    puts "Usage: $argv0 action host \[password\] \[path\]"
+    puts "\taction: check, copy, authorize"
+    exit 1
+}
+
+switch -exact -- [llength $argv] {
+    2 {
+        set action [lindex $argv 0]
+        set host [lindex $argv 1]
+        if {$action ne "check"} {
+            usage "Incorrect number of arguments for command $action or command is not supported."
+        }
+
+    }
+    3 {
+        set action [lindex $argv 0]
+        set host [lindex $argv 1]
+        set password [lindex $argv 2]
+        if {$action ne "authorize"} {
+            usage "Incorrect number of arguments for command $action or command is not supported."
+        }
+    }
+    4 {
+        set action [lindex $argv 0]
+        set host [lindex $argv 1]
+        set password [lindex $argv 2]
+        set path [lindex $argv 3]
+        if {$action ne "copy"} {
+            usage "Incorrect number of arguments for command $action or command is not supported."
+        }
+
+    }
+    default {
+        usage "Incorrect number of arguments."
+    }
+}
+
+# puts "action=$action, host=$host, password=$password, path=$path"
+
+switch -exact -- $action {
+    copy {
+        # spawn scp -r root@$host:/root/.ssh/ $path
+        spawn sh -c "scp root@$host:'/root/.ssh/id_*' $path"
+    }
+    check {
+        puts "checking ssh root@$host"
+        spawn ssh root@$host
+    }
+    authorize {
+        spawn ssh root@$host:/root/.ssh/ ha-cluster-init ssh_remote
+    }
+    default { 
+        usage "Unknown action $action"
+    }
+}
+
+while {1} {
+    expect {
+        "yes/no" { 
+            send "yes\r"
+        }
+        "Last login: " {
+            send -- "exit\r"
+            exit 0
+        }
+        "Password: " {
+            if {$password != ""} {
+                if {$password_sent == 0} {
+                    send -- $password\r
+                    set password_sent 1
+                } else {
+                    exit 11
+                }
+            } else {
+                exit 10
+            }
+        }
+        "Connection reset by peer" {
+            exit 51
+        }
+        "Name or service not known" {
+            exit 52
+        }
+        "No route to host" {
+            exit 53
+        }
+        "Connection refused" {
+            exit 54
+        }
+        expect timeout {
+            exit 5
+        }
+        expect eof {
+            if {$action eq "copy"} {
+                exit 0
+            } else {
+                exit 55
+            }
+
+        }
+    }
+}
+
+exit 0
