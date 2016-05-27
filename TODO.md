@@ -1,3 +1,5 @@
+- [ ] Clicking on 'x' window button goes back instead of aborting the Wizard. WTF?
+
 This code gives error in ncurses but works in gui:
 
 ```ruby

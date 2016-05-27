@@ -79,10 +79,12 @@ module Yast
     end
 
     def can_go_next
-      # super
+      super
       return true if @model.no_validators
-      if !@model.cluster_members.configured? &&
-          @my_model.all_rings.all? { |_, r| !r[:address].empty? }
+      return false unless @my_model.configured?
+      # if !@model.cluster_members.configured? &&
+      #     @my_model.all_rings.all? { |_, r| !r[:address].empty? }
+      if !@model.cluster_members.configured? && @my_model.configured?
         @my_model.all_rings.each do |ring_id, ring|
           @model.cluster_members.nodes.each do |node_id, values|
             v = values.dup
@@ -115,7 +117,7 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} ---"
       MinSize(
         # Width: ring name 5 + address 15 + port 5
-        @my_model.transport_mode == :multicast ? 26 : 21,
+        multicast? ? 26 : 21,
         Integer(@my_model.number_of_rings) * 1.5,
         Table(
           Id(:ring_definition_table),
@@ -129,7 +131,8 @@ module Yast
     end
 
     def multicast?
-      UI.QueryWidget(Id(:multicast), :Value)
+      # UI.QueryWidget(Id(:multicast), :Value)
+      @my_model.transport_mode == :multicast
     end
 
     def handle_user_input(input)
@@ -165,13 +168,25 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
         "Configuration for ring #{ring[:id]}",
-        nil,
-        MinWidth(15, InputField(Id(:address), 'Address:', ring[:address])),
-        MinWidth(5, InputField(Id(:port), 'Port:', ring[:port])),
+        -> (args) { ring_configuration_validators(args) },
+        MinWidth(15, InputField(Id(:address), 'IP Address:', ring[:address])),
+        MinWidth(5, InputField(Id(:port), 'Port Number:', ring[:port])),
         multicast? ? 
           MinWidth(15, InputField(Id(:mcast), 'Multicast Address', ring[:mcast]))
           : Empty()
       )
+    end
+
+    def ring_configuration_validators(values, report = true)
+      return true unless report
+      errors = SemanticChecks.instance.verbose_check do |check|
+        check.ipv4(values[:address], 'IP Address')
+        check.port(values[:port], 'Port Number')
+        check.ipv4(values[:mcast], 'Multicast Address') if multicast?
+      end
+      return true if errors.empty?
+      show_dialog_errors(errors)
+      false
     end
   end
 end

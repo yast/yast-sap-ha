@@ -126,13 +126,12 @@ module Yast
 
     def node_configuration_validators(values, report = true)
       return true unless report
-      check = SemanticChecks.instance
-      check.transaction_begin
-      check.ipv4(values[:ip_ring1], 'IP Ring 1')
-      check.ipv4(values[:ip_ring2], 'IP Ring 2') if @my_model.number_of_rings > 1
-      check.ipv4(values[:ip_ring3], 'IP Ring 3') if @my_model.number_of_rings > 2
-      check.hostname(values[:host_name], 'Hostname')
-      errors = check.transaction_end
+      errors = SemanticChecks.instance.verbose_check do |check|
+        check.ipv4(values[:ip_ring1], 'IP Ring 1')
+        check.ipv4(values[:ip_ring2], 'IP Ring 2') if @my_model.number_of_rings > 1
+        check.ipv4(values[:ip_ring3], 'IP Ring 3') if @my_model.number_of_rings > 2
+        check.hostname(values[:host_name], 'Hostname')
+      end
       return true if errors.empty?
       show_dialog_errors(errors)
       false

@@ -29,47 +29,50 @@ module Yast
   # Input validators and checks
   class SemanticChecks
     include Singleton
+    include Yast::Logger
+
+    attr_accessor :silent
 
     def initialize
       @transaction = false
       @errors = []
+      @checks_passed = true
+      @silent = false
     end
 
-    def transaction_begin
-      @errors = []
-      @transaction = true
+    def ipv4(value, field_name = '')
+      flag = IP.Check4(value)
+      report_error(flag, IP.Valid4, field_name, value)
     end
 
-    def transaction_end
-      @transaction = false
-      err_copy = @errors.dup
-      @errors = []
-      err_copy
+    def hostname(value, field_name = '')
+      flag = Hostname.Check(value)
+      report_error(flag, Hostname.ValidHost, field_name, value)
     end
 
-    def ipv4(ip, field_name = '')
-      unless IP.Check4(ip)
-        return error_string(field_name, IP.Valid4) unless @transaction
-        @errors << error_string(field_name, IP.Valid4, ip)
+    def port(value, field_name = '')
+      max_port_number = 65_535
+      msg = "The port number must be in the interval from 1 to #{max_port_number}."
+      if value.is_a?(::String) && value.empty?
+        portn = 0
+      else
+        portn = Integer(value)
       end
+      flag = 1 < portn && portn < 65_535
+      report_error(flag, msg, field_name, value)
     end
 
-    def hostname(name, field_name = '')
-      unless Hostname.Check(name)
-        return error_string(field_name, IP.Valid4) unless @transaction
-        @errors << error_string(field_name, Hostname.ValidHost, name)
-      end
-    end
-
-    def equal(rvalue, lvalue, message, inverse = false)
+    def equal(rvalue, lvalue, message = '', inverse = false)
       eq = rvalue == lvalue
+      return eq if @silent
       return nil if eq ^ inverse
       return message unless @transaction
       @errors << message
     end
 
-    def unique(message, inverse = false, *args)
+    def unique(message = '', inverse = false, *args)
       uniq = (args == (args & args))
+      return uniq if @silent
       return nil if uniq ^ inverse
       return message unless @transaction
       @errors << message
@@ -81,11 +84,57 @@ module Yast
       explanation = explanation[0..-2] if explanation.end_with? '.'
       if field_name.empty?
         "Invalid input: #{explanation}"
-      elsif value.nil?
+      elsif value.nil? || (value.is_a?(::String) && value.empty?) || @transaction
         "Invalid entry for #{field_name}: #{explanation}."
       else
         "Invalid entry for #{field_name} [#{value}]: #{explanation}."
       end
+    end
+
+    def verbose_check
+      old_silent = @silent
+      @silent = false
+      transaction_begin
+      yield self
+      transaction_end
+    ensure
+      @silent = old_silent
+    end
+
+    def silent_check
+      old_silent = @silent
+      @silent = true
+      transaction_begin
+      yield self
+      transaction_end
+      @checks_passed
+    ensure
+      @silent = old_silent
+    end
+
+    private
+
+    def report_error(flag, message, fiel_name, value)
+      if @transaction
+        @checks_passed &&= flag
+        @errors << error_string(fiel_name, message, value) unless @silent || flag
+      end
+      return flag if @silent
+      return error_string(fiel_name, message, value) unless flag
+      nil
+    end
+
+    def transaction_begin
+      @errors = []
+      @transaction = true
+      @checks_passed = true
+    end
+
+    def transaction_end
+      @transaction = false
+      err_copy = @errors.dup
+      @errors = []
+      err_copy
     end
   end
 end
