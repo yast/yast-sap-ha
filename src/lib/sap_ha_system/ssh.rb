@@ -1,4 +1,6 @@
 require 'yast'
+require 'fileutils'
+require 'tmpdir'
 require_relative 'shell_commands.rb'
 
 module Yast
@@ -22,29 +24,34 @@ module Yast
     include ShellCommands
     include Yast::Logger
 
-    # Warning: can block for a while
-    def can_ssh?(host)
-      (exec_status_to "ssh root@#{host} -oStrictHostKeyChecking=no 'true'").exitstatus == 0
-    end
+    # # Warning: can block for a while
+    # def can_ssh?(host)
+    #   (exec_status_to "ssh root@#{host} -oStrictHostKeyChecking=no 'true'").exitstatus == 0
+    # end
 
-    def can_ping?(host)
-      (exec_status_to "ping -c 1 #{host}").exitstatus == 0
-    end
+    # def can_ping?(host)
+    #   (exec_status_to "ping -c 1 #{host}").exitstatus == 0
+    # end
 
     def check_ssh(host)
       # TODO: this file path should be relative
-      stat = exec_status("/usr/bin/expect -f data/check_ssh.expect check #{host}")
+      stat = exec_status_l("/usr/bin/expect", "-f", "data/check_ssh.expect", "check", host)
       fortune_teller(binding)
     end
 
+    def check_ssh_password(host, password)
+
+    end
+
     def copy_keys_from(host, password, path)
-      stat = exec_status("/usr/bin/expect -f data/check_ssh.expect copy #{host} #{password} #{path}")
+      stat = exec_status_l("/usr/bin/expect", "-f", "data/check_ssh.expect",
+        "copy", host, password, path.to_s)
       fortune_teller(binding)
     end
 
     # Copy SSH keys from the host to the local machine
     # @param password [String] SSH password or "''" for an empty string
-    def copy_keys(host, overwrite = false, password = "''")
+    def copy_keys(host, overwrite = false, password = "")
       # Create the .shh directory
       log.info "SSH::copy_keys(#{host}, overwrite=#{overwrite})"
       begin
@@ -56,23 +63,16 @@ module Yast
       # Create a temporary directory for the keys
       tmpdir = Dir.mktmpdir('sap-ha-keys-')
       log.debug "Created tmp directory #{tmpdir}"
-
       log.info "Retrieving SSH keys from node #{host}"
-      unless can_ssh? host
-        if !can_ping? host
-          log.warn "Could not ping host #{host}."
-          raise SSHConnectionException, "Unable to establish a connection to the host #{host}."
-        end
-        raise SSHAuthException, "Could not connect to host #{host}: check authentication"
-      end
-      cmdline = "scp -oStrictHostKeyChecking=no root@#{host}:'/root/.ssh/id_*' #{tmpdir}"
-      log.error "CMD #{cmdline}"
-      status, err = exec_status_stderr cmdline
-      unless status == 0
-        raise SSHKeyException, "Could not copy the keys from host #{host}: #{err}"
+      begin
+        copy_keys_from(host, password, tmpdir)
+      rescue SSHException => e
+        log.error e.to_s
+        ::FileUtils.rm_rf tmpdir
+        raise e
       end
       keys_copied = 0
-      Dir.glob(File.join(tmpdir, "id_{rsa,dsa,ecdsa,ed25519}{.pub}")) do |source_path|
+      Dir.glob(File.join(tmpdir, "id_{rsa,dsa,ecdsa,ed25519}")) do |source_path|
         basename = File.basename(source_path)
         puts "Copied key #{basename}"
         target_path = File.join(ssh_dir, basename)
@@ -90,20 +90,26 @@ module Yast
         else
           log.err "Public key #{source_pub_key} wasn't found."
         end
-        puts "Copied #{keys_copied} keys."
-        ::FileUtils.rm_rf tmpdir
       end
+      puts "Copied #{keys_copied} keys."
+      ::FileUtils.rm_rf tmpdir
       # make sure the target host has its own keys in authorized_keys
-      if exec_status_to("ssh root@$#{host} ha-cluster-init ssh_remote").to_i != 0
+      if exec_status_l("/usr/bin/expect", "-f",
+        "data/check_ssh.expect", "authorize", host, password).exitstatus != 0
         log.error "Executing ha-cluster-init ssh_remote on host #{host} failed"
       end
+    end
+
+    def ssh_exec(host, timeout=5, command)
+      exec_status_l
     end
 
     private
 
     def authorize_key(path)
       auth_keys_path = File.join(Dir.home, '.ssh', 'authorized_keys')
-      if exec_status("grep -q -s #{path} #{auth_keys_path}").to_i != 0
+      if exec_status_l("grep", "-q", "-s", path, auth_keys_path.to_s).exitstatus != 0
+        log.info "Adding key #{path} to #{auth_keys_path}"
         key = File.read(path)
         File.open(auth_keys_path, mode: 'a') do |fh|
           fh << "\n"
@@ -122,9 +128,9 @@ module Yast
       when 5 # timeout
         raise SSHException, "Could not connect to #{host}: Connection time out"
       when 10
-        raise SSHAuthException, "Could not connect to #{host}: Password is required"
+        raise SSHAuthException, "Could not execute a remote command on #{host}: Password is required"
       when 11
-        raise SSHPassException, "Could not connect to #{host}: Password is incorrect"
+        raise SSHPassException, "Could not execute a remote command on #{host}: Password is incorrect"
       when 51
         raise SSHException, "Could not connect to #{host}: Remote host reset the connection"
       when 52

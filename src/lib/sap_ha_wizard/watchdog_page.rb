@@ -33,7 +33,6 @@ module Yast
         true,
         true
       )
-      refresh_view
     end
 
     def can_go_next
@@ -48,7 +47,6 @@ module Yast
     end
 
     def handle_user_input(input)
-      super
       case input
       when :add_wd
         to_add = wd_selection_popup
@@ -60,7 +58,7 @@ module Yast
         @model.watchdog.remove_from_config(to_remove)
         refresh_view
       else
-        log.warn "--- #{self.class}.#{__callee__}: Unexpected user input: #{input} ---"
+        super
       end
     end
 
@@ -69,7 +67,8 @@ module Yast
       base_popup(
         "Select a module to configure",
         nil,
-        SelectionBox(Id(:selected), 'Available modules:', @model.watchdog.proposals)
+        MinHeight(10,
+          SelectionBox(Id(:selected), 'Available modules:', @model.watchdog.proposals))
       )
     end
   end

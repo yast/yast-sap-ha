@@ -33,12 +33,12 @@
         <th colspan="2">Configuration steps</th>
     </tr>
     <tr>
-        <td>Communication layer:&nbsp;</td>
+        <td>Communication layer:</td>
         <td>
             <% if !@config.communication_layer.configured? %>
             <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join an another cluster</a>)<br>' %>
+            <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join another cluster</a>)<br>' %>
             <%= @config.communication_layer.description %>
             <% end %>
         </td>

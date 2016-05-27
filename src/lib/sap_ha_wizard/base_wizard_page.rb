@@ -36,13 +36,14 @@ module Yast
     # Handle custom user input
     # @param input [Symbol]
     def handle_user_input(input)
-      log.debug "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect} ---"
+      log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect} ---"
     end
 
     # Set the contents of the Wizard's page and run the event loop
     def run
       log.debug "--- #{self.class}.#{__callee__} ---"
       set_contents
+      refresh_view
       main_loop
     end
 
@@ -69,6 +70,13 @@ module Yast
     end
 
     private
+
+    # Obtain a property of a widget
+    # @param widget_id [Symbol]
+    # @param property [Symbol]
+    def value(widget_id, property = :Value)
+      UI.QueryWidget(Id(widget_id), property)
+    end
 
     # Base layout that wraps all the widgets
     def base_layout(contents)
@@ -102,7 +110,8 @@ module Yast
     # @param widgets [Array] widgets to show
     def base_popup(message, validators, *widgets)
       log.debug "--- #{self.class}.#{__callee__} ---"
-      input_widgets = [:InputField, :TextEntry, :SelectionBox, :MinWidth, :MinHeight, :MinSize]
+      input_widgets = [:InputField, :TextEntry, :Password,
+                       :SelectionBox, :MinWidth, :MinHeight, :MinSize]
       UI.OpenDialog(
         VBox(
           Label(message),
@@ -172,6 +181,40 @@ module Yast
           Item(Id(:false), 'false', !true_),
         ]
       )
+    end
+
+    # Prompt the user for the password
+    # Do not use base_popup because it logs the input!
+    # @param message [String] additional prompt message
+    def password_prompt(message)
+      UI.OpenDialog(
+        VBox(
+          Label(message),
+          Password(Id(:password), 'Password:', ''),
+          Wizard.CancelOKButtonBox
+        )
+      )
+      ui = UI.UserInput
+      case ui
+      when :cancel
+        UI.CloseDialog
+        return nil
+      when :ok
+        UI.CloseDialog
+        pass = value(:password)
+        return nil if pass.empty?
+        pass
+      end
+    end
+
+    def show_dialog_errors(error_list)
+
+      html_str = "<ul>\n"
+      html_str << error_list.map { |e| "<li>#{e}</li>" }.join("\n")
+      html_str << "</ul>"
+      # Popup.LongError(error_list.join("\n"))
+      # Popup.LongError(html_str)
+      Popup.LongText("Invalid input", RichText(html_str), 60, 17)
     end
   end
 end

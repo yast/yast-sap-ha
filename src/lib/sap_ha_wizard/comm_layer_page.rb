@@ -23,7 +23,6 @@ module Yast
         base_layout_with_label(
           'Define the communication layer',
           VBox(
-            Left(PushButton(Id(:join_cluster), 'Join existing cluster')),
             VBox(
               Label('Transport mode:'),
               RadioButtonGroup(
@@ -34,7 +33,6 @@ module Yast
                 )
               )
             ),
-
             Frame('',
               VBox(
                 ComboBox(Id(:number_of_rings), Opt(:notify), 'Number of rings:', ['1', '2', '3']),
@@ -49,14 +47,14 @@ module Yast
             HBox(
             InputField(Id(:cluster_name), _('Cluster name:'), ''),
             InputField(Id(:expected_votes), _('Expected votes:'), '')
-            )
+            ),
+            PushButton(Id(:join_cluster), 'Join existing cluster')
           )
         ),
         SAPHAHelpers.instance.load_html_help('help_comm_layer.html'),
         true,
         true
       )
-      refresh_view
     end
 
     def can_go_next
@@ -79,6 +77,7 @@ module Yast
 
     def refresh_view
       super
+      UI.ChangeWidget(Id(:join_cluster), :Enabled, false)
       UI.ChangeWidget(Id(@my_model.transport_mode), :Value, true)
       UI.ChangeWidget(Id(:number_of_rings), :Value, @my_model.number_of_rings.to_s)
       if @recreate_table
@@ -111,8 +110,6 @@ module Yast
     end
 
     def handle_user_input(input)
-      log.debug "--- #{self.class}.#{__callee__}: user input: #{input} ---"
-      super
       case input
       when :edit_ring
         item_id = UI.QueryWidget(Id(:ring_definition_table), :Value)
@@ -135,7 +132,7 @@ module Yast
       when :join_cluster # won't happen ever
         return :join_cluster
       else
-        log.warn "--- #{self.class}.#{__callee__}: Unexpected user input: #{input} ---"
+        super
       end
     end
 
@@ -144,7 +141,7 @@ module Yast
       # TODO: validate user input here
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
-        "Configuration for Ring #{ring[:id]}",
+        "Configuration for ring #{ring[:id]}",
         nil,
         MinWidth(15, InputField(Id(:address), 'Address:', ring[:address])),
         MinWidth(5, InputField(Id(:port), 'Port:', ring[:port])),

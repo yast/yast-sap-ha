@@ -1,5 +1,2 @@
-expect
-yast2-cluster
-yast2-ntp-client
-sleha-bootstrap
-openssh
+packages: expect yast2-cluster yast2-ntp-client ha-cluster-bootstrap openssh
+pattern: ha_sles

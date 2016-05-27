@@ -101,9 +101,5 @@ module Yast
       end
       a.join('<br>')
     end
-
-    def list_interfaces
-      # TODO: list the interfaces      
-    end
   end
 end

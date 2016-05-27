@@ -48,7 +48,6 @@ module Yast
         true
       )
       UI.ChangeWidget(Id(:stonith_method), :Enabled, false)
-      refresh_view
     end
 
     def can_go_next
@@ -65,13 +64,14 @@ module Yast
     end
 
     def handle_user_input(input)
-      super
       case input
       when :add_sbd_device
         sbd_dev_configuration
       when :remove_sbd_device
         item_id = UI.QueryWidget(Id(:sbd_dev_list_table), :Value)
         log.debug "--- removing item #{item_id} from the table of SBD devices"
+      else
+        super
       end
       # case input
       # when :sbd_dev_list_table

@@ -41,7 +41,6 @@ module Yast
       File.join(@data_path, basename)
       # TODO error handling
     end
-
     private
 
     def read_file(path)

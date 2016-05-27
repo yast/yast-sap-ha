@@ -50,7 +50,6 @@ module Yast
         true,
         true
       )
-      refresh_view
     end
 
     def can_go_next

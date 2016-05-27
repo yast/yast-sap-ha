@@ -19,8 +19,7 @@ module Yast
         SAPHAHelpers.instance.load_html_help('setup_summary_help.html'),
         true,
         true
-        )
-      refresh_view
+      )
     end
 
     def refresh_view

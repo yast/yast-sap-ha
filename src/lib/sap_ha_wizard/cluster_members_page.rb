@@ -1,8 +1,7 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
-Yast.import 'IP'
-Yast.import 'Hostname'
+require 'sap_ha/semantic_checks'
 Yast.import 'Report'
 
 module Yast
@@ -37,8 +36,7 @@ module Yast
         '',
         true,
         true
-        )
-      refresh_view
+      )
     end
 
     def can_go_next
@@ -78,7 +76,6 @@ module Yast
     end
 
     def handle_user_input(input)
-      super
       case input
       when :edit_node
         item_id = UI.QueryWidget(Id(:node_definition_table), :Value)
@@ -90,7 +87,7 @@ module Yast
           refresh_view
         end
       else
-        log.warn "--- #{self.class}.#{__callee__}: Unexpected user input: #{input} ---"
+        super
       end
     end
 
@@ -108,23 +105,17 @@ module Yast
     end
 
     def node_configuration_validators(values, report = true)
-      if !IP.Check4(values[:ip_ring1])
-        Report.Error("Invalid entry for IP Ring 1: #{IP.Valid4}") if report
-        return false
-      end
-      if @my_model.number_of_rings > 1 && !IP.Check4(values[:ip_ring2])
-        Report.Error("Invalid entry for IP Ring 2: #{IP.Valid4}") if report
-        return false
-      end
-      if @my_model.number_of_rings > 2 && !IP.Check4(values[:ip_ring3])
-        Report.Error("Invalid entry for IP Ring 2: #{IP.Valid4}") if report
-        return false
-      end
-      if !Hostname.Check(values[:host_name])
-        Report.Error("Invalid entry for Hostname: #{Hostname.ValidHost}") if report
-        return false
-      end
-      true
+      return true unless report
+      check = SemanticChecks.instance
+      check.transaction_begin
+      check.ipv4(values[:ip_ring1], 'IP Ring 1')
+      check.ipv4(values[:ip_ring2], 'IP Ring 2') if @my_model.number_of_rings > 1
+      check.ipv4(values[:ip_ring3], 'IP Ring 3') if @my_model.number_of_rings > 2
+      check.hostname(values[:host_name], 'Hostname')
+      errors = check.transaction_end
+      return true if errors.empty?
+      show_dialog_errors(errors)
+      false
     end
   end
 end

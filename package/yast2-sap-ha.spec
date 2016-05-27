@@ -20,12 +20,11 @@ Release:        0
 BuildArch:      noarch
 
 Source0:        %{name}-%{version}.tar.bz2
-#Source1:        yast2-sap-scp-rpmlintrc
+Source1:        yast2-sap-ha-rpmlintrc
 
 Requires:       yast2
 Requires:       yast2-ruby-bindings
 Requires:       xdg-utils
-Requires:       yast2-sap-scp-prodlist
 Requires:       expect openssh yast2-cluster yast2-ntp-client ha-cluster-bootstrap 
 
 BuildRequires:  yast2
@@ -59,8 +58,8 @@ install -m 644 data/* %{buildroot}%{yast_dir}/data/suse_connect_program/template
 
 %files
 %defattr(-,root,root)
-#%doc %yast_docdir
-#%doc doc/SUSE_Connect_Program.md
+%doc %yast_docdir
+%doc doc/yast-sap-ha.md
 %yast_desktopdir
 %yast_clientdir
 %yast_libdir

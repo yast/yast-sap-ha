@@ -78,7 +78,7 @@ module Yast
     end
 
     def number_of_rings=(value)
-      @number_of_rings=value
+      @number_of_rings = value
       log.info "--- #{self.class}.#{__callee__}: number_of_rings <- #{value} ---"
     end
 

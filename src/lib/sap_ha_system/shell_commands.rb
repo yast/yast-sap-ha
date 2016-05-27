@@ -15,6 +15,16 @@ module ShellCommands
     Open3.popen3(command) { |_, _, _, wait_thr| wait_thr.value }
   end
 
+  def exec_status_l(*params)
+    puts "exec_status: #{params}"
+    Open3.popen3(*params) { |_, _, _, wait_thr| wait_thr.value }
+  end
+
+  def exec_status_lo(params)
+    puts "exec_status: #{params}"
+    Open3.popen3(*params) { |_, out, _, wait_thr| [wait_thr.value, out.read] }
+  end
+
   def exec_status_to(command, timeout = 5)
     Open3.popen3(command) do |_, _, _, wait_thr|
       begin

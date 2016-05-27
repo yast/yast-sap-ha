@@ -25,87 +25,13 @@ module Yast
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
       @config = ScenarioConfiguration.new
-      # TODO: debug
       @config.debug = WFM.Args.include? 'debug'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
+      @bogus = WFM.Args.include?('bogus')
     end
 
     def main
       textdomain 'sap-ha'
-
-      # @sequence = {
-      #   # "ws_start"              => "product_check",
-      #   "ws_start"              => "debug_run", # TODO: debug
-      #   "product_check"         =>  {
-      #     abort:             :abort,
-      #     hana:              "scenario_selection",
-      #     nw:                "scenario_selection",
-      #     unknown:           "product_not_supported",
-      #     next:              "product_not_supported"
-      #     },
-      #   "scenario_selection"    => {
-      #     abort:             :abort,
-      #     next:              "general_setup", # TODO: here be magic that restructures this
-      #     unknown:           "product_not_supported"
-      #     },
-      #   "general_setup"         => {
-      #     abort:             :abort,
-      #     next:              "scenario_setup",
-      #     config_members:    "configure_members",
-      #     config_network:    "configure_network",
-      #     config_components: "configure_components",
-      #     join_cluster:      "join_cluster",
-      #     fencing:           "fencing",
-      #     watchdog:          "watchdog",
-      #     hana:              "hana"
-      #     },
-      #   "scenario_setup"        => {
-      #     abort:             :abort,
-      #     next:              :next
-      #     },
-      #   "summary"               => {
-      #     next:              :abort,
-      #     abort:             :abort
-      #     },
-      #   "configure_members"     => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "configure_network"     => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "configure_components"  => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "join_cluster"          => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "fencing"               => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "watchdog"              => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "hana"                  => {
-      #     next:              "general_setup",
-      #     back:              "general_setup",
-      #     abort:             :abort
-      #     },
-      #   "debug_run"             => {
-      #     general_setup:     "general_setup"
-      #     }
-      #   }
 
       @sequence = {
         "ws_start"              => "product_check",
@@ -115,13 +41,13 @@ module Yast
           nw:                "scenario_selection",
           unknown:           "product_not_supported",
           next:              "product_not_supported"
-          },
+        },
         "scenario_selection"    => {
           abort:             :abort,
           next:              "configure_network", # TODO: here be magic that restructures this
           unknown:           "product_not_supported",
           summary:           "general_setup"
-          },
+        },
         "general_setup"         => {
           abort:             :abort,
           next:              "scenario_setup",
@@ -134,65 +60,63 @@ module Yast
           hana:              "hana",
           install:           "installation",
           back:              :back
-          },
+        },
         "scenario_setup"        => {
           abort:             :abort,
           next:              :next,
           summary:           "general_setup"
-          },
+        },
         "configure_members"     => {
           next:              "fencing",
           back:              :back,
           abort:             :abort,
           summary:           "general_setup"
-          },
+        },
         "configure_network"     => {
           next:              "configure_members",
           back:              :back,
           abort:             :abort,
           summary:           "general_setup",
           join_cluster:      "join_cluster"
-          },
+        },
         "configure_components"  => {
           next:              "general_setup",
           back:              :back,
           abort:             :abort
-          },
+        },
         "join_cluster"          => {
           next:              "configure_members",
           back:              :back,
           abort:             :abort,
           summary:           "general_setup"
-          },
+        },
         "fencing"               => {
           next:              "watchdog",
           back:              :back,
           abort:             :abort,
           summary:           "general_setup"
-          },
+        },
         "watchdog"              => {
           next:              "hana",
           back:              :back,
           abort:             :abort,
           summary:           "general_setup"
-          },
+        },
         "hana"                  => {
           next:              "general_setup",
           back:              :back,
           abort:             :abort,
           summary:           "general_setup"
-          },
+        },
         "debug_run"             => {
           general_setup:     "general_setup"
-          },
+        },
         "installation"          => {
           abort:             :abort
-          }
         }
+      }
 
-      if @config.debug
-        @sequence["ws_start"] = "debug_run"
-      end
+      @sequence["ws_start"] = "debug_run" if @config.debug
 
       @aliases = {
         'product_check'         => -> { product_check },
@@ -208,7 +132,7 @@ module Yast
         'watchdog'              => -> { watchdog },
         'hana'                  => -> { hana_configuration },
         'debug_run'             => -> { debug_run },
-        'installation'             => -> { run_installation }
+        'installation'          => -> { run_installation }
       }
 
       Wizard.CreateDialog
@@ -223,7 +147,6 @@ module Yast
     def product_check
       log.debug "--- called #{self.class}.#{__callee__} ---"
       # TODO: here we need to know what product we are installing
-      # TODO: allow a bogus product setup if we are in debug mode
       begin
         @config.product_id = "HANA"
       rescue ProductNotFoundException => e
@@ -344,7 +267,61 @@ module Yast
     def debug_run
       @config.product_id = "HANA"
       @config.scenario_name = 'Performance-optimized'
+      set_bogus_values if @bogus
       :general_setup
+    end
+
+    def set_bogus_values
+      log.info "BOGUS!"
+      @config.product_id = "HANA"
+      @config.scenario_name = 'Performance-optimized'
+      @config.communication_layer.unsafe_import(
+        number_of_rings: 2,
+        transport_mode: :unicast,
+        cluster_name: 'hana_sysrep',
+        expected_votes: 2,
+        rings: {
+          ring1: {
+            address:  '192.168.100.254',
+            port:     '1233',
+            id:       1,
+            mcast:    ''
+          },
+          ring2: {
+            address:  '192.168.102.254',
+            port:     '1233',
+            id:       2,
+            mcast:    ''
+          }
+        }
+      )
+      @config.cluster_members.unsafe_import(
+        number_of_rings: 2,
+        number_of_nodes: 2,
+        nodes: {
+          node1: {
+            host_name:  "hana01",
+            ip_ring1:   "192.168.100.100",
+            ip_ring2:   "192.168.102.100",
+            ip_ring3:   "",
+            node_id:    '1'
+          },
+          node2: {
+            host_name:  "hana02",
+            ip_ring1:   "192.168.100.105",
+            ip_ring2:   "192.168.102.105",
+            ip_ring3:   "",
+            node_id:    '2'
+          }
+        }
+      )
+    @config.stonith.unsafe_import(devices: [{name: '/dev/sda', type: 'disk', uuid: ''}])
+    @config.watchdog.unsafe_import(to_install: ['softdog'])
+    @config.hana.unsafe_import(
+      system_id: 'XXX',
+      instance:  '05',
+      virtual_ip: '192.168.110.151'
+    )
     end
   end
 

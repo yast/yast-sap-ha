@@ -1,12 +1,12 @@
 #!/usr/bin/expect -f
 
-# Arguments
+# >>> Arguments:
 # 0: action
 #    either "check", "copy", "authorize"
 # 1: host name
 # 2: [password] (only if action==copy)
 # 3: [path] (only if action==copy)
-# Retcodes:
+# >>> Retcodes:
 # 0 - all is peachy
 # 5 - timeout
 # 10 - password required
@@ -18,16 +18,15 @@
 # 55 - unknown error
 
 set have_password 0
-set timeout 5
 set action ""
 set host ""
 set password ""
 set path ""
 set password_sent 0
 
-# for {set i 0} {$i < [llength $argv]} {incr i} {
-#     puts "index=$i [lindex $argv $i]"
-# }
+for {set i 0} {$i < [llength $argv]} {incr i} {
+    puts "index=$i [lindex $argv $i]"
+}
 
 proc usage {{msg ""}} {
     global argv0
@@ -39,64 +38,68 @@ proc usage {{msg ""}} {
     exit 1
 }
 
-switch -exact -- [llength $argv] {
-    2 {
-        set action [lindex $argv 0]
-        set host [lindex $argv 1]
-        if {$action ne "check"} {
-            usage "Incorrect number of arguments for command $action or command is not supported."
-        }
 
-    }
-    3 {
-        set action [lindex $argv 0]
-        set host [lindex $argv 1]
-        set password [lindex $argv 2]
-        if {$action ne "authorize"} {
-            usage "Incorrect number of arguments for command $action or command is not supported."
-        }
-    }
-    4 {
-        set action [lindex $argv 0]
-        set host [lindex $argv 1]
-        set password [lindex $argv 2]
-        set path [lindex $argv 3]
-        if {$action ne "copy"} {
-            usage "Incorrect number of arguments for command $action or command is not supported."
-        }
-
-    }
-    default {
-        usage "Incorrect number of arguments."
-    }
+if {[llength $argv] > 4 || [llength $argv] < 2} {
+    usage "Incorrect number of arguments"
 }
 
-# puts "action=$action, host=$host, password=$password, path=$path"
+set action [lindex $argv 0]
+set host [lindex $argv 1]
 
 switch -exact -- $action {
     copy {
-        # spawn scp -r root@$host:/root/.ssh/ $path
+        # copy hostname password path
+        # copy the ssh keys from the host into the local path
+        set password [lindex $argv 2]
+        set path [lindex $argv 3]
         spawn sh -c "scp root@$host:'/root/.ssh/id_*' $path"
     }
     check {
-        puts "checking ssh root@$host"
-        spawn ssh root@$host
+        # check hostname [password]
+        # check if we can SSH to the host
+        set host [lindex $argv 1]
+        set password [lindex $argv 2]
+        puts "checking ssh to root@$host"
+        spawn ssh root@$host true
     }
     authorize {
-        spawn ssh root@$host:/root/.ssh/ ha-cluster-init ssh_remote
+        # authorize hostname password
+        # make sure that host's own keys are authorized
+        set password [lindex $argv 2]
+        # spawn ssh root@$host ha-cluster-init -y ssh_remote
+        # spawn ssh root@$host sh -c {b=/root/.ssh; a=$b/authorized_keys; for i in $b/id_*[^.pub]; do grep $(cat $i) $a || cat $i >> $a; done}
+        # spawn ssh root@$host bash -c {'for i in /root/.ssh/id_*[^.pub] ; do
+        #         grep -- $(cat $i.pub) /root/.ssh/authorized_keys || cat $i >> /root/.ssh/authorized_keys; 
+        #     done'}
+        spawn ssh root@$host bash -c {'
+            for key in id_rsa id_dsa id_ecdsa id_ed25519 ; do
+                [ -f /root/.ssh/$key ] || continue
+                grep -q -s "$(cat /root/.ssh/$key.pub)" /root/.ssh/authorized_keys \
+                    || cat /root/.ssh/$key.pub >> /root/.ssh/authorized_keys
+            done
+        '}
+        # spawn ssh root@$host bash -c {'for i in /root/.ssh/id_*.pub ; do
+        #         echo $i
+        #     done'}
+
     }
     default { 
         usage "Unknown action $action"
     }
 }
 
+set timeout 5
+
 while {1} {
     expect {
+        timeout {
+            exit 5
+        }
         "yes/no" { 
             send "yes\r"
         }
-        "Last login: " {
-            send -- "exit\r"
+        "Last login:" {
+            # send -- "exit\r"
             exit 0
         }
         "Password: " {
@@ -123,11 +126,8 @@ while {1} {
         "Connection refused" {
             exit 54
         }
-        expect timeout {
-            exit 5
-        }
-        expect eof {
-            if {$action eq "copy"} {
+        eof {
+            if {$action eq "copy" || $action eq "check"} {
                 exit 0
             } else {
                 exit 55
