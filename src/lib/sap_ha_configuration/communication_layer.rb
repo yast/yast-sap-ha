@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Communication Layer Configuration
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require_relative 'base_component_configuration.rb'
 Yast.import 'UI'
@@ -5,11 +26,10 @@ Yast.import 'UI'
 module Yast
   # Communication Layer Configuration
   class CommunicationLayerConfiguration < BaseComponentConfiguration
-
-    attr_reader  :number_of_rings,
-                 :transport_mode,
-                 :cluster_name,
-                 :expected_votes
+    attr_reader :number_of_rings,
+      :transport_mode,
+      :cluster_name,
+      :expected_votes
 
     include Yast::UIShortcuts
     include Yast::Logger # TODO: rm
@@ -28,9 +48,9 @@ module Yast
       (1..@number_of_rings).each do |ix|
         @rings["ring#{ix}".to_sym] = {
           address: '',
-          port: '',
-          id: ix,
-          mcast: ''
+          port:    '',
+          id:      ix,
+          mcast:   ''
         }
       end
     end
@@ -55,9 +75,9 @@ module Yast
         else
           @rings[key] = {
             address: '',
-            port: '',
-            id: ix,
-            mcast: ''
+            port:    '',
+            id:      ix,
+            mcast:   ''
           }
         end
       end
@@ -73,9 +93,7 @@ module Yast
 
     def update_ring(ring_id, values)
       [:address, :port].each { |e| @rings[ring_id][e] = values[e] }
-      if @transport_mode == :multicast
-        @rings[ring_id][:mcast] = values[:mcast]
-      end
+      @rings[ring_id][:mcast] = values[:mcast] if @transport_mode == :multicast
     end
 
     def transport_mode=(value)
@@ -83,16 +101,16 @@ module Yast
         raise CommunicationLayerConfigurationException,
           "Error setting transport mode to #{value}"
       end
-      @transport_mode=value
+      @transport_mode = value
     end
 
     def configured?
-      @rings.all? { |_,v| !v[:address].empty? && !v[:port].empty? }
+      @rings.all? { |_, v| !v[:address].empty? && !v[:port].empty? }
     end
 
     def description
       a = []
-      a << "&nbsp; Transport mode: #{@transport_mode.to_s}."
+      a << "&nbsp; Transport mode: #{@transport_mode}."
       a << "&nbsp; Cluster name: #{@cluster_name}."
       a << "&nbsp; Expected votes: #{@expected_votes}."
       @rings.each do |_, r|

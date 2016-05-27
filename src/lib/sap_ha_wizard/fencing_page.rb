@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Fencing Mechanism Configuration Page
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
@@ -37,7 +58,7 @@ module Yast
             ),
             HBox(
               PushButton(Id(:add_sbd_device), _('Add')),
-              PushButton(Id(:remove_sbd_device), _('Remove')),
+              PushButton(Id(:remove_sbd_device), _('Remove'))
             ),
             VSpacing(3),
             Label(_("Note that all the data on the selected devices WILL BE DESTROYED."))
@@ -73,33 +94,9 @@ module Yast
       else
         super
       end
-      # case input
-      # when :sbd_dev_list_table
-      #   item_id = UI.QueryWidget(Id(:ring_definition_table), :Value)
-      #   values = ring_configuration_popup(@model.conf_nodes.node_parameters(item_id))
-      #   Report.ClearErrors
-      #   log.info "Return from ring_configuration_popup: #{values}"
-      #   if !values.nil? && !values.empty?
-      #     @model.conf_nodes.update_values(item_id, values)
-      #     refresh_view
-      #   end
-      # else
-      #   log.warn "--- #{self.class}.#{__callee__}: Unexpected user input: #{input} ---"
-      # end
     end
 
     def sbd_dev_configuration
-      def handle_combo
-        v = UI.QueryWidget(Id(:sbd_combo), :Value)
-        log.info "--- combo event: value #{v} ---"
-        log.info "--- values: #{@model.stonith.proposals} ---"
-        item = @model.stonith.proposals.find { |e| e[:name] == v }
-        UI.ChangeWidget(Id(:sbd_name), :Value, item[:name])
-        UI.ChangeWidget(Id(:sbd_type), :Value, item[:type])
-        UI.ChangeWidget(Id(:sbd_uuid), :Value, item[:uuid] || "")
-        UI.RecalcLayout
-      end
-
       log.debug "--- #{self.class}.#{__callee__} --- "
       items = @model.stonith.combo_items
       UI.OpenDialog(
@@ -135,31 +132,18 @@ module Yast
         end
       end
     end
-    # # Returns the ring configuration parameters
-    # def ring_configuration_popup(ring_number=0)
-    #   log.debug "--- #{self.class}.#{__callee__} --- "
-    #   base_popup(
-    #     "Configuration for Ring \##{ring_number}",
-    #     nil,
-    #     InputField(Id(:address), 'Address:', ''),
-    #     InputField(Id(:port), 'Port:', '')
-    #   )
-    # end
 
-    # def node_configuration_validators(values, report = true)
-    #   if !IP.Check4(values[:ip_ring1])
-    #     Report.Error("Invalid entry for IP Ring 1: #{IP.Valid4}") if report
-    #     return false
-    #   end
-    #   if !IP.Check4(values[:ip_ring2])
-    #     Report.Error("Invalid entry for IP Ring 2: #{IP.Valid4}") if report
-    #     return false
-    #   end
-    #   if !Hostname.Check(values[:host_name])
-    #     Report.Error("Invalid entry for Hostname: #{Hostname.ValidHost}") if report
-    #     return false
-    #   end
-    #   true
-    # end
+    private
+
+    def handle_combo
+      v = UI.QueryWidget(Id(:sbd_combo), :Value)
+      log.info "--- combo event: value #{v} ---"
+      log.info "--- values: #{@model.stonith.proposals} ---"
+      item = @model.stonith.proposals.find { |e| e[:name] == v }
+      UI.ChangeWidget(Id(:sbd_name), :Value, item[:name])
+      UI.ChangeWidget(Id(:sbd_type), :Value, item[:type])
+      UI.ChangeWidget(Id(:sbd_uuid), :Value, item[:uuid] || "")
+      UI.RecalcLayout
+    end
   end
 end

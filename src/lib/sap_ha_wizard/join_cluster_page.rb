@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Page for joining an existing cluster
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'sap_ha_wizard/base_wizard_page'
 require 'sap_ha_system/ssh'
 require 'sap_ha_system/network'
@@ -5,6 +26,7 @@ require 'sap_ha_system/network'
 Yast.import 'Popup'
 
 module Yast
+  # Page for joining an existing cluster
   class JoinClusterPage < BaseWizardPage
     def set_contents
       super
@@ -29,7 +51,7 @@ module Yast
       case input
       when :join
         node_ip = value(:ip_address)
-        interface = value(:interface)
+        # interface = value(:interface)
         begin
           SSH.instance.check_ssh(node_ip)
         rescue SSHAuthException
@@ -37,7 +59,7 @@ module Yast
           return if passwd.nil?
           begin
             SSH.instance.copy_keys(node_ip, true, passwd)
-          rescue SSHException =>e
+          rescue SSHException => e
             log.error e.message
             Popup.Error(e.message)
           end

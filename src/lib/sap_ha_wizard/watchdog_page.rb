@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Watchdog Configuration Page
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
@@ -6,7 +27,7 @@ Yast.import 'Hostname'
 Yast.import 'Report'
 
 module Yast
-  # Communication Layer Configuration Page
+  # Watchdog Configuration Page
   class WatchdogConfigurationPage < BaseWizardPage
     def initialize(model)
       super(model)
@@ -24,9 +45,8 @@ module Yast
             HBox(
               PushButton(Id(:add_wd), 'Add'),
               PushButton(Id(:remove_wd), 'Remove')
-              ),
-            SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:',
-              [])
+            ),
+            SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', [])
           )
         ),
         '',
@@ -62,7 +82,7 @@ module Yast
       end
     end
 
-    def wd_selection_popup()
+    def wd_selection_popup
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
         "Select a module to configure",

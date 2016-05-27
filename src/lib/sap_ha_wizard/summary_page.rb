@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Setup summary page
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'sap_ha/helpers'
 
@@ -16,7 +37,7 @@ module Yast
         "High-Availability Setup Summary",
         UI.TextMode ? SAPHAHelpers.instance.render_template('setup_summary_ncurses.erb', binding) :
         SAPHAHelpers.instance.render_template('setup_summary_gui.erb', binding),
-        SAPHAHelpers.instance.load_html_help('setup_summary_help.html'),
+        SAPHAHelpers.instance.load_help('setup_summary_help.html'),
         true,
         true
       )
@@ -44,7 +65,7 @@ module Yast
       input = Wizard.UserInput
       log.debug "--- #{self.class}.#{__callee__}: input is #{input.inspect} ---"
       Wizard.SetNextButton(:summary, "&Summary") unless input == :next
-      return input.to_sym
+      input.to_sym
     end
   end
 end

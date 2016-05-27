@@ -1,5 +1,5 @@
 #
-# spec file for package yast2-sap-scp
+# spec file for package yast2-sap-ha
 #
 # Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
 #
@@ -54,15 +54,15 @@ rake test:unit
 %install
 mkdir -p %{buildroot}%{yast_dir}/data/sap_ha/
 rake install DESTDIR="%{buildroot}"
-install -m 644 data/* %{buildroot}%{yast_dir}/data/suse_connect_program/template_ncurses.erb
+install -m 644 data/*[!.expect] %{buildroot}%{yast_dir}/data/sap_ha/
+install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 
 %files
 %defattr(-,root,root)
 %doc %yast_docdir
-%doc doc/yast-sap-ha.md
 %yast_desktopdir
 %yast_clientdir
 %yast_libdir
-%yast_dir
+%{yast_dir}/data/sap_ha/
 
 %changelog

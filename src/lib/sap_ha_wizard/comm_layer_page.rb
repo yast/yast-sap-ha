@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Communication Layer Configuration Page
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
@@ -42,16 +63,16 @@ module Yast
                   HSpacing(25)
                 ),
                 PushButton(Id(:edit_ring), _('Edit selected'))
-              ),
+              )
             ),
             HBox(
-            InputField(Id(:cluster_name), _('Cluster name:'), ''),
-            InputField(Id(:expected_votes), _('Expected votes:'), '')
+              InputField(Id(:cluster_name), _('Cluster name:'), ''),
+              InputField(Id(:expected_votes), _('Expected votes:'), '')
             ),
             PushButton(Id(:join_cluster), 'Join existing cluster')
           )
         ),
-        SAPHAHelpers.instance.load_html_help('help_comm_layer.html'),
+        SAPHAHelpers.instance.load_help('help_comm_layer.html'),
         true,
         true
       )
@@ -60,7 +81,8 @@ module Yast
     def can_go_next
       # super
       return true if @model.no_validators
-      if !@model.cluster_members.configured?
+      if !@model.cluster_members.configured? &&
+          @my_model.all_rings.all? { |_, r| !r[:address].empty? }
         @my_model.all_rings.each do |ring_id, ring|
           @model.cluster_members.nodes.each do |node_id, values|
             v = values.dup
@@ -82,7 +104,7 @@ module Yast
       UI.ChangeWidget(Id(:number_of_rings), :Value, @my_model.number_of_rings.to_s)
       if @recreate_table
         @recreate_table = false
-      UI.ReplaceWidget(Id(:rp_table), table_widget)
+        UI.ReplaceWidget(Id(:rp_table), table_widget)
       end
       UI.ChangeWidget(Id(:ring_definition_table), :Items, @my_model.table_items)
       UI.ChangeWidget(Id(:cluster_name), :Value, @my_model.cluster_name)
@@ -91,18 +113,19 @@ module Yast
 
     def table_widget
       log.debug "--- #{self.class}.#{__callee__} ---"
-        MinSize(
-          @my_model.transport_mode == :multicast ? 26 : 21, # Width: ring name 5 + address 15 + port 5
-          Integer(@my_model.number_of_rings)*1.5, 
-          Table(
-            Id(:ring_definition_table),
-            Opt(:keepSorting),
-            multicast? ? 
-              Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address')) 
-              : Header(_('Ring'), _('Address'), _('Port')),
-            []
-          )
+      MinSize(
+        # Width: ring name 5 + address 15 + port 5
+        @my_model.transport_mode == :multicast ? 26 : 21,
+        Integer(@my_model.number_of_rings) * 1.5,
+        Table(
+          Id(:ring_definition_table),
+          Opt(:keepSorting),
+          multicast? ?
+            Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address'))
+            : Header(_('Ring'), _('Address'), _('Port')),
+          []
         )
+      )
     end
 
     def multicast?

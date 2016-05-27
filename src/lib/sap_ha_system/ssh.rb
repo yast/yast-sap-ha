@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Remote SSH invocation
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'fileutils'
 require 'tmpdir'
@@ -19,6 +40,7 @@ module Yast
   class SSHKeyException < SSHException
   end
 
+  # Remote SSH invocation
   class SSH
     include Singleton
     include ShellCommands
@@ -33,9 +55,12 @@ module Yast
     #   (exec_status_to "ping -c 1 #{host}").exitstatus == 0
     # end
 
+    def initialize
+      @script_path = SAPHAHelpers.instance.data_file_path('check_ssh.expect')
+    end
+
     def check_ssh(host)
-      # TODO: this file path should be relative
-      stat = exec_status_l("/usr/bin/expect", "-f", "data/check_ssh.expect", "check", host)
+      stat = exec_status_l("/usr/bin/expect", "-f", @script_path, "check", host)
       fortune_teller(binding)
     end
 
@@ -44,7 +69,7 @@ module Yast
     end
 
     def copy_keys_from(host, password, path)
-      stat = exec_status_l("/usr/bin/expect", "-f", "data/check_ssh.expect",
+      stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
         "copy", host, password, path.to_s)
       fortune_teller(binding)
     end
@@ -95,14 +120,14 @@ module Yast
       ::FileUtils.rm_rf tmpdir
       # make sure the target host has its own keys in authorized_keys
       if exec_status_l("/usr/bin/expect", "-f",
-        "data/check_ssh.expect", "authorize", host, password).exitstatus != 0
+        @script_path, "authorize", host, password).exitstatus != 0
         log.error "Executing ha-cluster-init ssh_remote on host #{host} failed"
       end
     end
 
-    def ssh_exec(host, timeout=5, command)
-      exec_status_l
-    end
+    # def ssh_exec(host, timeout = 5, command)
+    #   exec_status_l
+    # end
 
     private
 

@@ -19,8 +19,17 @@ require "yast/rake"
 
 Yast::Tasks.configuration do |conf|
   conf.skip_license_check << /.*desktop$/
-  conf.exclude_files << "pry_debug.rb"
+  conf.skip_license_check << /.*erb$/
+  conf.skip_license_check << /.*yaml$/
+  conf.skip_license_check << /.*yml$/
+  conf.skip_license_check << /.*html$/
+  conf.skip_license_check << /.*rpmlintrc$/
+  conf.skip_license_check << /pry_debug.rb/
+  conf.exclude_files << /pry_debug.rb/
   conf.exclude_files << /.rubocop.yml/
+  conf.exclude_files << /TODO.md/
+  conf.exclude_files << /doc/
+  conf.exclude_files << /make_package.sh/
 end
 
 desc "Runs unit tests with coverage."

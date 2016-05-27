@@ -4,9 +4,8 @@
 Session.vim
 *~
 
-*.htm
-*.html
-
 .idea
+coverage
+
 yast-sap-ha.sublime-project
 yast-sap-ha.sublime-workspace

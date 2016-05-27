@@ -1,19 +1,42 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Cluster members configuration
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'erb'
 require_relative 'base_component_configuration.rb'
+require 'sap_ha/exceptions'
 Yast.import 'UI'
 
 module Yast
-  class ClusterMembersConfigurationException < StandardError
+  class ClusterMembersConfigurationException < SAPHAException
   end
 
+  # Cluster members configuration
   class ClusterMembersConfiguration < BaseComponentConfiguration
     attr_reader :nodes, :number_of_rings
 
     include Yast::UIShortcuts
     include Yast::Logger # TODO: rm
 
-    def initialize(number_of_nodes=0)
+    def initialize(number_of_nodes = 0)
       log.info "--- #{self.class}.#{__callee__} ---"
       @number_of_nodes = number_of_nodes
       @number_of_rings = 1
@@ -37,7 +60,7 @@ module Yast
     end
 
     def configured?
-      @nodes.all? { |_, v| !v[:ip_ring1].empty?}
+      @nodes.all? { |_, v| !v[:ip_ring1].empty? }
     end
 
     def update_values(k, values)
@@ -88,10 +111,10 @@ module Yast
       (1..@number_of_nodes).each do |i|
         @nodes["node#{i}".to_sym] = {
           host_name: "node#{i}",
-          ip_ring1: '',
-          ip_ring2: '',
-          ip_ring3: '',
-          node_id: i.to_s
+          ip_ring1:  '',
+          ip_ring2:  '',
+          ip_ring3:  '',
+          node_id:   i.to_s
         }
       end
     end

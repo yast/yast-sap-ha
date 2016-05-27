@@ -1,6 +1,25 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: main GUI Wizard class
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
-require 'yaml'
-require 'sap_ha/sap_ha_dialogs'
 require 'sap_ha/helpers'
 require 'sap_ha/gui'
 require 'sap_ha_wizard/cluster_members_page'
@@ -44,7 +63,7 @@ module Yast
         },
         "scenario_selection"    => {
           abort:             :abort,
-          next:              "configure_network", # TODO: here be magic that restructures this
+          next:              "configure_network",
           unknown:           "product_not_supported",
           summary:           "general_setup"
         },
@@ -53,7 +72,6 @@ module Yast
           next:              "scenario_setup",
           config_members:    "configure_members",
           config_network:    "configure_network",
-          config_components: "configure_components",
           join_cluster:      "join_cluster",
           fencing:           "fencing",
           watchdog:          "watchdog",
@@ -78,11 +96,6 @@ module Yast
           abort:             :abort,
           summary:           "general_setup",
           join_cluster:      "join_cluster"
-        },
-        "configure_components"  => {
-          next:              "general_setup",
-          back:              :back,
-          abort:             :abort
         },
         "join_cluster"          => {
           next:              "configure_members",
@@ -124,7 +137,6 @@ module Yast
         'product_not_supported' => -> { product_not_supported },
         'configure_members'     => -> { configure_members },
         'configure_network'     => -> { configure_comm_layer },
-        'configure_components'  => -> { configure_components },
         'general_setup'         => -> { general_setup },
         'scenario_setup'        => -> { scenario_setup },
         'join_cluster'          => -> { join_existing_cluster },
@@ -163,17 +175,18 @@ module Yast
       help = @config.scenarios_help
       SAPHAGUI.list_selection(
         "Scenario selection for #{@config.product_name}",
-        "An #{@config.product_name} installation was detected. Select one of the high-avaliability scenarios from the list below:",
+        "An #{@config.product_name} installation was detected. Select one of the high-avaliability "\
+        "scenarios from the list below:",
         scenarios,
         help,
         false,
         true
-        )
+      )
       selection = UI.UserInput()
       if selection == :next
         begin
           @config.scenario_name = UI.QueryWidget(:selection_box, :Value)
-        rescue ScenarioNotFoundException => e
+        rescue ScenarioNotFoundException
           return :unknown
         end
       end
@@ -184,14 +197,14 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SAPHAGUI.richt_text(
         'Product not supported',
-        SAPHAHelpers.instance.load_html_help('help_product_not_found.html'),
-        SAPHAHelpers.instance.load_html_help('help_product_not_found.html'),
+        SAPHAHelpers.instance.load_help('help_product_not_found.html'),
+        SAPHAHelpers.instance.load_help('help_product_not_found.html'),
         false,
         false
       )
       log.error("No HA scenarios found for product #{@product_name}")
       UI.UserInput()
-      return :abort
+      :abort
     end
 
     def scenarios_not_found
@@ -205,7 +218,7 @@ module Yast
       )
       log.error("No HA scenarios found for product #{@product_name}")
       UI.UserInput()
-      return :abort
+      :abort
     end    
 
     def scenario_setup
@@ -223,15 +236,6 @@ module Yast
     def general_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SetupSummaryPage.new(@config).run
-    end
-
-    def configure_components
-      log.debug "--- called #{self.class}.#{__callee__} ---"
-      SAPHAGUI.stub(
-        "Components Configuration",
-        'Here you can configure the components of the installation.',
-      )
-      UI.UserInput()
     end
 
     def configure_members

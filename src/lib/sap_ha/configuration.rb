@@ -1,3 +1,24 @@
+# encoding: utf-8
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Module's configuration
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'erb'
 require 'yaml'
@@ -16,21 +37,22 @@ module Yast
   class ScenarioNotFoundException < Exception
   end
 
-  # Scenario Configuration class
+  # Module's configuration
   class ScenarioConfiguration
-    attr_reader   :product_id,
-                  :scenario_name
+    # TODO: rename the class
+    attr_reader :product_id,
+      :scenario_name
     attr_accessor :debug,
-                  :no_validators,
-                  :product_name,
-                  :product,
-                  :scenario,
-                  :scenario_summary,
-                  :cluster_members,
-                  :communication_layer,
-                  :stonith,
-                  :watchdog,
-                  :hana
+      :no_validators,
+      :product_name,
+      :product,
+      :scenario,
+      :scenario_summary,
+      :cluster_members,
+      :communication_layer,
+      :stonith,
+      :watchdog,
+      :hana
 
     include Yast::Logger
     include Yast::I18n
@@ -52,7 +74,7 @@ module Yast
       @hana = HANAConfiguration.new
     end
 
-    # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found in the YAML file
+    # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
     # @param [String] value product ID
     def product_id=(value)
       @product_id = value
@@ -64,7 +86,7 @@ module Yast
       @product_name = @product['string_name']
     end
 
-    # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found in the YAML file
+    # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found
     # @param [String] value scenario name
     def scenario_name=(value)
       log.info "Selected scenario is '#{value}' for product '#{@product_name}'"
@@ -92,7 +114,7 @@ module Yast
       case @product_id # TODO: product-specific setups
       when "HANA"
         configs << :@hana
-      when "NW" 
+      when "NW"
         configs << :@nw
       end
       configs.map do |config|
@@ -107,9 +129,7 @@ module Yast
 
     # Load scenarios from the YAML configuration file
     def load_scenarios
-      # TODO: check the file path
-      YAML.load_file('data/scenarios.yaml')
+      YAML.load_file(SAPHAHelpers.instance.data_file_path('scenarios.yaml'))
     end
-
   end # class ScenarioConfiguration
 end # module Yast
