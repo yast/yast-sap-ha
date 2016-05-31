@@ -22,9 +22,6 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
-Yast.import 'IP'
-Yast.import 'Hostname'
-Yast.import 'Report'
 
 module Yast
   # HANA configuration page
@@ -67,7 +64,7 @@ module Yast
               )
             )
         ),
-        '',   # TODO: load help
+        SAPHAHelpers.instance.load_help('help_hana.html'),
         true,
         true
       )

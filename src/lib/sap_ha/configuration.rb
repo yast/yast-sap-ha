@@ -28,6 +28,7 @@ require 'sap_ha_configuration/communication_layer.rb'
 require 'sap_ha_configuration/stonith.rb'
 require 'sap_ha_configuration/watchdog.rb'
 require 'sap_ha_configuration/hana.rb'
+require 'sap_ha_configuration/ntp.rb'
 
 module Yast
   # Exceptions
@@ -42,7 +43,8 @@ module Yast
     # TODO: rename the class
     attr_reader :product_id,
       :scenario_name
-    attr_accessor :debug,
+    attr_accessor :role,
+      :debug,
       :no_validators,
       :product_name,
       :product,
@@ -52,12 +54,14 @@ module Yast
       :communication_layer,
       :stonith,
       :watchdog,
-      :hana
+      :hana,
+      :ntp
 
     include Yast::Logger
     include Yast::I18n
 
     def initialize
+      @role = :master
       @debug = false
       @no_validators = false
       @product_id = nil
@@ -72,6 +76,7 @@ module Yast
       @stonith = StonithConfiguration.new
       @watchdog = WatchdogConfiguration.new
       @hana = HANAConfiguration.new
+      @ntp = NTPConfiguration.new
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -123,6 +128,25 @@ module Yast
         next if conf.nil?
         conf.configured?
       end.all?
+    end
+
+    # Dump this object to a YAML representation
+    # @param [Boolean] slave change the 
+    def dump_configuration_to_s(slave = false)
+      # TODO: the proposals are also kept in this way of duplicating...
+      old_role = @role
+      @role = :slave if slave
+      repr = YAML.dump self
+      @role = old_role
+      repr
+    end
+
+    # Dump this object to a YAML representation
+    # @param [Boolean] slave change the 
+    def dump_configuration_to_file(path, slave = false)
+      repr = dump_configuration_to_s(slave)
+      File.open(path, 'wb') { |fh| fh.write(repr) }
+      nil
     end
 
     private

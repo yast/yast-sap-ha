@@ -1,12 +1,21 @@
-<h2>Cluster Communication Layer</h2>
-This step tunes the cluster's communication layer.
-<br><br>
-<b>Transport mode</b> defines the transport mode of the corosync messaging layer. Unicast (default) is preferred in most of the configurations.
-<br><br>
-<b>Number of rings</b>. This parameter allows you to set more than one communication rings for redundancy. It is highly recommended to have at least 2 rings. For more information, refer to the SUSE High Availability Guide, section 3.5.2 <a href="https://www.suse.com/documentation/sle_ha/book_sleha/data/sec_ha_installation_setup_manual.html#sec_ha_installation_setup_channels">"Defining the Communication Channels"</a>.
-<br><br>
-For every ring a binding address and a port should be specified. If you use Multicast transport mode, one multicast address has to be provided per each ring.
-<br><br>
-<b>Cluster name</b> is the internal name of the cluster.
-<br><br>
-<b>Expected votes</b> is the parameter defining the quorum of the cluster.
+<html>
+    <h2>Cluster Communication Layer</h2>
+    <p>This step tunes the cluster's communication layer.</p>
+    <p>
+        <b>Transport mode</b> defines the transport mode of the corosync messaging layer.
+        Unicast (default) is preferred in most of the configurations.
+    </p>
+    <p>
+        <b>Number of rings</b>. This parameter allows you to set more than one communication rings
+        for redundancy. It is highly recommended to have at least 2 rings. For more information,
+        refer to the SUSE High Availability Guide, section 3.5.2 <a href="https://www.suse.com/documentation/sle_ha/book_sleha/data/sec_ha_installation_setup_manual.html#sec_ha_installation_setup_channels">
+        "Defining the Communication Channels"</a>.
+    </p>
+    <p>
+        For every ring a binding address and a port should be specified.
+        If you use Multicast transport mode, one multicast address has to be 
+        provided per each ring.
+    </p>
+    <p><b>Cluster name</b> is the internal name of the cluster.</p>
+    <p><b>Expected votes</b> is the parameter defining the quorum of the cluster.</p>
+</html>

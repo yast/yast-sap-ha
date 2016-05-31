@@ -18,14 +18,14 @@
 
 <br>
 
-<table border="1" cellpadding="5">
+<table border="0" cellpadding="7">
     <tr>
         <td>Overall status:</td>
         <td>
             <% if !@config.can_install? %>
-               <%= "<font color=\"red\">Configuration is incomplete.</font>" %>
+               <%= '<font color="red">Configuration is incomplete.</font>' %>
             <% else %>
-               <%= "<font color=\"green\">Configuration is complete.</font>" %>
+               <%= '<font color="green">Configuration is complete.</font>' %>
             <% end %>
         </td>
     </tr>
@@ -36,9 +36,9 @@
         <td>Communication layer:</td>
         <td>
             <% if !@config.communication_layer.configured? %>
-            <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
+            <%= '<font color="red">Not configured</font> (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join another cluster</a>)<br>' %>
+            <%= '<font color="green">Configured</font> (<a href="config_network">reconfigure</a> or <a href="join_cluster">join another cluster</a>)<br>' %>
             <%= @config.communication_layer.description %>
             <% end %>
         </td>
@@ -47,10 +47,21 @@
         <td>Cluster members:</td>
         <td>
             <% if !@config.cluster_members.configured? %>
-            <%= 'Not configured (<a href="config_members">configure</a>)' %>
+            <%= '<font color="red">Not configured</font> (<a href="config_members">configure</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="config_members">reconfigure</a>)<br>' %>
+            <%= '<font color="green">Configured</font> (<a href="config_members">reconfigure</a>)<br>' %>
             <%= @config.cluster_members.description %>
+            <% end %>
+        </td>
+    </tr>
+    <tr>
+        <td>NTP Client:</td>
+        <td>
+            <% if !@config.ntp.configured? %>
+            <%= '<font color="red">Not configured</font> (<a href="ntp">configure</a>)' %>
+            <% else %>
+            <%= '<font color="green">Configured</font> (<a href="ntp">reconfigure</a>)<br>' %>
+            <%= @config.ntp.description %>
             <% end %>
         </td>
     </tr>
@@ -58,9 +69,9 @@
         <td>Fencing (STONITH):</td>
         <td>
             <% if !@config.stonith.configured? %>
-            <%= 'Not configured (<a href="fencing">configure</a>)' %>
+            <%= '<font color="red">Not configured</font> (<a href="fencing">configure</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="fencing">reconfigure</a>)<br>' %>
+            <%= '<font color="green">Configured</font> (<a href="fencing">reconfigure</a>)<br>' %>
             <%= @config.stonith.description %>
             <% end %>
         </td>
@@ -69,9 +80,9 @@
         <td>Watchdog:</td>
         <td>
             <% if !@config.watchdog.configured? %>
-            <%= 'Not configured (<a href="watchdog">configure</a>)' %>
+            <%= '<font color="red">Not configured</font> (<a href="watchdog">configure</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="watchdog">reconfigure</a>)<br>' %>
+            <%= '<font color="green">Configured</font> (<a href="watchdog">reconfigure</a>)<br>' %>
             <%= @config.watchdog.description %>
             <% end %>
         </td>
@@ -81,9 +92,9 @@
         <td>HANA configuration:</td>
         <td>
             <% if !@config.hana.configured? %>
-            <%= 'Not configured (<a href="hana">configure</a>)' %>
+            <%= '<font color="red">Not configured</font> (<a href="hana">configure</a>)' %>
             <% else %>
-            <%= 'Configured (<a href="hana">reconfigure</a>)<br>' %>
+            <%= '<font color="green">Configured</font> (<a href="hana">reconfigure</a>)<br>' %>
             <%= @config.hana.description %>
             <% end %>
         </td>

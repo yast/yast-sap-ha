@@ -23,8 +23,6 @@ require 'sap_ha_wizard/base_wizard_page'
 require 'sap_ha_system/ssh'
 require 'sap_ha_system/network'
 
-Yast.import 'Popup'
-
 module Yast
   # Page for joining an existing cluster
   class JoinClusterPage < BaseWizardPage
@@ -40,7 +38,7 @@ module Yast
             PushButton(Id(:join), 'Join Cluster')
           )
         ),
-        '',
+        SAPHAHelpers.instance.load_help('help_join_cluster.html'),
         true,
         true
       )

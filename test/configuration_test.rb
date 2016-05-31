@@ -16,43 +16,12 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Base configuration class
+# Summary: SUSE High Availability Setup for SAP Products: test helper
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/exceptions'
+require_relative 'test_helper'
+require 'sap_ha/configuration'
 
-module Yast
-  # Base class for component configuration
-  class BaseComponentConfiguration
-    include Yast::Logger
-    def initialize
-      @storage = {}
-    end
-
-    def print
-      inspect
-    end
-
-    # Check if the user changed the configuration
-    def configured?
-      false
-    end
-
-    # Get an HTML description of the settings
-    def description
-      ""
-    end
-
-    # Check the settings for consistency
-    def consistent?
-      false
-    end
-
-    def unsafe_import(hash)
-      log.debug "--- #{self.class}.#{__callee__}: #{hash} ---"
-      log.error "--- unsafe_import called ---"
-      hash.each { |k, v| instance_variable_set("@#{k}".to_sym, v) }
-    end
-  end
+describe Yast::ScenarioConfiguration do
+  
 end

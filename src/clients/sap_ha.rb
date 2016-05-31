@@ -28,13 +28,17 @@ require 'sap_ha_wizard/join_cluster_page'
 require 'sap_ha_wizard/fencing_page'
 require 'sap_ha_wizard/watchdog_page'
 require 'sap_ha_wizard/hana_page'
+require 'sap_ha_wizard/ntp_page'
 require 'sap_ha_wizard/summary_page'
+require 'sap_ha_wizard/gui_installation_page'
 require 'sap_ha/configuration'
 
 # YaST module
 module Yast
   # Main client class
   class SAPHAClass < Client
+    attr_reader :sequence
+
     Yast.import 'UI'
     Yast.import 'Wizard'
     Yast.import 'Sequencer'
@@ -47,11 +51,7 @@ module Yast
       @config.debug = WFM.Args.include? 'debug'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
       @bogus = WFM.Args.include?('bogus')
-    end
-
-    def main
-      textdomain 'sap-ha'
-
+      Wizard.SetTitleIcon('yast-heartbeat')
       @sequence = {
         "ws_start"              => "product_check",
         "product_check"         =>  {
@@ -63,37 +63,42 @@ module Yast
         },
         "scenario_selection"    => {
           abort:             :abort,
+          cancel:            :abort,
           next:              "configure_network",
           unknown:           "product_not_supported",
           summary:           "general_setup"
         },
         "general_setup"         => {
           abort:             :abort,
-          next:              "scenario_setup",
+          cancel:            :abort,
           config_members:    "configure_members",
           config_network:    "configure_network",
           join_cluster:      "join_cluster",
           fencing:           "fencing",
           watchdog:          "watchdog",
           hana:              "hana",
-          install:           "installation",
+          ntp:               "ntp",
+          next:              "installation",
           back:              :back
         },
         "scenario_setup"        => {
           abort:             :abort,
+          cancel:            :abort,
           next:              :next,
           summary:           "general_setup"
         },
         "configure_members"     => {
-          next:              "fencing",
+          next:              "ntp",
           back:              :back,
           abort:             :abort,
+          cancel:            :abort,
           summary:           "general_setup"
         },
         "configure_network"     => {
           next:              "configure_members",
           back:              :back,
           abort:             :abort,
+          cancel:            :abort,
           summary:           "general_setup",
           join_cluster:      "join_cluster"
         },
@@ -101,36 +106,44 @@ module Yast
           next:              "configure_members",
           back:              :back,
           abort:             :abort,
+          cancel:            :abort,
           summary:           "general_setup"
         },
         "fencing"               => {
           next:              "watchdog",
           back:              :back,
           abort:             :abort,
+          cancel:            :abort,
           summary:           "general_setup"
         },
         "watchdog"              => {
           next:              "hana",
           back:              :back,
           abort:             :abort,
+          cancel:            :abort,
           summary:           "general_setup"
         },
         "hana"                  => {
           next:              "general_setup",
           back:              :back,
           abort:             :abort,
+          cancel:            :abort,
           summary:           "general_setup"
+        },
+        "ntp"                   => {
+          next:              "fencing",
+          back:              :back,
+          abort:             :abort,
+          cancel:            :abort
         },
         "debug_run"             => {
           general_setup:     "general_setup"
         },
         "installation"          => {
-          abort:             :abort
+          abort:             :abort,
+          cancel:            :abort
         }
       }
-
-      @sequence["ws_start"] = "debug_run" if @config.debug
-
       @aliases = {
         'product_check'         => -> { product_check },
         'scenario_selection'    => -> { scenario_selection },
@@ -144,9 +157,14 @@ module Yast
         'watchdog'              => -> { watchdog },
         'hana'                  => -> { hana_configuration },
         'debug_run'             => -> { debug_run },
-        'installation'          => -> { run_installation }
+        'installation'          => -> { run_installation },
+        'ntp'                   => -> { configure_ntp }
       }
+    end
 
+    def main
+      textdomain 'sap-ha'
+      @sequence["ws_start"] = "debug_run" if @config.debug
       Wizard.CreateDialog
       begin
         Sequencer.Run(@aliases, @sequence)
@@ -159,6 +177,8 @@ module Yast
     def product_check
       log.debug "--- called #{self.class}.#{__callee__} ---"
       # TODO: here we need to know what product we are installing
+      # SAPProducts.Read
+      # SAPProducts.Installed [{productID: 'HANA'...}...]
       begin
         @config.product_id = "HANA"
       rescue ProductNotFoundException => e
@@ -190,6 +210,7 @@ module Yast
           return :unknown
         end
       end
+      set_bogus_values if @bogus
       selection
     end
 
@@ -233,9 +254,13 @@ module Yast
       UI.UserInput()
     end
 
+    # TODO: rename to configuration_overview
     def general_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SetupSummaryPage.new(@config).run
+      ret = SetupSummaryPage.new(@config).run
+      log.error "--- #{self.class}.#{__callee__}: return=#{ret} ---"
+      return :abort if ret == :back # TODO: find out why it returns "back"
+      ret
     end
 
     def configure_members
@@ -263,9 +288,25 @@ module Yast
       WatchdogConfigurationPage.new(@config).run
     end
 
+    # TODO: rename to configure_hana
     def hana_configuration
       log.debug "--- called #{self.class}.#{__callee__} ---"
       HANAConfigurationPage.new(@config).run
+    end
+
+    def configure_ntp
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      if @config.ntp.configured?
+        log.error "--- #{self.class}.#{__callee__}: skipping configuration: NTP is configured ---"
+        return :next
+      else
+        return NTPConfigurationPage.new(@config).run
+      end
+    end
+
+    def run_installation
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      GUIInstallationPage.new(@config).run
     end
 
     def debug_run
@@ -286,14 +327,14 @@ module Yast
         expected_votes: 2,
         rings: {
           ring1: {
-            address:  '192.168.100.254',
-            port:     '1233',
+            address:  '192.168.103.0',
+            port:     '5999',
             id:       1,
             mcast:    ''
           },
           ring2: {
-            address:  '192.168.102.254',
-            port:     '1233',
+            address:  '192.168.101.0',
+            port:     '5999',
             id:       2,
             mcast:    ''
           }
@@ -305,26 +346,26 @@ module Yast
         nodes: {
           node1: {
             host_name:  "hana01",
-            ip_ring1:   "192.168.100.100",
-            ip_ring2:   "192.168.102.100",
+            ip_ring1:   "192.168.101.21",
+            ip_ring2:   "192.168.103.21",
             ip_ring3:   "",
             node_id:    '1'
           },
           node2: {
             host_name:  "hana02",
-            ip_ring1:   "192.168.100.105",
-            ip_ring2:   "192.168.102.105",
+            ip_ring1:   "192.168.101.22",
+            ip_ring2:   "192.168.103.23",
             ip_ring3:   "",
             node_id:    '2'
           }
         }
       )
-    @config.stonith.unsafe_import(devices: [{name: '/dev/sda', type: 'disk', uuid: ''}])
+    @config.stonith.unsafe_import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
     @config.watchdog.unsafe_import(to_install: ['softdog'])
     @config.hana.unsafe_import(
       system_id: 'XXX',
       instance:  '05',
-      virtual_ip: '192.168.110.151'
+      virtual_ip: '192.168.101.100'
     )
     end
   end

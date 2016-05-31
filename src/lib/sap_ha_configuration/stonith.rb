@@ -57,7 +57,14 @@ module Yast
     end
 
     def rm_from_config(dev_path)
-      # TODO
+      @devices.delete_if { |e| e[:name] == dev_path }
+    end
+
+    def rm_from_config_by_id(dev_id)
+      dev = @devices.each_with_index.find { |e, ix| ix == dev_id }
+      return if dev.empty?
+      log.error "--- called #{self.class}.#{__callee__} dev=#{dev} ---"
+      rm_from_config(dev[0][:name])
     end
 
     private

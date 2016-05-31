@@ -23,7 +23,6 @@ require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
 require 'sap_ha/semantic_checks'
-Yast.import 'Report'
 
 module Yast
   # Cluster Nodes Configuration Page
@@ -34,7 +33,7 @@ module Yast
     end
 
     def set_contents
-      # TODO: allow adding nodes if !@my_model.fixed_number_of_nodes?
+      # TODO: NW allow adding nodes if !@my_model.fixed_number_of_nodes?
       super
       Wizard.SetContents(
         _('Cluster Members'),
@@ -53,7 +52,7 @@ module Yast
             )
           )
         ),
-        '',
+        SAPHAHelpers.instance.load_help('help_cluster_members.html'),
         true,
         true
       )
@@ -62,7 +61,31 @@ module Yast
     def can_go_next
       return true if @model.no_validators
       flag = @my_model.nodes.all? { |_, v| node_configuration_validators(v, false) }
-      Report.Error("Configuration is invalid. Please review the parameters.") unless flag
+      # check SSH connectivity
+      ips = @my_model.other_nodes
+      ips.each do |ip|
+        begin
+          SSH.instance.check_ssh(ip)
+        rescue SSHAuthException => e
+          log.error e.message
+          password = password_prompt("Password is required for node #{ip}:")
+          begin
+            SSH.instance.check_ssh_password(ip, password)
+          rescue SSHAuthException => e
+            Popup.Error(e.message)
+            return false
+          rescue SSHException => e
+            Popup.Error(e.message)
+            return false
+          else
+            SSH.instance.copy_keys_to(ip, password)
+          end
+        rescue SSHException => e
+          Popup.Error(e.message)
+          return false
+        end
+      end
+      dialog_cannot_continue unless flag
       flag
     end
 

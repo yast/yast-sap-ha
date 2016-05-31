@@ -22,9 +22,6 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
-Yast.import 'IP'
-Yast.import 'Hostname'
-Yast.import 'Report'
 
 module Yast
   # Communication Layer Configuration Page
@@ -81,9 +78,11 @@ module Yast
     def can_go_next
       super
       return true if @model.no_validators
-      return false unless @my_model.configured?
-      # if !@model.cluster_members.configured? &&
-      #     @my_model.all_rings.all? { |_, r| !r[:address].empty? }
+      unless @my_model.configured?
+        dialog_cannot_continue
+        return false
+      end
+      # TODO: this is to set the IP addresses. Try to move it to an appropriate place
       if !@model.cluster_members.configured? && @my_model.configured?
         @my_model.all_rings.each do |ring_id, ring|
           @model.cluster_members.nodes.each do |node_id, values|

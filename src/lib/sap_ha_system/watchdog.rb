@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'open3'
+require_relative 'shell_commands'
 Yast.import 'Kernel'
 
 module Yast
@@ -31,6 +32,7 @@ module Yast
   class Watchdog
     include Singleton
     include Yast::Logger
+    include ShellCommands
         
     MODULES_PATH = '/usr/src/linux/drivers/watchdog'.freeze
 
@@ -108,6 +110,14 @@ module Yast
       mods = []
       Kernel.modules_to_load.each { |_, v| mods.concat(v) }
       mods
+    end
+
+    def load(module_name)
+      rc = exec_status_l('/usr/sbin/modprobe', module_name)
+      unless rc.exitstatus == 0
+        log.error "Could not load module #{module_name}. modprobe returned rc=#{rc}"
+        raise WatchdogException, "Could not load module #{module_name}."
+      end
     end
   
     private

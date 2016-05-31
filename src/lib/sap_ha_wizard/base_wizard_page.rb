@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'sap_ha/helpers'
+require 'sap_ha/exceptions'
 
 module Yast
   # Base Wizard page class
@@ -37,6 +38,7 @@ module Yast
     def initialize(model)
       log.debug "--- called #{self.class}.#{__callee__} ---"
       @model = model
+      @my_model = nil
     end
 
     # Set the Wizard's contents, help and the back/next buttons
@@ -78,9 +80,9 @@ module Yast
         input = Wizard.UserInput
         log.debug "--- #{self.class}.#{__callee__} ---"
         case input
-        # TODO: return only :abort and :back from here. If the page needs anything else
+        # TODO: return only :abort, :cancel and :back from here. If the page needs anything else
         # it should redefine the main_loop
-        when :abort, :back, :summary, :join_cluster
+        when :abort, :back, :cancel, :summary, :join_cluster
           return input
         when :next
           return :next if can_go_next
@@ -221,8 +223,8 @@ module Yast
         UI.CloseDialog
         return nil
       when :ok
+        pass = UI.QueryWidget(Id(:password), :Value)
         UI.CloseDialog
-        pass = value(:password)
         return nil if pass.empty?
         pass
       end
@@ -233,6 +235,14 @@ module Yast
       html_str << error_list.map { |e| "<li>#{e}</li>" }.join("\n")
       html_str << "</ul>"
       Popup.LongText("Invalid input", RichText(html_str), 60, 17)
+    end
+
+    def dialog_cannot_continue(message=nil)
+      unless message
+        message = "<p>Configuration is invalid or incomplete and the Wizard 
+        cannot proceed to the next step.</p><p>Please review the parameters.</p>"
+      end
+      Popup.LongText("Invalid input", RichText(message), 40, 5)
     end
   end
 end

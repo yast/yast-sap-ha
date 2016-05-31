@@ -24,8 +24,8 @@ require 'sap_ha/helpers'
 
 module Yast
   # Installation Summary page
-  # TODO: rename
-  class SetupSummaryPage < BaseWizardPage
+  # TODO: THIS IS the SUMMARY. The other one is just the configuration overview
+  class SetupLogPage < BaseWizardPage
     attr_accessor :model
 
     def initialize(model)
@@ -34,10 +34,15 @@ module Yast
 
     def set_contents
       super
+      text =  if UI.TextMode
+                SAPHAHelpers.instance.render_template('setup_summary_ncurses.erb', binding)
+              else
+                SAPHAHelpers.instance.render_template('setup_summary_gui.erb', binding)
+              end        
+
       base_rich_text(
         "High-Availability Setup Summary",
-        UI.TextMode ? SAPHAHelpers.instance.render_template('setup_summary_ncurses.erb', binding) :
-        SAPHAHelpers.instance.render_template('setup_summary_gui.erb', binding),
+        text,
         SAPHAHelpers.instance.load_help('setup_summary_help.html'),
         true,
         true
@@ -52,7 +57,7 @@ module Yast
       else
         Wizard.DisableNextButton
       end
-      Wizard.SetNextButton(:next, "&Install")
+      Wizard.SetNextButton(:install, "&Install")
     end
 
     def can_go_next
@@ -62,10 +67,9 @@ module Yast
     protected
 
     def main_loop
-      # TODO: the 'x' button of the window doesn't work here...
       log.debug "--- #{self.class}.#{__callee__} ---"
       input = Wizard.UserInput
-      log.error "--- #{self.class}.#{__callee__}: input is #{input.inspect} ---"
+      log.debug "--- #{self.class}.#{__callee__}: input is #{input.inspect} ---"
       Wizard.SetNextButton(:summary, "&Summary") unless input == :next
       input.to_sym
     end

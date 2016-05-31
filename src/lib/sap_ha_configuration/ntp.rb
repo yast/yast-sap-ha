@@ -16,52 +16,48 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: HANA configuration
+# Summary: SUSE High Availability Setup for SAP Products: Cluster members configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require 'sap_ha_system/watchdog'
+require 'erb'
+require 'socket'
 require_relative 'base_component_configuration.rb'
 
+Yast.import 'NtpClient'
+
+
 module Yast
-  # HANA configuration
-  class HANAConfiguration < BaseComponentConfiguration
-    
-    attr_accessor :system_id,
-      :instance,
-      :virtual_ip,
-      :prefer_takeover,
-      :auto_register
-
-    include Yast::UIShortcuts
-
+  # Cluster members configuration
+  class NTPConfiguration < BaseComponentConfiguration
+    attr_reader :used_servers
     def initialize
-      @system_id = 'NDB' # TODO
-      @instance = '00'
-      @virtual_ip = ''
-      @prefer_takeover = true
-      @auto_register = false
+      log.info "--- #{self.class}.#{__callee__} ---"
+      read_configuration
+    end
+
+    def read_configuration
+      log.info "--- #{self.class}.#{__callee__} ---"
+      NtpClient.Read
+      @config = NtpClient.Export
+      @ntpd_cron = NtpClient.ReadSynchronization
+      @used_servers = NtpClient.GetUsedNtpServers
     end
 
     def configured?
-      !@virtual_ip.empty?
+      (start_at_boot? || @ntpd_cron) && !@used_servers.empty?
     end
 
     def description
-      "&nbsp; System ID: #{@system_id}, Instance: #{@instance}.<br>
-      &nbsp; Virtual IP: #{@virtual_ip}.<br>
-      &nbsp; Prefer takeover: #{@prefer_takeover}.<br>
-      &nbsp; Automatic Registration: #{@auto_register}.
-      "
+      s = @used_servers.join(', ')
+      "&nbsp;Synchronize with servers: #{s}.<br>&nbsp;Start at boot: #{start_at_boot?}."
     end
 
-    def add_to_config(wdt_module)
-      @to_install << wdt_module
-      @installed = @system.installed_watchdogs.concat(@to_install)
-    end
-
-    def combo_items
-      @proposals
+    def start_at_boot?
+      @config["start_at_boot"]
     end
   end
 end
+
+
+# require 'yast'; Yast.import 'NtpClient'; Yast::NtpClient.Read; Yast::NtpClient.GetUsedNtpServers

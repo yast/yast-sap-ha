@@ -22,15 +22,13 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
-Yast.import 'IP'
-Yast.import 'Hostname'
-Yast.import 'Report'
 
 module Yast
   # Fencing Mechanism Configuration Page
   class FencingConfigurationPage < BaseWizardPage
     def initialize(model)
       super(model)
+      @my_model = model.stonith
     end
 
     def set_contents
@@ -64,7 +62,7 @@ module Yast
             Label(_("Note that all the data on the selected devices WILL BE DESTROYED."))
           )
         ),
-        '',
+        SAPHAHelpers.instance.load_help('help_fencing.html'),
         true,
         true
       )
@@ -78,10 +76,7 @@ module Yast
 
     def refresh_view
       super
-      UI.ChangeWidget(Id(:sbd_dev_list_table), :Items, @model.stonith.table_items)
-      # entries = @model.conf_nodes.table_items.map { |entry| Item(Id(entry[0]), *entry[1..-1]) }
-      # log.info "Table items: #{entries.inspect}"
-      # UI.ChangeWidget(Id(:ring_definition_table), :Items, entries)
+      UI.ChangeWidget(Id(:sbd_dev_list_table), :Items, @my_model.table_items)
     end
 
     def handle_user_input(input)
@@ -89,8 +84,9 @@ module Yast
       when :add_sbd_device
         sbd_dev_configuration
       when :remove_sbd_device
-        item_id = UI.QueryWidget(Id(:sbd_dev_list_table), :Value)
-        log.debug "--- removing item #{item_id} from the table of SBD devices"
+        item_id = UI.QueryWidget(Id(:sbd_dev_list_table), :CurrentItem)
+        @my_model.rm_from_config_by_id(item_id)
+        refresh_view
       else
         super
       end
@@ -120,7 +116,7 @@ module Yast
         case ui
         when :ok
           v = UI.QueryWidget(Id(:sbd_combo), :Value)
-          @model.stonith.add_to_config(v)
+          @my_model.add_to_config(v)
           UI.CloseDialog
           refresh_view
           break
@@ -139,7 +135,7 @@ module Yast
       v = UI.QueryWidget(Id(:sbd_combo), :Value)
       log.info "--- combo event: value #{v} ---"
       log.info "--- values: #{@model.stonith.proposals} ---"
-      item = @model.stonith.proposals.find { |e| e[:name] == v }
+      item = @my_model.proposals.find { |e| e[:name] == v }
       UI.ChangeWidget(Id(:sbd_name), :Value, item[:name])
       UI.ChangeWidget(Id(:sbd_type), :Value, item[:type])
       UI.ChangeWidget(Id(:sbd_uuid), :Value, item[:uuid] || "")

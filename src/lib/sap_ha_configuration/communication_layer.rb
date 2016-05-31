@@ -105,7 +105,14 @@ module Yast
     end
 
     def configured?
-      @rings.all? { |_, v| !v[:address].empty? && !v[:port].empty? }
+      flag = true
+      flag &= @rings.length == @number_of_rings
+      # TODO: shall we really check the semantics of the values here?
+      flag = @rings.all? { |_, v| !v[:address].empty? && !v[:port].empty? }
+      if @transport_mode == :multicast
+        flag &= @rings.all? { |_, v| !v[:mcast].empty? }
+      end
+      flag
     end
 
     def description

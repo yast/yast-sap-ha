@@ -21,7 +21,7 @@
 
 require 'yast'
 require 'open3'
-require_relative 'watchdog.rb'
+require_relative 'watchdog'
 
 Yast.import 'Service'
 
@@ -92,7 +92,7 @@ module Yast
     end
 
     def configure_firewall
-      # TODO:
+      # TODO: firewall configuration
       true
     end
 

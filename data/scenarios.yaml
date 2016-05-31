@@ -24,7 +24,7 @@
         site_name_primary: SINGAPORE
         site_name_secondary: NEWYORK
 
-      - name: Multi-tier/Chained
+      - name: Multi-tier (Chained)
         number_of_nodes: 2
         description: |
           <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between

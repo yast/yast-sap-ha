@@ -22,15 +22,13 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha_wizard/base_wizard_page'
-Yast.import 'IP'
-Yast.import 'Hostname'
-Yast.import 'Report'
 
 module Yast
   # Watchdog Configuration Page
   class WatchdogConfigurationPage < BaseWizardPage
     def initialize(model)
       super(model)
+      @my_model = model.watchdog
     end
 
     def set_contents
@@ -49,7 +47,7 @@ module Yast
             SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', [])
           )
         ),
-        '',
+        SAPHAHelpers.instance.load_help('help_watchdog.html'),
         true,
         true
       )
@@ -62,8 +60,8 @@ module Yast
 
     def refresh_view
       super
-      UI.ChangeWidget(Id(:configured_wd), :Items, @model.watchdog.installed)
-      UI.ChangeWidget(Id(:loaded_wd), :Items, @model.watchdog.loaded)
+      UI.ChangeWidget(Id(:configured_wd), :Items, @my_model.installed)
+      UI.ChangeWidget(Id(:loaded_wd), :Items, @my_model.loaded)
     end
 
     def handle_user_input(input)
@@ -71,11 +69,11 @@ module Yast
       when :add_wd
         to_add = wd_selection_popup
         return if to_add.nil?
-        @model.watchdog.add_to_config(to_add[:selected])
+        @my_model.add_to_config(to_add[:selected])
         refresh_view
       when :remove_wd
         to_remove = UI.QueryWidget(Id(:configured_wd), :CurrentItem)
-        @model.watchdog.remove_from_config(to_remove)
+        @my_model.remove_from_config(to_remove)
         refresh_view
       else
         super
@@ -88,7 +86,7 @@ module Yast
         "Select a module to configure",
         nil,
         MinHeight(10,
-          SelectionBox(Id(:selected), 'Available modules:', @model.watchdog.proposals))
+          SelectionBox(Id(:selected), 'Available modules:', @my_model.proposals))
       )
     end
   end

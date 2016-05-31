@@ -23,4 +23,8 @@ module Yast
   # Base exceptions
   class SAPHAException < StandardError
   end
+
+  # Invalid Input to the model
+  class InvalidInputException < SAPHAException
+  end
 end

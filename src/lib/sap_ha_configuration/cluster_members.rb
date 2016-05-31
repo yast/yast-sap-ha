@@ -21,8 +21,9 @@
 
 require 'yast'
 require 'erb'
+require 'socket'
 require_relative 'base_component_configuration.rb'
-require 'sap_ha/exceptions'
+
 Yast.import 'UI'
 
 module Yast
@@ -98,6 +99,17 @@ module Yast
 
     def remove_node(node_id)
       # TODO
+    end
+
+    # return IPs of the first ring for nodes other than current node
+    def other_nodes
+      my_ips = Socket.getifaddrs.select do |iface| 
+        iface.addr.ipv4? && !iface.addr.ip_address.start_with?("127.")
+      end.map{|iface| iface.addr.ip_address}
+      log.error "#{@nodes}"
+      ips = @nodes.map { |_, n| n[:ip_ring1] } - my_ips
+      raise ClusterMembersConfigurationException, "Empty IPs detected" if ips.any? { |e| e.empty? }
+      ips
     end
 
     def number_of_rings=(value)

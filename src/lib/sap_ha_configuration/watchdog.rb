@@ -75,5 +75,11 @@ module Yast
     def combo_items
       @proposals
     end
+
+    def apply_config
+      return false if !configured?
+      
+      true
+    end
   end
 end

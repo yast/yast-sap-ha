@@ -103,6 +103,10 @@ switch -exact -- $action {
         #     done'}
 
     }
+    copy-id {
+        set password [lindex $argv 2]
+        spawn ssh-copy-id root@$host
+    }
     default { 
         usage "Unknown action $action"
     }
@@ -147,7 +151,7 @@ while {1} {
             exit 54
         }
         eof {
-            if {$action eq "copy" || $action eq "check"} {
+            if {$action eq "copy" || $action eq "check" || $action eq "copy-id"} {
                 exit 0
             } else {
                 exit 55
