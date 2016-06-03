@@ -51,6 +51,13 @@ def init_config
     config
 end
 
+def rpc
+    require "xmlrpc/client"
+    XMLRPC::Client.new("192.168.103.21", "/RPC2", 8080)
+end
+
+s = init_config.stonith
+
 binding.pry
 
 # config.can_install?

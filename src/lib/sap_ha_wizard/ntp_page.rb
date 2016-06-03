@@ -69,10 +69,9 @@ module Yast
       case input
       when :ntp_configure
         if WFM.ClientExists('ntp-client')
-          # Yast::Wizard.CreateDialog
           WFM.CallFunction('ntp-client', [])
-          # Yast::Wizard.CloseDialog
-          log.error 'RETURN FROM NTP-CLIENT'
+          # NTP Client rewrites the heading
+          Wizard.SetDialogTitle("SAP High-Availability")
         else
           Popup.Error('Could not find the yast-ntp-client module!')
           continue

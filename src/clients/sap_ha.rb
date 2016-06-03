@@ -166,6 +166,7 @@ module Yast
       textdomain 'sap-ha'
       @sequence["ws_start"] = "debug_run" if @config.debug
       Wizard.CreateDialog
+      Wizard.SetDialogTitle("SAP High-Availability")
       begin
         Sequencer.Run(@aliases, @sequence)
       ensure
@@ -296,12 +297,7 @@ module Yast
 
     def configure_ntp
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      if @config.ntp.configured?
-        log.error "--- #{self.class}.#{__callee__}: skipping configuration: NTP is configured ---"
-        return :next
-      else
-        return NTPConfigurationPage.new(@config).run
-      end
+      return NTPConfigurationPage.new(@config).run
     end
 
     def run_installation
@@ -360,7 +356,7 @@ module Yast
           }
         }
       )
-    @config.stonith.unsafe_import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
+    # @config.stonith.unsafe_import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
     @config.watchdog.unsafe_import(to_install: ['softdog'])
     @config.hana.unsafe_import(
       system_id: 'XXX',

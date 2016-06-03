@@ -20,6 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'erb'
+require 'tmpdir'
 
 module Yast
   # Common routines
@@ -31,11 +32,21 @@ module Yast
     
     def initialize
       @storage = {}
-      @data_path = if ENV['Y2DIR']
-                     'data/' # tests or local run
-                   else
-                     '/usr/share/YaST2/data/sap_ha/' # production
-                   end
+      if ENV['Y2DIR']  # tests or local run
+        @data_path = 'data/' 
+        @var_path = File.join(Dir.tmpdir, 'yast-sap-ha-tmp')
+        begin
+          Dir.mkdir(@var_path)
+        rescue Exception => e
+          log.debug "Cannot create the tmp_dir"
+          puts "craaap"
+          puts e.message
+        end
+      else  # production
+        @data_path = '/usr/share/YaST2/data/sap_ha' 
+        @var_path = '/var/lib/YaST/sap_ha'
+      end
+      
     end
 
     # Render an ERB template by its name
@@ -66,6 +77,10 @@ module Yast
     # Get the path to the file given its name
     def data_file_path(basename)
       File.join(@data_path, basename)
+    end
+
+    def var_file_path(basename)
+      File.join(@var_path, basename)
     end
 
     private

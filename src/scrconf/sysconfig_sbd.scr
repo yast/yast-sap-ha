@@ -1,0 +1,5 @@
+.sysconfig.sbd
+
+`ag_ini(
+		`SysConfigFile("/etc/sysconfig/sbd")
+	   )

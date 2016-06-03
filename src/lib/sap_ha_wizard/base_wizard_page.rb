@@ -56,6 +56,10 @@ module Yast
       true
     end
 
+    # Update the model's values from the user input
+    def update_model
+    end
+
     # Handle custom user input
     # @param input [Symbol]
     def handle_user_input(input)
@@ -85,6 +89,7 @@ module Yast
         when :abort, :back, :cancel, :summary, :join_cluster
           return input
         when :next
+          update_model
           return :next if can_go_next
         else
           handle_user_input(input)
@@ -99,6 +104,10 @@ module Yast
     # @param property [Symbol]
     def value(widget_id, property = :Value)
       UI.QueryWidget(Id(widget_id), property)
+    end
+
+    def set_value(widget_id, value, property = :Value)
+      UI.ChangeWidget(Id(widget_id), property, value)
     end
 
     # Base layout that wraps all the widgets
@@ -240,7 +249,7 @@ module Yast
     def dialog_cannot_continue(message=nil)
       unless message
         message = "<p>Configuration is invalid or incomplete and the Wizard 
-        cannot proceed to the next step.</p><p>Please review the parameters.</p>"
+        cannot proceed to the next step.</p><p>Please review the settings.</p>"
       end
       Popup.LongText("Invalid input", RichText(message), 40, 5)
     end

@@ -30,8 +30,9 @@ module Yast
       @storage = {}
     end
 
-    def print
-      inspect
+    # Read system parameters
+    # Should be only called on a master node
+    def read_system
     end
 
     # Check if the user changed the configuration
@@ -53,6 +54,11 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__}: #{hash} ---"
       log.error "--- unsafe_import called ---"
       hash.each { |k, v| instance_variable_set("@#{k}".to_sym, v) }
+    end
+
+    def apply(role)
+      log.error '#{self.class}.#{__callee__} is not implemented yet'
+      raise SAPHAException, '#{self.class}.#{__callee__} is not implemented yet'
     end
   end
 end

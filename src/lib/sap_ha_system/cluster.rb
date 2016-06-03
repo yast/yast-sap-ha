@@ -94,6 +94,9 @@ module Yast
     def configure_firewall
       # TODO: firewall configuration
       true
+
+      # iptables -I INPUT 1 -p tcp --dport 8080 -j ACCEPT
+
     end
 
     def configure_sshd

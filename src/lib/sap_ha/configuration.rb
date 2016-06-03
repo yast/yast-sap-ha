@@ -149,6 +149,10 @@ module Yast
       nil
     end
 
+    def propagate_configuration
+      
+    end
+
     private
 
     # Load scenarios from the YAML configuration file

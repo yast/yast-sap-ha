@@ -1,3 +1,11 @@
 <html>
     <h2>Fencing Mechanism</h2>
+    <h3>SBD</h3>
+    <p><b>Device list</b> specifies the devices to use for exchanging sbd messages monitoring.</p>
+    <p><b>SBD options</b> specifiy additional options for SBD start.</p>
+    <p><b>Delay SBD start</b> specifies whether the node should pause for "msgwait" seconds on boot.
+        This may be necessary if your cluster nodes reboot so fast that the 
+        other nodes are still waiting in the fence acknowledgement phase.
+        This is an occasional issue with virtual machines.
+    </p>
 </html>

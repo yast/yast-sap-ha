@@ -29,6 +29,7 @@ module Yast
     def initialize(model)
       super(model)
       @my_model = model.stonith
+      @my_model.read_system
     end
 
     def set_contents
@@ -58,7 +59,9 @@ module Yast
               PushButton(Id(:add_sbd_device), _('Add')),
               PushButton(Id(:remove_sbd_device), _('Remove'))
             ),
-            VSpacing(3),
+            InputField(Id(:sbd_options), 'SBD Options', ''),
+            ComboBox(Id(:sbd_delayed_start), 'Delay SBD Start', ['no', 'yes']),
+            VSpacing(1),
             Label(_("Note that all the data on the selected devices WILL BE DESTROYED."))
           )
         ),
@@ -71,12 +74,20 @@ module Yast
 
     def can_go_next
       return true if @model.debug
+      @my_model.write_sysconfig
       true
     end
 
     def refresh_view
       super
-      UI.ChangeWidget(Id(:sbd_dev_list_table), :Items, @my_model.table_items)
+      set_value(:sbd_dev_list_table, @my_model.table_items, :Items)
+      set_value(:sbd_options, @my_model.sbd_options)
+      set_value(:sbd_delayed_start, @my_model.sbd_delayed_start)
+    end
+
+    def update_model
+      @my_model.sbd_options = value(:sbd_options)
+      @my_model.sbd_delayed_start = value(:sbd_delayed_start)
     end
 
     def handle_user_input(input)
@@ -85,7 +96,7 @@ module Yast
         sbd_dev_configuration
       when :remove_sbd_device
         item_id = UI.QueryWidget(Id(:sbd_dev_list_table), :CurrentItem)
-        @my_model.rm_from_config_by_id(item_id)
+        @my_model.remove_device_by_id(item_id)
         refresh_view
       else
         super
@@ -116,7 +127,7 @@ module Yast
         case ui
         when :ok
           v = UI.QueryWidget(Id(:sbd_combo), :Value)
-          @my_model.add_to_config(v)
+          @my_model.add_device(v)
           UI.CloseDialog
           refresh_view
           break
