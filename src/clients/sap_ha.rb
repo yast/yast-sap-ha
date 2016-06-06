@@ -181,7 +181,7 @@ module Yast
       # SAPProducts.Read
       # SAPProducts.Installed [{productID: 'HANA'...}...]
       begin
-        @config.product_id = "HANA"
+        @config.set_product_id "HANA"
       rescue ProductNotFoundException => e
         log.error e.message
         return :unknown
@@ -206,7 +206,7 @@ module Yast
       selection = UI.UserInput()
       if selection == :next
         begin
-          @config.scenario_name = UI.QueryWidget(:selection_box, :Value)
+          @config.set_scenario_name UI.QueryWidget(:selection_box, :Value)
         rescue ScenarioNotFoundException
           return :unknown
         end
@@ -302,21 +302,24 @@ module Yast
 
     def run_installation
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      GUIInstallationPage.new(@config).run
+      ui = GUIInstallationPage.new
+      inst = SAPHAInstallation.new(@config, ui)
+      inst.run
+      :next
     end
 
     def debug_run
-      @config.product_id = "HANA"
-      @config.scenario_name = 'Performance-optimized'
+      @config.set_product_id "HANA"
+      @config.set_scenario_name 'Performance-optimized'
       set_bogus_values if @bogus
       :general_setup
     end
 
     def set_bogus_values
       log.info "BOGUS!"
-      @config.product_id = "HANA"
-      @config.scenario_name = 'Performance-optimized'
-      @config.communication_layer.unsafe_import(
+      @config.set_product_id "HANA"
+      @config.set_scenario_name 'Performance-optimized'
+      @config.communication_layer.import(
         number_of_rings: 2,
         transport_mode: :unicast,
         cluster_name: 'hana_sysrep',
@@ -336,7 +339,7 @@ module Yast
           }
         }
       )
-      @config.cluster_members.unsafe_import(
+      @config.cluster_members.import(
         number_of_rings: 2,
         number_of_nodes: 2,
         nodes: {
@@ -356,9 +359,9 @@ module Yast
           }
         }
       )
-    # @config.stonith.unsafe_import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
-    @config.watchdog.unsafe_import(to_install: ['softdog'])
-    @config.hana.unsafe_import(
+    # @config.stonith.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
+    @config.watchdog.import(to_install: ['softdog'])
+    @config.hana.import(
       system_id: 'XXX',
       instance:  '05',
       virtual_ip: '192.168.101.100'

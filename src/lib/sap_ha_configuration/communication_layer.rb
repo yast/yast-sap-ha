@@ -35,6 +35,8 @@ module Yast
     include Yast::Logger # TODO: rm
 
     def initialize(number_of_rings = 1)
+      super()
+      @screen_name = "Communication Layer"
       @rings = {}
       @transport_mode = :unicast
       @number_of_rings = number_of_rings
@@ -125,6 +127,10 @@ module Yast
         a << "&nbsp; Ring #{r[:id]}: #{r[:address]}:#{r[:port]}#{add}"
       end
       a.join('<br>')
+    end
+
+    def apply(role)
+      return false if !configured?
     end
   end
 end

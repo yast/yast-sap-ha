@@ -9,8 +9,8 @@ require 'sap_ha/semantic_checks'
 require_relative 'src/clients/sap_ha.rb'
 
 config = Yast::ScenarioConfiguration.new
-config.product_id = "HANA"
-config.scenario_name = "Performance-optimized"
+config.set_product_id "HANA"
+config.set_scenario_name "Performance-optimized"
 
 # ssh = Yast::SSH.instance
 
@@ -46,8 +46,8 @@ end
 
 def init_config
     config = Yast::ScenarioConfiguration.new
-    config.product_id = "HANA"
-    config.scenario_name = "Performance-optimized"
+    config.set_product_id "HANA"
+    config.set_scenario_name "Performance-optimized"
     config
 end
 
@@ -56,7 +56,11 @@ def rpc
     XMLRPC::Client.new("192.168.103.21", "/RPC2", 8080)
 end
 
-s = init_config.stonith
+c = init_config
+y = c.dump(true)
+s = rpc
+
+cc = Hash[c.all_configs.map { |config_name| [config_name, c.instance_variable_get(config_name).screen_name] }]
 
 binding.pry
 

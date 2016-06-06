@@ -31,14 +31,16 @@ module Yast
   end
 
   # Cluster members configuration
+  # TODO: think of merging this one and the CommLayer
   class ClusterMembersConfiguration < BaseComponentConfiguration
-    attr_reader :nodes, :number_of_rings
+    attr_reader :nodes, :number_of_rings, :number_of_nodes
 
     include Yast::UIShortcuts
     include Yast::Logger # TODO: rm
 
     def initialize(number_of_nodes = 0)
-      log.info "--- #{self.class}.#{__callee__} ---"
+      super()
+      @screen_name = "Cluster Members Configuration"
       @number_of_nodes = number_of_nodes
       @number_of_rings = 1
       @nodes = {}
@@ -112,9 +114,21 @@ module Yast
       ips
     end
 
+    def other_nodes_ext
+      others_ip = other_nodes
+      @nodes.map do |k, node|
+        next unless others_ip.include? node[:ip_ring1]
+        {hostname: node[:host_name], ip: node[:ip_ring1]}
+      end.compact
+    end
+
     def number_of_rings=(value)
       @number_of_rings = value
       log.info "--- #{self.class}.#{__callee__}: number_of_rings <- #{value} ---"
+    end
+
+    def apply(role)
+      return false if !configured?
     end
 
     private

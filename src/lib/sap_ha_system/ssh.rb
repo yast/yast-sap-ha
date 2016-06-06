@@ -22,6 +22,7 @@
 require 'yast'
 require 'fileutils'
 require 'tmpdir'
+require 'sap_ha/helpers'
 require_relative 'shell_commands.rb'
 
 module Yast
@@ -69,18 +70,21 @@ module Yast
       @user_pubkeys = Dir.glob(File.join(@ssh_user_dir, "id_{rsa,dsa,ecdsa,ed25519}.pub"))
     end
 
+    # Check if we can initiate an SSH connection to the host without a password
     def check_ssh(host)
       log.info "--- #{self.class}.#{__callee__} --- "
       stat = exec_status_l("/usr/bin/expect", "-f", @script_path, "check", host)
       fortune_teller(binding)
     end
 
+    # Check if we can initiate an SSH connection to the host using the specified password
     def check_ssh_password(host, password)
       log.info "--- #{self.class}.#{__callee__} --- "
       stat = exec_status_l("/usr/bin/expect", "-f", @script_path, "check", host, password)
       fortune_teller(binding)
     end
 
+    # Copy SSH keys from the host
     def copy_keys_from_(host, password, path)
       stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
         "copy", host, password, path.to_s)
@@ -105,6 +109,7 @@ module Yast
       reinit_identities
     end
 
+    # Copy own SSH identities to the specified host using the password
     def copy_keys_to(host, password)
       stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
         "copy-id", host, password)
@@ -171,9 +176,11 @@ module Yast
       end
     end
 
-    # def ssh_exec(host, timeout = 5, command)
-    #   exec_status_l
-    # end
+    def run_rpc_server(host)
+      # TODO: change the path
+      exec_status_l("ssh", "-f", "root@#{host}", "/urs/bin/ruby", 
+        "/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
+    end
 
     private
 

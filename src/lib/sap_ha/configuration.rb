@@ -42,7 +42,8 @@ module Yast
   class ScenarioConfiguration
     # TODO: rename the class
     attr_reader :product_id,
-      :scenario_name
+      :scenario_name,
+      :all_configs
     attr_accessor :role,
       :debug,
       :no_validators,
@@ -60,8 +61,8 @@ module Yast
     include Yast::Logger
     include Yast::I18n
 
-    def initialize
-      @role = :master
+    def initialize(role = :master)
+      @role = role
       @debug = false
       @no_validators = false
       @product_id = nil
@@ -77,11 +78,12 @@ module Yast
       @watchdog = WatchdogConfiguration.new
       @hana = HANAConfiguration.new
       @ntp = NTPConfiguration.new
+      @all_configs = [:@cluster_members, :@communication_layer, :@stonith, :@watchdog, :@ntp]
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
     # @param [String] value product ID
-    def product_id=(value)
+    def set_product_id(value)
       @product_id = value
       product = @yaml_configuration.find do |p|
         p['product'] && p['product'].fetch('id', '') == @product_id
@@ -89,11 +91,17 @@ module Yast
       raise ProductNotFoundException, "Could not find product1 with ID '#{value}'" unless product
       @product = product['product']
       @product_name = @product['string_name']
+      case @product_id
+      when "HANA"
+        @all_configs << :@hana
+      when "NW"
+        @all_configs << :@nw
+      end
     end
 
     # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found
     # @param [String] value scenario name
-    def scenario_name=(value)
+    def set_scenario_name(value)
       log.info "Selected scenario is '#{value}' for product '#{@product_name}'"
       @scenario_name = value
       @scenario = @product['scenarios'].find { |s| s['name'] == @scenario_name }
@@ -115,14 +123,7 @@ module Yast
 
     # Can the cluster be set up?
     def can_install?
-      configs = [:@cluster_members, :@communication_layer, :@stonith, :@watchdog]
-      case @product_id # TODO: product-specific setups
-      when "HANA"
-        configs << :@hana
-      when "NW"
-        configs << :@nw
-      end
-      configs.map do |config|
+      @all_configs.map do |config|
         next unless instance_variable_defined?(config)
         conf = instance_variable_get(config)
         next if conf.nil?
@@ -132,7 +133,7 @@ module Yast
 
     # Dump this object to a YAML representation
     # @param [Boolean] slave change the 
-    def dump_configuration_to_s(slave = false)
+    def dump(slave = false)
       # TODO: the proposals are also kept in this way of duplicating...
       old_role = @role
       @role = :slave if slave
@@ -141,16 +142,9 @@ module Yast
       repr
     end
 
-    # Dump this object to a YAML representation
-    # @param [Boolean] slave change the 
-    def dump_configuration_to_file(path, slave = false)
-      repr = dump_configuration_to_s(slave)
-      File.open(path, 'wb') { |fh| fh.write(repr) }
-      nil
-    end
+    def apply_configs
+      s_config = dump(true)
 
-    def propagate_configuration
-      
     end
 
     private

@@ -32,11 +32,12 @@ module Yast
     include Yast::UIShortcuts
 
     def initialize
-      @system = Watchdog.instance
-      @loaded = @system.loaded_watchdogs
-      @installed = @system.installed_watchdogs
+      super
+      @screen_name = "Watchdog Setup"
+      @loaded = Watchdog.instance.loaded_watchdogs
+      @installed = Watchdog.instance.installed_watchdogs
       @to_install = []
-      @proposals = @system.list_watchdogs
+      @proposals = Watchdog.instance.list_watchdogs
     end
 
     def configured?
@@ -45,40 +46,26 @@ module Yast
 
     def description
       s = []
-      unless @installed.empty?
-        wd = @installed.join(', ')
-        s << "&nbsp; Configured modules: #{wd}."
-      end
-      unless @loaded.empty?
-        wd = @loaded.join(', ')
-        s << "&nbsp; Already loaded modules: #{wd}."
-      end
-      unless @to_install.empty?
-        wd = @to_install.join(', ')
-        s << "&nbsp; Modules to install: #{wd}."
-      end
+      s << "&nbsp; Configured modules: #{@installed.join(', ')}." unless @installed.empty?
+      s << "&nbsp; Already loaded modules: #{@loaded.join(', ')}." unless @loaded.empty?
+      s << "&nbsp; Modules to install: #{@to_install.join(', ')}." unless @to_install.empty?
       return '' if s.empty?
       s.join('<br>')
     end
 
     def add_to_config(wdt_module)
       @to_install << wdt_module
-      @installed = @system.installed_watchdogs.concat(@to_install)
+      @installed = Watchdog.instance.installed_watchdogs.concat(@to_install)
     end
 
     def remove_from_config(wdt_module)
       return unless @to_install.include? wdt_module
       @to_install -= [wdt_module]
-      @installed = @system.installed_watchdogs.concat(@to_install)
+      @installed = Watchdog.instance.installed_watchdogs.concat(@to_install)
     end
 
-    def combo_items
-      @proposals
-    end
-
-    def apply_config
+    def apply(role)
       return false if !configured?
-      
       true
     end
   end

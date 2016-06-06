@@ -32,6 +32,8 @@ module Yast
   class NTPConfiguration < BaseComponentConfiguration
     attr_reader :used_servers
     def initialize
+      super
+      @screen_name = "NTP Configuration"
       log.info "--- #{self.class}.#{__callee__} ---"
       read_configuration
     end
@@ -55,6 +57,14 @@ module Yast
 
     def start_at_boot?
       @config["start_at_boot"]
+    end
+
+    def apply(role)
+      return false if !configured?
+      # Master has the configuration in place already
+      return true if role == :master
+      NtpClient.Import @config
+      NtpClient.Write
     end
   end
 end

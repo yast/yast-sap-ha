@@ -32,6 +32,8 @@ module Yast
     include Yast::UIShortcuts
 
     def initialize
+      super
+      @screen_name = "Fencing Mechanism"
       @devices = []
       @proposals = []
       @sbd_options = ""
@@ -120,6 +122,11 @@ module Yast
         Hash[[:name, :type, :uuid].zip(s.split)]
       end
       @proposals = blk.select { |d| d[:type] == "part" || d[:type] == "disk" }
+    end
+
+    def apply(role)
+      return false if !configured?
+      write_sysconfig
     end
   end
 end

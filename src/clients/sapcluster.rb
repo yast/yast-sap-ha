@@ -20,7 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require 'sap_ha_system/cluster'
+# require 'sap_ha_system/cluster'
 
 module Yast
   class SAPHAClusterClass < Client
@@ -28,7 +28,7 @@ module Yast
     Yast.import 'Progress'
 
     def main
-      cluster = SAPHACluster.instance
+      # cluster = SAPHACluster.instance
       Wizard.CreateDialog
       Progress.New(
         'SAP HA Configuration',
@@ -52,16 +52,16 @@ module Yast
       Progress.NextStage
       # SSH Server
       sleep(2)
-      Progress.NextStage if cluster.configure_sshd
+      Progress.NextStage
       # Firewall
       sleep(2)
-      Progress.NextStage if cluster.configure_firewall
+      Progress.NextStage
       # NTP
       sleep(2)
-      Progress.NextStage if cluster.ntp_configured?
+      Progress.NextStage
       # Watchdog
       sleep(2)
-      Progress.NextStage if cluster.watchdog_configured?
+      Progress.NextStage
       # Finish
       sleep(2)
       Wizard.CloseDialog

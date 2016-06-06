@@ -27,51 +27,76 @@ Yast.import 'Progress'
 
 module Yast
   # GUI Installation Page
-  class GUIInstallationPage < BaseWizardPage
-    def initialize(model)
-      super(model)
-      @installer = SAPHAInstallation.instance
-    end
+  class GUIInstallationPage # < BaseWizardPage
+    # def initialize(model)
+    #   super(model)
+    #   @installer = SAPHAInstallation.instance
+    # end
 
-    def set_contents
+    # def set_contents
+    #   Progress.New(
+    #     'SAP High-Availability Configuration',
+    #     '',
+    #     4,
+    #     [
+    #       'SSH Server',
+    #       'SUSEFirewall',
+    #       'NTP Service',
+    #       'Watchdog'
+    #       ],
+    #       [
+    #         _('Starting SSH Server'),
+    #         _('Adjusting SUSEFirewall rules'),
+    #         _('Checking the Network Time Protocol Service'),
+    #         _('Checking the Watchdog configuration')
+    #         ],
+    #         ""
+    #         )
+    # end
+
+    # def main_loop
+    #   Progress.NextStage
+    #   @installer.activate_sshd
+    #   # SSH Server
+    #   sleep(2)
+    #   Progress.NextStage
+    #   # Firewall
+    #   sleep(2)
+    #   Progress.NextStage
+    #   show_dialog_errors(["Stuff went wrong here", "And here is something suspicious"])
+    #   # NTP
+    #   sleep(2)
+    #   Progress.NextStage
+    #   # Watchdog
+    #   sleep(2)
+    #   Progress.NextStage
+    #   # Finish
+    #   sleep(2)
+    # end
+
+    def set(nodes, titles, tasks)
+      @tasks = tasks
       Progress.New(
-        'SAP HA Configuration',
+        'SAP High-Availability Setup',
         '',
-        4,
-        [
-          'SSH Server',
-          'SUSEFirewall',
-          'NTP Service',
-          'Watchdog'
-          ],
-          [
-            _('Starting SSH Server'),
-            _('Adjusting SUSEFirewall rules'),
-            _('Checking the Network Time Protocol Service'),
-            _('Checking the Watchdog configuration')
-            ],
-            ""
-            )
+        titles.length,
+        nodes,
+        titles,
+        '')
+      Progress.SubprogressType(:progress, @tasks.length)
+      Progress::SubprogressTitle("")
     end
 
-    def main_loop
+    def next_node
       Progress.NextStage
-      @installer.activate_sshd
-      # SSH Server
-      sleep(2)
-      Progress.NextStage
-      # Firewall
-      sleep(2)
-      Progress.NextStage
-      show_dialog_errors(["Stuff went wrong here", "And here is something suspicious"])
-      # NTP
-      sleep(2)
-      Progress.NextStage
-      # Watchdog
-      sleep(2)
-      Progress.NextStage
-      # Finish
-      sleep(2)
+      @task_no = -1
+      next_task
+    end
+
+    def next_task
+      @task_no += 1
+      Progress.SubprogressValue(@task_no)
+      Progress::SubprogressTitle(@tasks[@task_no])
     end
   end
 end

@@ -26,8 +26,12 @@ module Yast
   # Base class for component configuration
   class BaseComponentConfiguration
     include Yast::Logger
+
+    attr_reader :screen_name
+
     def initialize
-      @storage = {}
+      log.debug "--- #{self.class}.#{__callee__} ---"
+      @screen_name = "Base Component Configuration"
     end
 
     # Read system parameters
@@ -50,15 +54,25 @@ module Yast
       false
     end
 
-    def unsafe_import(hash)
+    def import(hash)
       log.debug "--- #{self.class}.#{__callee__}: #{hash} ---"
-      log.error "--- unsafe_import called ---"
-      hash.each { |k, v| instance_variable_set("@#{k}".to_sym, v) }
+      hash.each do |k, v|
+        name = k.to_s.start_with?('@') ? k : "@#{k}".to_sym
+        instance_variable_set(name, v)
+     end
+    end
+
+    def export
+      Hash[instance_variables.map { |name| [name, instance_variable_get(name)] }]
     end
 
     def apply(role)
-      log.error '#{self.class}.#{__callee__} is not implemented yet'
+      log.error "#{self.class}.#{__callee__} (role=#{role}) is not implemented yet"
       raise SAPHAException, '#{self.class}.#{__callee__} is not implemented yet'
+    end
+
+    def bogus_apply
+      sleep 2
     end
   end
 end

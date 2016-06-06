@@ -36,6 +36,8 @@ module Yast
     include Yast::UIShortcuts
 
     def initialize
+      super
+      @screen_name = "HANA Configuration"
       @system_id = 'NDB' # TODO
       @instance = '00'
       @virtual_ip = ''
@@ -62,6 +64,10 @@ module Yast
 
     def combo_items
       @proposals
+    end
+
+    def apply(role)
+      return false if !configured?
     end
   end
 end

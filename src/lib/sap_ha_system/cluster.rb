@@ -96,6 +96,9 @@ module Yast
       true
 
       # iptables -I INPUT 1 -p tcp --dport 8080 -j ACCEPT
+      # then
+      # RULE_NO=$(iptables -L INPUT -n -v --line-number | awk '$11 == "tcp" && $12 == "dpt:8080" { print $1 }')
+      # iptables -D INPUT $RULE_NO
 
     end
 
