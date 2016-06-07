@@ -96,24 +96,9 @@ module Yast
 
     def refresh_view
       super
-      UI.ChangeWidget(Id(:join_cluster), :Enabled, false)
-      UI.ChangeWidget(Id(@my_model.transport_mode), :Value, true)
-      UI.ChangeWidget(Id(:number_of_rings), :Value, @my_model.number_of_rings.to_s)
-      if @recreate_table
-        @recreate_table = false
-        UI.ReplaceWidget(Id(:rp_table), table_widget)
-      end
-      UI.ChangeWidget(Id(:ring_definition_table), :Items, @my_model.table_items)
-      UI.ChangeWidget(Id(:cluster_name), :Value, @my_model.cluster_name)
-      UI.ChangeWidget(Id(:expected_votes), :Value, @my_model.expected_votes.to_s)
     end
 
-    def update_model
-      @my_model.cluster_name = value(:cluster_name)
-      @my_model.expected_votes = value(:expected_votes)
-    end
-
-    def table_widget
+    def ring_table_widget
       log.debug "--- #{self.class}.#{__callee__} ---"
       MinSize(
         # Width: ring name 5 + address 15 + port 5

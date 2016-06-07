@@ -1,0 +1,10 @@
+group <%= group_name %>
+{
+<% for include_path in includes -%>
+  <%= "include #{include_path}" %>
+<% end -%>
+  <%= "key #{key_path}" %>
+<% for host in hosts -%>
+  <%= "host #{host}" %>
+<% end -%>
+}

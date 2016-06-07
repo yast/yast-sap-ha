@@ -23,8 +23,7 @@ require 'yast'
 require 'erb'
 require 'yaml'
 
-require 'sap_ha_configuration/cluster_members.rb'
-require 'sap_ha_configuration/communication_layer.rb'
+require 'sap_ha_configuration/cluster.rb'
 require 'sap_ha_configuration/fencing.rb'
 require 'sap_ha_configuration/watchdog.rb'
 require 'sap_ha_configuration/hana.rb'
@@ -51,8 +50,7 @@ module Yast
       :product,
       :scenario,
       :scenario_summary,
-      :cluster_members,
-      :communication_layer,
+      :cluster,
       :fencing,
       :watchdog,
       :hana,
@@ -71,14 +69,13 @@ module Yast
       @scenario_name = nil
       @scenario = nil
       @scenario_summary = nil
-      @cluster_members = nil # This depends on the scenario configuration
-      @communication_layer = CommunicationLayerConfiguration.new
+      @cluster = nil # This depends on the scenario configuration
       @yaml_configuration = load_scenarios
       @fencing = FencingConfiguration.new
       @watchdog = WatchdogConfiguration.new
       @hana = HANAConfiguration.new
       @ntp = NTPConfiguration.new
-      @components = [:@cluster_members, :@communication_layer, :@fencing, :@watchdog, :@ntp]
+      @components = [:@cluster, :@communication_layer, :@fencing, :@watchdog, :@ntp]
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -109,7 +106,7 @@ module Yast
         log.error("Scenario name '#{@scenario_name}' not found in the scenario list")
         raise ScenarioNotFoundException
       end
-      @cluster_members = ClusterMembersConfiguration.new(@scenario['number_of_nodes'])
+      @cluster = ClusterConfiguration.new(@scenario['number_of_nodes'])
     end
 
     def all_scenarios

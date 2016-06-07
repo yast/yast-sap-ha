@@ -22,8 +22,7 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha/gui'
-require 'sap_ha_wizard/cluster_members_page'
-require 'sap_ha_wizard/comm_layer_page'
+require 'sap_ha_wizard/cluster_page'
 require 'sap_ha_wizard/join_cluster_page'
 require 'sap_ha_wizard/fencing_page'
 require 'sap_ha_wizard/watchdog_page'
@@ -64,15 +63,14 @@ module Yast
         "scenario_selection"    => {
           abort:             :abort,
           cancel:            :abort,
-          next:              "configure_network",
+          next:              "configure_cluster",
           unknown:           "product_not_supported",
           summary:           "config_overview"
         },
         "config_overview"         => {
           abort:             :abort,
           cancel:            :abort,
-          config_members:    "configure_members",
-          config_network:    "configure_network",
+          config_cluster:    "configure_cluster",
           join_cluster:      "join_cluster",
           fencing:           "fencing",
           watchdog:          "watchdog",
@@ -87,23 +85,15 @@ module Yast
           next:              :next,
           summary:           "config_overview"
         },
-        "configure_members"     => {
+        "configure_cluster"    => {
           next:              "ntp",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
           summary:           "config_overview"
         },
-        "configure_network"     => {
-          next:              "configure_members",
-          back:              :back,
-          abort:             :abort,
-          cancel:            :abort,
-          summary:           "config_overview",
-          join_cluster:      "join_cluster"
-        },
         "join_cluster"          => {
-          next:              "configure_members",
+          next:              "configure_cluster",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
@@ -156,8 +146,7 @@ module Yast
         'product_check'         => -> { product_check },
         'scenario_selection'    => -> { scenario_selection },
         'product_not_supported' => -> { product_not_supported },
-        'configure_members'     => -> { configure_members },
-        'configure_network'     => -> { configure_comm_layer },
+        'configure_cluster'     => -> { configure_cluster },
         'config_overview'       => -> { configuration_overview },
         'scenario_setup'        => -> { scenario_setup },
         'join_cluster'          => -> { join_existing_cluster },
@@ -272,14 +261,9 @@ module Yast
       ret
     end
 
-    def configure_members
+    def configure_cluster
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      ClusterMembersConfigurationPage.new(@config).run
-    end
-
-    def configure_comm_layer
-      log.debug "--- called #{self.class}.#{__callee__} ---"
-      CommLayerConfigurationPage.new(@config).run
+      ClusterConfigurationPage.new(@config).run
     end
 
     def join_existing_cluster
@@ -339,7 +323,7 @@ module Yast
       log.info "BOGUS!"
       @config.set_product_id "HANA"
       @config.set_scenario_name 'Performance-optimized'
-      @config.communication_layer.import(
+      @config.cluster.import(
         number_of_rings: 2,
         transport_mode: :unicast,
         cluster_name: 'hana_sysrep',
@@ -359,7 +343,7 @@ module Yast
           }
         }
       )
-      @config.cluster_members.import(
+      @config.cluster.import(
         number_of_rings: 2,
         number_of_nodes: 2,
         nodes: {
