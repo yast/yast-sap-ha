@@ -26,6 +26,7 @@ require 'yast'
 require "xmlrpc/server"
 require "sap_ha/configuration"
 require "sap_ha/helpers"
+require "sap_ha_system/shell_commands"
 require 'yaml'
 
 module SAPHA
@@ -34,20 +35,34 @@ module SAPHA
   # Exposes the following functions in the sapha.* namespace:
   #  - load_config(yaml_string) : recreates the marshalled config on the RPC Server's side
   #  - config : returns the @config object
-  #  - 
+  #  - config_{sub_config}.* : exposed methods of components' configurations
   class RPCServer
+    include ShellCommands
+
     def initialize
-      @server = XMLRPC::Server.new(8080, '0.0.0.0', maxConnections=3) #, stdlog=@fh)
-      @config = Yast::ScenarioConfiguration.new :slave
+      @fh = File.open('/tmp/rpc_serv', 'wb')
+      @server = XMLRPC::Server.new(8080, '0.0.0.0', maxConnections=3, stdlog=@fh)
+      # @config = Yast::Configuration.new :slave
       open_port
       install_handlers
     end
 
     def install_handlers
-      @server.add_handler('sapha.load_config') do |yaml_string|
+      @server.add_introspection
+  
+      @server.add_handler('sapha.import_config') do |yaml_string|
         @config = YAML::load(yaml_string)
+
         @server.add_handler('sapha.config', @config)
-        set_subconf_handlers
+        for config_name in @config.components
+          func = "sapha.config_#{config_name.to_s[1..-1]}"
+          obj = @config.instance_variable_get(config_name)
+          @server.add_handler(func, obj)
+        end
+        true
+      end
+
+      @server.add_handler('sapha.ping') do
         true
       end
 
@@ -56,42 +71,36 @@ module SAPHA
       end
     end
 
-    def set_subconf_handlers
-      for config_name in @config.all_configs
-        func = "sapha.config_#{config_name.to_s[1..-1]}"
-        obj = @config.instance_variable_get(config_name)
-        @server.add_handler(func, obj)
-      end
-    end
-
     def start
       @server.serve
     end
 
     def shutdown
-      close_port
-      @server.shutdown
+      Thread.new { sleep 1; @server.shutdown }
+      return true
     end
-
-    private
 
     def open_port
       rule_no = get_rule_number
+      puts "RULE NO #{rule_no}"
       return if rule_no
-      out = `/usr/sbin/iptables -I INPUT 1 -p tcp --dport 8080 -j ACCEPT`
-      rc = $?.exitstatus
-      puts "opening port:#{$?.exitstatus}: #{out}"
+      rc, out = exec_status_lo('/usr/sbin/iptables', '-I', 
+        'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
+      rc.exitstatus == 0
     end
 
     def close_port
       rule_no = get_rule_number
-      out = `/usr/sbin/iptables -D INPUT #{rule_no}`
-      rc = $?.exitstatus
-      puts "closing port:#{$?.exitstatus}: #{out}"
+      puts "close_port: rule_no=#{rule_no} #{!!rule_no}"
+      return unless rule_no
+      rc, out = exec_status_lo('/usr/sbin/iptables', '-D', 'INPUT', "#{rule_no}")
+      puts "close_port: rc=#{rc}, out=#{out}"
+      rc.exitstatus == 0
     end
 
     def get_rule_number
-      out = `/usr/sbin/iptables -L INPUT -n -v --line-number | /usr/bin/awk '$11 == "tcp" && $12 == "dpt:8080" && $4 == "ACCEPT" { print $1 }'`
+      out = pipeline(['/usr/sbin/iptables', '-L', 'INPUT', '-n', '-v', '--line-number'],
+        ['/usr/bin/awk', '$11 == "tcp" && $12 == "dpt:8080" && $4 == "ACCEPT" { print $1 }'])
       return nil if out.empty?
       Integer(out.strip)
     end
@@ -102,4 +111,5 @@ if __FILE__ == $0
   server = SAPHA::RPCServer.new
   at_exit { server.shutdown }
   server.start
+  server.close_port
 end

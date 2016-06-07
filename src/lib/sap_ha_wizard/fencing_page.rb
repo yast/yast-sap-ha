@@ -28,7 +28,7 @@ module Yast
   class FencingConfigurationPage < BaseWizardPage
     def initialize(model)
       super(model)
-      @my_model = model.stonith
+      @my_model = model.fencing
       @my_model.read_system
     end
 
@@ -51,7 +51,7 @@ module Yast
                 Id(:sbd_dev_list_table),
                 Opt(:keepSorting, :immediate),
                 Header(_('#'), _('Mount Point'), _('Type'), _('UUID')),
-                @model.stonith.table_items
+                @model.fencing.table_items
               ),
               HSpacing(20)
             ),
@@ -73,9 +73,8 @@ module Yast
     end
 
     def can_go_next
-      return true if @model.debug
-      @my_model.write_sysconfig
-      true
+      return true if @model.no_validators
+      @my_model.configured?
     end
 
     def refresh_view
@@ -105,18 +104,18 @@ module Yast
 
     def sbd_dev_configuration
       log.debug "--- #{self.class}.#{__callee__} --- "
-      items = @model.stonith.combo_items
+      items = @model.fencing.combo_items
       UI.OpenDialog(
         VBox(
-          Left(Label(Opt(:boldFont), 'SBD Device Configuration')),
+          Label(Opt(:boldFont), 'SBD Device Configuration'),
           Left(
             HBox(
-              Label('Device:'),
+              Label(Opt(:boldFont), 'Device:'),
               ComboBox(Id(:sbd_combo), Opt(:notify), '', items))),
           VBox(
-            Left(HBox(Label('Name:'), Label(Id(:sbd_name), ''))),
-            Left(HBox(Label('Type:'), Label(Id(:sbd_type), ''))),
-            Left(HBox(Label('UUID:'), MinWidth(44, Label(Id(:sbd_uuid), ''))))
+            Left(HBox(Label(Opt(:boldFont), 'Name:'), Label(Id(:sbd_name), ''))),
+            Left(HBox(Label(Opt(:boldFont), 'Type:'), Label(Id(:sbd_type), ''))),
+            Left(HBox(Label(Opt(:boldFont), 'UUID:'), MinWidth(44, Label(Id(:sbd_uuid), ''))))
           ),
           Wizard.CancelOKButtonBox
         )
@@ -145,11 +144,11 @@ module Yast
     def handle_combo
       v = UI.QueryWidget(Id(:sbd_combo), :Value)
       log.info "--- combo event: value #{v} ---"
-      log.info "--- values: #{@model.stonith.proposals} ---"
+      log.info "--- values: #{@model.fencing.proposals} ---"
       item = @my_model.proposals.find { |e| e[:name] == v }
       UI.ChangeWidget(Id(:sbd_name), :Value, item[:name])
       UI.ChangeWidget(Id(:sbd_type), :Value, item[:type])
-      UI.ChangeWidget(Id(:sbd_uuid), :Value, item[:uuid] || "")
+      UI.ChangeWidget(Id(:sbd_uuid), :Value, item[:uuid] || "N/A")
       UI.RecalcLayout
     end
   end

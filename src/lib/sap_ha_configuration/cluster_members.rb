@@ -27,7 +27,7 @@ require_relative 'base_component_configuration.rb'
 Yast.import 'UI'
 
 module Yast
-  class ClusterMembersConfigurationException < SAPHAException
+  class ClusterMembersConfException < ModelValidationException
   end
 
   # Cluster members configuration
@@ -44,6 +44,7 @@ module Yast
       @number_of_nodes = number_of_nodes
       @number_of_rings = 1
       @nodes = {}
+      @exception_type = ClusterMembersConfException
       init_nodes
     end
 
@@ -63,7 +64,16 @@ module Yast
     end
 
     def configured?
-      @nodes.all? { |_, v| !v[:ip_ring1].empty? }
+      flag = @nodes.all? do |_, v| 
+        validate_node(v, :silent)
+      end
+      return flag unless flag
+      flag &= SemanticChecks.instance.check(:silent) do |check|
+        check.unique(@nodes.map { |_, v| v[:ip_ring1] })
+        check.unique(@nodes.map { |_, v| v[:ip_ring2] }) if @number_of_rings >= 2
+        check.unique(@nodes.map { |_, v| v[:ip_ring3] }) if @number_of_rings == 3
+      end
+      flag
     end
 
     def update_values(k, values)
@@ -74,14 +84,8 @@ module Yast
       tmp = ERB.new(
         '
           <% @nodes.each_with_index do |(k, nd), ix| %>
-            <%= "&nbsp; <i>Node #{nd[:node_id]}:</i> #{nd[:host_name]} [#{nd[:ip_ring1]}" %>
-            <% if @number_of_rings > 1 && !nd[:ip_ring2].empty? %>
-              <%= " / #{nd[:ip_ring2]}" %>
-            <% end %>
-            <% if @number_of_rings > 2 && !nd[:ip_ring3].empty? %>
-              <%= " / #{nd[:ip_ring3]}" %>
-            <% end %>
-            <%= "]" %>
+            <% ips = [nd[:ip_ring1], nd[:ip_ring2], nd[:ip_ring3]][0...@number_of_rings].join(", ") %>
+            <%= "&nbsp; #{nd[:node_id]}. #{nd[:host_name]} (#{ips})." %>
             <% if ix != (@nodes.length-1) %>
               <%= "<br>" %>
             <% end %>
@@ -110,10 +114,11 @@ module Yast
       end.map{|iface| iface.addr.ip_address}
       log.error "#{@nodes}"
       ips = @nodes.map { |_, n| n[:ip_ring1] } - my_ips
-      raise ClusterMembersConfigurationException, "Empty IPs detected" if ips.any? { |e| e.empty? }
+      raise ClusterMembersConfException, "Empty IPs detected" if ips.any? { |e| e.empty? }
       ips
     end
 
+    # TODO: rename and document
     def other_nodes_ext
       others_ip = other_nodes
       @nodes.map do |k, node|
@@ -129,6 +134,25 @@ module Yast
 
     def apply(role)
       return false if !configured?
+    end
+
+    def validate
+      # TODO
+      super
+    end
+
+    def validate_node(node, verbosity)
+      SemanticChecks.instance.check(verbosity) do |check|
+        check.ipv4(node[:ip_ring1], 'IP Ring 1')
+        check.ipv4(node[:ip_ring2], 'IP Ring 2') if @number_of_rings > 1
+        check.ipv4(node[:ip_ring3], 'IP Ring 3') if @number_of_rings > 2
+        check.hostname(node[:host_name], 'Hostname')
+        check.nonneg_integer(node[:node_id], 'Node ID')
+      end
+    end
+
+    def check_ssh_connectivity
+
     end
 
     private

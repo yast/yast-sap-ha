@@ -70,15 +70,17 @@ module Yast
       )
     end
 
-    def can_go_next
-      # TODO: validators
-      @my_model.system_id = UI.QueryWidget(Id(:hana_sid), :Value)
+    def update_model
+      @my_model.system_id = UI.QueryWidget(Id(:hana_sid), :Value).upcase
       @my_model.instance = UI.QueryWidget(Id(:hana_inst), :Value)
       @my_model.virtual_ip = UI.QueryWidget(Id(:hana_vip), :Value)
       @my_model.prefer_takeover = UI.QueryWidget(Id(:site_takover), :Value)
       @my_model.auto_register = UI.QueryWidget(Id(:auto_reg), :Value)
+    end
+
+    def can_go_next
       return true if @model.no_validators
-      true
+      @my_model.configured?
     end
 
     def refresh_view

@@ -50,14 +50,14 @@ module Yast
     def refresh_view
     end
 
+    # Refresh model, populating the values from the view
+    def update_model
+    end
+
     # Return true if the user can proceed to the next screen
     # Use this if additional verification of the data is needed
     def can_go_next
       true
-    end
-
-    # Update the model's values from the user input
-    def update_model
     end
 
     # Handle custom user input
@@ -74,6 +74,17 @@ module Yast
       main_loop
     end
 
+    # TODO: move simple GUI modules from HAGUI
+    # def self.rich_text(title, contents, help, allow_back, allow_next)
+    #   self.class.new().base_rich_text(title, contents, 
+    #     help, allow_back, allow_next)
+    # end
+
+    # def self.list_selection(title, message, list_contents, help, allow_back, allow_next)
+    #   self.class.new().base_list_selection(title, message, list_contents, 
+    #     help, allow_back, allow_next)
+    # end
+
     protected
 
     # Run the main input processing loop
@@ -84,13 +95,17 @@ module Yast
         input = Wizard.UserInput
         log.debug "--- #{self.class}.#{__callee__} ---"
         case input
-        # TODO: return only :abort, :cancel and :back from here. If the page needs anything else
+        # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
         # it should redefine the main_loop
-        when :abort, :back, :cancel, :summary, :join_cluster
+        when :abort, :back, :cancel, :join_cluster
           return input
-        when :next
+        when :next, :summary
           update_model
-          return :next if can_go_next
+          if can_go_next
+            return input
+          else
+            dialog_cannot_continue
+          end
         else
           handle_user_input(input)
         end
@@ -173,7 +188,10 @@ module Yast
           log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
           if validators && !@model.no_validators
             ret = validators.call(parameters)
-            next unless ret
+            unless ret.empty?
+              show_dialog_errors(ret)
+              next
+            end
           end
           UI.CloseDialog
           return parameters
@@ -195,6 +213,26 @@ module Yast
         title,
         base_layout(
           RichText(contents)
+        ),
+        help,
+        allow_back,
+        allow_next
+      )
+    end
+
+    # Create a Wizard page with a simple list selection
+    # @param title [String]
+    # @param message [String]
+    # @param list_contents [Array[String]]
+    # @param help [String]
+    # @param allow_back [Boolean]
+    # @param allow_next [Boolean]
+    def base_list_selection(title, message, list_contents, help, allow_back, allow_next)
+      Wizard.SetContents(
+        title,
+        base_layout_with_label(
+          message,
+          SelectionBox(Id(:selection_box), Opt(:vstretch), '', list_contents)
         ),
         help,
         allow_back,
@@ -240,6 +278,7 @@ module Yast
     end
 
     def show_dialog_errors(error_list)
+      log.error "--- #{self.class}.#{__callee__}: #{error_list} ---"
       html_str = "<ul>\n"
       html_str << error_list.map { |e| "<li>#{e}</li>" }.join("\n")
       html_str << "</ul>"

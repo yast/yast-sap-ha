@@ -46,7 +46,14 @@ module Yast
     end
 
     def configured?
+      # TODO: HANA validators
       !@virtual_ip.empty?
+      flag = true
+      flag &= SemanticChecks.instance.check(:silent) do |check|
+        check.ipv4(@virtual_ip)
+        check.integer_in_range(@instance, 0, 99)
+        check.sap_sid(@system_id)
+      end
     end
 
     def description

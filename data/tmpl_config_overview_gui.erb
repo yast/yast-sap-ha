@@ -68,11 +68,11 @@
     <tr>
         <td>Fencing (STONITH):</td>
         <td>
-            <% if !@config.stonith.configured? %>
+            <% if !@config.fencing.configured? %>
             <%= '<font color="red">Not configured</font> (<a href="fencing">configure</a>)' %>
             <% else %>
             <%= '<font color="green">Configured</font> (<a href="fencing">reconfigure</a>)<br>' %>
-            <%= @config.stonith.description %>
+            <%= @config.fencing.description %>
             <% end %>
         </td>
     </tr>

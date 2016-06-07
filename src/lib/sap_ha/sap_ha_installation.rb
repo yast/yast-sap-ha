@@ -8,20 +8,75 @@ module Yast
 
     def initialize(config, ui = nil)
       @config = config
+      @yaml_config = config.dump(true)
       @ui = ui
       prepare
     end
 
+    def run
+      @ui.next_node if @ui
+      # local_configuration
+      @ui.next_node if @ui
+      log.error "--- #{self.class}.#{__callee__}: configuring remote nodes ---"
+      for node in @other_nodes
+        log.error "--- #{self.class}.#{__callee__}: configuring node #{node[:hostname]} ---"
+        remote_configuration(node)
+        @ui.next_node if @ui
+        log.error "--- #{self.class}.#{__callee__}: finished configuring node #{node[:hostname]} ---"
+      end
+      if @ui
+        @ui.unblock
+        log.error "--- #{self.class}.#{__callee__}: returning :next ---"
+        return :next 
+      else
+        log.error "--- #{self.class}.#{__callee__}: UI is screwed ---"
+      end
+      true
+    end
+
+    private
+
+    def remote_configuration(node)
+      # Catch 'execution expired and start afresh'
+      connect(node)
+      @ui.next_task if @ui
+      # Export config
+      rpc = node[:rpc]
+      rpc.call('sapha.import_config', @yaml_config)
+      @ui.next_task if @ui
+      for component_id in @config.components
+        log.error "--- #{self.class}.#{__callee__}: configuring component #{component_id} on node #{node[:hostname]} ---"
+        func = "sapha.config_#{component_id.to_s[1..-1]}.bogus_apply"
+        rpc.call(func)
+        @ui.next_task
+      end
+    ensure
+      if node[:rpc]
+        node[:rpc].call('sapha.shutdown')
+      end
+    end
+
+
+    def local_configuration
+      log.error "--- #{self.class}.#{__callee__}: configuring current node ---"
+      @ui.next_node if @ui
+      @ui.next_task if @ui # we are not connecting to this node
+      for component_id in @config.components
+        log.error "--- #{self.class}.#{__callee__}: configuring #{component_id} ---"
+        @config.instance_variable_get(component_id).bogus_apply
+        @ui.next_task if @ui
+      end
+      log.error "--- #{self.class}.#{__callee__}: finished ---"
+    end
+
     def prepare
-      # other_nodes_ip = @config.cluster_members.other_nodes
-      # number_of_nodes = @config.cluster_members.number_of_nodes
+      # TODO: rename other_nodes_ext
       @other_nodes = @config.cluster_members.other_nodes_ext
       calculate_gui if @ui
-      connect
     end
 
     def calculate_gui
-      config_components = Hash[@config.all_configs.map { |config_name|
+      config_components = Hash[@config.components.map { |config_name|
         [config_name, @config.instance_variable_get(config_name).screen_name] }]
       tasks = ['Connecting']
       tasks.concat(config_components.map { |k, v| v })
@@ -34,21 +89,12 @@ module Yast
       @ui.set(stages, titles, tasks)
     end
 
-    def connect
-      @other_nodes.map do |node|
-        SSH.instance.run_rpc_server(node[:ip])
-        node[:rpc] = XMLRPC::Client.new(node[:ip], "/RPC2", 8080)
-      end
-    end
-
-    def run
-      (0...2).each do |i|
-        @ui.next_node
-        (0...7).each do |ix|
-          sleep 1
-          @ui.next_task
-        end
-      end
+    def connect(node)
+      # TODO: catch all the SSH exceptions
+      SSH.instance.run_rpc_server(node[:ip])
+      sleep 5
+      # TODO: catch 'Connection refused'
+      node[:rpc] = XMLRPC::Client.new(node[:ip], "/RPC2", 8080)
     end
   end
 end

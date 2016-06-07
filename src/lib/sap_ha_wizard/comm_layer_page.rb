@@ -76,12 +76,8 @@ module Yast
     end
 
     def can_go_next
-      super
       return true if @model.no_validators
-      unless @my_model.configured?
-        dialog_cannot_continue
-        return false
-      end
+      return false unless @my_model.configured?
       # TODO: this is to set the IP addresses. Try to move it to an appropriate place
       if !@model.cluster_members.configured? && @my_model.configured?
         @my_model.all_rings.each do |ring_id, ring|
@@ -110,6 +106,11 @@ module Yast
       UI.ChangeWidget(Id(:ring_definition_table), :Items, @my_model.table_items)
       UI.ChangeWidget(Id(:cluster_name), :Value, @my_model.cluster_name)
       UI.ChangeWidget(Id(:expected_votes), :Value, @my_model.expected_votes.to_s)
+    end
+
+    def update_model
+      @my_model.cluster_name = value(:cluster_name)
+      @my_model.expected_votes = value(:expected_votes)
     end
 
     def table_widget
@@ -167,25 +168,13 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
         "Configuration for ring #{ring[:id]}",
-        -> (args) { ring_configuration_validators(args) },
+        -> (args) { @my_model.validate_ring(args, :verbose) },
         MinWidth(15, InputField(Id(:address), 'IP Address:', ring[:address])),
         MinWidth(5, InputField(Id(:port), 'Port Number:', ring[:port])),
         multicast? ? 
           MinWidth(15, InputField(Id(:mcast), 'Multicast Address', ring[:mcast]))
           : Empty()
       )
-    end
-
-    def ring_configuration_validators(values, report = true)
-      return true unless report
-      errors = SemanticChecks.instance.verbose_check do |check|
-        check.ipv4(values[:address], 'IP Address')
-        check.port(values[:port], 'Port Number')
-        check.ipv4(values[:mcast], 'Multicast Address') if multicast?
-      end
-      return true if errors.empty?
-      show_dialog_errors(errors)
-      false
     end
   end
 end

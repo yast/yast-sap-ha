@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Module's configuration
+# Summary: SUSE High Availability Setup for SAP Products: Top-level configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -25,7 +25,7 @@ require 'yaml'
 
 require 'sap_ha_configuration/cluster_members.rb'
 require 'sap_ha_configuration/communication_layer.rb'
-require 'sap_ha_configuration/stonith.rb'
+require 'sap_ha_configuration/fencing.rb'
 require 'sap_ha_configuration/watchdog.rb'
 require 'sap_ha_configuration/hana.rb'
 require 'sap_ha_configuration/ntp.rb'
@@ -39,11 +39,11 @@ module Yast
   end
 
   # Module's configuration
-  class ScenarioConfiguration
-    # TODO: rename the class
+  class Configuration
     attr_reader :product_id,
       :scenario_name,
-      :all_configs
+      # configuration components
+      :components
     attr_accessor :role,
       :debug,
       :no_validators,
@@ -53,7 +53,7 @@ module Yast
       :scenario_summary,
       :cluster_members,
       :communication_layer,
-      :stonith,
+      :fencing,
       :watchdog,
       :hana,
       :ntp
@@ -74,11 +74,11 @@ module Yast
       @cluster_members = nil # This depends on the scenario configuration
       @communication_layer = CommunicationLayerConfiguration.new
       @yaml_configuration = load_scenarios
-      @stonith = StonithConfiguration.new
+      @fencing = FencingConfiguration.new
       @watchdog = WatchdogConfiguration.new
       @hana = HANAConfiguration.new
       @ntp = NTPConfiguration.new
-      @all_configs = [:@cluster_members, :@communication_layer, :@stonith, :@watchdog, :@ntp]
+      @components = [:@cluster_members, :@communication_layer, :@fencing, :@watchdog, :@ntp]
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -93,9 +93,9 @@ module Yast
       @product_name = @product['string_name']
       case @product_id
       when "HANA"
-        @all_configs << :@hana
+        @components << :@hana
       when "NW"
-        @all_configs << :@nw
+        @components << :@nw
       end
     end
 
@@ -123,7 +123,7 @@ module Yast
 
     # Can the cluster be set up?
     def can_install?
-      @all_configs.map do |config|
+      @components.map do |config|
         next unless instance_variable_defined?(config)
         conf = instance_variable_get(config)
         next if conf.nil?
@@ -140,11 +140,6 @@ module Yast
       repr = YAML.dump self
       @role = old_role
       repr
-    end
-
-    def apply_configs
-      s_config = dump(true)
-
     end
 
     private

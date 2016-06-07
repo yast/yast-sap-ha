@@ -32,6 +32,7 @@ module Yast
     def initialize
       log.debug "--- #{self.class}.#{__callee__} ---"
       @screen_name = "Base Component Configuration"
+      @exception_type = SAPHAException
     end
 
     # Read system parameters
@@ -41,8 +42,14 @@ module Yast
 
     # Check if the user changed the configuration
     def configured?
-      false
+      begin
+        return validate
+      rescue @exception_type => e
+        # here we only rescue the designated exception type
+        return false
+      end
     end
+
 
     # Get an HTML description of the settings
     def description
@@ -72,7 +79,13 @@ module Yast
     end
 
     def bogus_apply
-      sleep 2
+      sleep 0.5
+      true
+    end
+
+    # Validate model, raising an exception on error
+    def validate
+      raise @exception_type, "Validation failed"
     end
   end
 end

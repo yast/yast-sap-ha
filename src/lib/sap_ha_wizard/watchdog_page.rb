@@ -38,8 +38,7 @@ module Yast
         base_layout_with_label(
           'Select the appropriate watchdog modules to load at system startup',
           VBox(
-            SelectionBox(Id(:configured_wd), 'Configured watchdogs:',
-              []),
+            SelectionBox(Id(:configured_wd), 'Configured watchdogs:', []),
             HBox(
               PushButton(Id(:add_wd), 'Add'),
               PushButton(Id(:remove_wd), 'Remove')

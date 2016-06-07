@@ -23,10 +23,11 @@ require 'yast'
 require 'fileutils'
 require 'tmpdir'
 require 'sap_ha/helpers'
+require 'sap_ha/exceptions'
 require_relative 'shell_commands.rb'
 
 module Yast
-  class SSHException < StandardError
+  class SSHException < SAPHAException
   end
 
   class SSHConnectionException < SSHException
@@ -178,8 +179,13 @@ module Yast
 
     def run_rpc_server(host)
       # TODO: change the path
-      exec_status_l("ssh", "-f", "root@#{host}", "/urs/bin/ruby", 
-        "/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
+      # stat = exec_status_l("ssh", "-f", "root@#{host}", "/usr/bin/ruby", 
+      #   "/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
+      stat = exec_status_l("ssh", "-f", "root@#{host}", "systemd-cat /usr/bin/ruby /root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
+
+      # exec_status_l("ssh", "-f", "root@#{host}", "/urs/bin/ruby", 
+      #   SAPHAHelpers.instance.)
+      fortune_teller(binding)
     end
 
     private

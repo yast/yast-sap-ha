@@ -37,7 +37,7 @@ Cluster setup
 ### 0. Check that sshd service is started and enabled
 
 ### 1. Set NTP
-We can simply call `yast2 ntp-client`. **TODO:** include in dependencies.
+We can simply call `yast2 ntp-client`.
 
 ```ruby
 Yast::WFM.ClientExists('ntp-client')

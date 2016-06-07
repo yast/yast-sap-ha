@@ -60,10 +60,9 @@ module Yast
 
     def can_go_next
       return true if @model.no_validators
-      flag = @my_model.nodes.all? { |_, v| node_configuration_validators(v, false) }
+      return false unless @my_model.configured?
       # check SSH connectivity
-      ips = @my_model.other_nodes
-      ips.each do |ip|
+      for ip in @my_model.other_nodes
         begin
           SSH.instance.check_ssh(ip)
         rescue SSHAuthException => e
@@ -85,8 +84,7 @@ module Yast
           return false
         end
       end
-      dialog_cannot_continue unless flag
-      flag
+      true
     end
 
     def refresh_view
@@ -138,7 +136,7 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
         "Configuration for Node #{values[:node_id]}",
-        -> (args) { node_configuration_validators(args) },
+        -> (args) { @my_model.validate_node(args, :verbose) },
         InputField(Id(:host_name), 'Host name:', values[:host_name] || ""),
         InputField(Id(:ip_ring1), 'IP Ring 1:', values[:ip_ring1] || ""),
         @my_model.number_of_rings > 1 ? InputField(Id(:ip_ring2), 'IP Ring 2:', values[:ip_ring2] || "") : Empty(),
@@ -147,17 +145,5 @@ module Yast
       )
     end
 
-    def node_configuration_validators(values, report = true)
-      return true unless report
-      errors = SemanticChecks.instance.verbose_check do |check|
-        check.ipv4(values[:ip_ring1], 'IP Ring 1')
-        check.ipv4(values[:ip_ring2], 'IP Ring 2') if @my_model.number_of_rings > 1
-        check.ipv4(values[:ip_ring3], 'IP Ring 3') if @my_model.number_of_rings > 2
-        check.hostname(values[:host_name], 'Hostname')
-      end
-      return true if errors.empty?
-      show_dialog_errors(errors)
-      false
-    end
   end
 end

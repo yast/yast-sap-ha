@@ -16,7 +16,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: STONITH configuration
+# Summary: SUSE High Availability Setup for SAP Products: Fencing configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
@@ -24,8 +24,8 @@ require_relative 'base_component_configuration.rb'
 Yast.import 'UI'
 
 module Yast
-  # STONITH configuration
-  class StonithConfiguration < BaseComponentConfiguration
+  # Fencing configuration
+  class FencingConfiguration < BaseComponentConfiguration
     attr_reader :proposals, :sysconfig
     attr_accessor :sbd_options, :sbd_delayed_start
 
@@ -54,8 +54,8 @@ module Yast
     def description
       ds = @devices.map { |d| d[:name] }.join(', ')
       "&nbsp; Configured devices: #{ds}.<br>
-      &nbsp; Delayed start : #{@sysconfig[:dealy_start]}<br>
-      &nbsp; SBD options : #{@sysconfig[:options]}"
+      &nbsp; Delayed start : #{@sysconfig[:dealy_start] || 'false'}.<br>
+      &nbsp; SBD options : #{@sysconfig[:options] || 'none'}."
     end
 
     # Drop-down box items
@@ -79,7 +79,7 @@ module Yast
       dev = @devices.each_with_index.find { |e, ix| ix == dev_id }
       return if dev.empty?
       log.error "--- called #{self.class}.#{__callee__} dev=#{dev} ---"
-      rm_from_config(dev[0][:name])
+      remove_device(dev[0][:name])
     end
 
     def read_sysconfig

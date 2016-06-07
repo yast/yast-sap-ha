@@ -60,7 +60,7 @@ module Yast
     end
 
     def apply(role)
-      return false if !configured?
+      return false unless configured?
       # Master has the configuration in place already
       return true if role == :master
       NtpClient.Import @config

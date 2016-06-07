@@ -35,15 +35,15 @@ module Yast
     def set_contents
       super
       text =  if UI.TextMode
-                SAPHAHelpers.instance.render_template('setup_summary_ncurses.erb', binding)
+                SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding)
               else
-                SAPHAHelpers.instance.render_template('setup_summary_gui.erb', binding)
+                SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding)
               end        
 
       base_rich_text(
         "High-Availability Setup Summary",
         text,
-        SAPHAHelpers.instance.load_help('setup_summary_help.html'),
+        SAPHAHelpers.instance.load_help('help_setup_summary.html'),
         true,
         true
       )

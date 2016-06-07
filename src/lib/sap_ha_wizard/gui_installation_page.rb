@@ -84,7 +84,7 @@ module Yast
         titles,
         '')
       Progress.SubprogressType(:progress, @tasks.length)
-      Progress::SubprogressTitle("")
+      Progress.SubprogressTitle("")
     end
 
     def next_node
@@ -96,7 +96,14 @@ module Yast
     def next_task
       @task_no += 1
       Progress.SubprogressValue(@task_no)
-      Progress::SubprogressTitle(@tasks[@task_no])
+      Progress.SubprogressTitle(@tasks[@task_no])
+    end
+
+    def unblock
+      Progress.Finish
+      # Wizard.SetNextButton(:next, "&Next")
+      # Wizard.EnableNextButton
+      # Wizard.DisableBackButton
     end
   end
 end

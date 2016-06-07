@@ -2,6 +2,7 @@
     id: HANA
     string_name: SAP HANA
     scenarios:
+
       - name: Performance-optimized
         description: |
           <b>Performance-optimized scenario</b> allows to set up a synchronous system
@@ -38,6 +39,3 @@
       - name: Simple Stack
       - name: Simple Stack with Enqueue Replication
       - name: Simple Stack with Enqueue Replication (external DB)
-
-- weird:
-    id: BOO

@@ -30,6 +30,7 @@ describe Yast::SemanticChecks do
       end
       
       expect(flag).to eq false
+      
       flag = subject.silent_check do |check|
         check.ipv4('192.168.100.100')
         check.ipv4('192.168.100.1')
@@ -99,5 +100,13 @@ describe Yast::SemanticChecks do
       expect(flag).to eq true
     end
     # TODO: port
+
+    describe '#unique' do
+      it "reports uniqueness in silent mode" do
+        subject.silent = true
+        expect(subject.unique(['100', '100', '100'])).to eq false
+        expect(subject.not_unique(['100', '100', '100'])).to eq true
+      end
+    end
   end
 end

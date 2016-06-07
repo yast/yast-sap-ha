@@ -16,16 +16,15 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Setup summary page
+# Summary: SUSE High Availability Setup for SAP Products: Configuration overview page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
 require 'sap_ha/helpers'
 
 module Yast
-  # Installation Summary page
-  # TODO: rename
-  class SetupSummaryPage < BaseWizardPage
+  # Configuration Overview page
+  class ConfigurationOverviewPage < BaseWizardPage
     attr_accessor :model
 
     def initialize(model)
@@ -35,10 +34,10 @@ module Yast
     def set_contents
       super
       base_rich_text(
-        "High-Availability Setup Summary",
-        UI.TextMode ? SAPHAHelpers.instance.render_template('setup_summary_ncurses.erb', binding) :
-        SAPHAHelpers.instance.render_template('setup_summary_gui.erb', binding),
-        SAPHAHelpers.instance.load_help('setup_summary_help.html'),
+        "High-Availability Configuration Overview",
+        UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
+        SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
+        SAPHAHelpers.instance.load_help('help_setup_summary.html'),
         true,
         true
       )
@@ -66,7 +65,7 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} ---"
       input = Wizard.UserInput
       log.error "--- #{self.class}.#{__callee__}: input is #{input.inspect} ---"
-      Wizard.SetNextButton(:summary, "&Summary") unless input == :next
+      Wizard.SetNextButton(:summary, "&Overview") unless input == :next
       input.to_sym
     end
   end

@@ -42,7 +42,8 @@ module ShellCommands
     Open3.popen3(*params) { |_, _, _, wait_thr| wait_thr.value }
   end
 
-  def exec_status_lo(params)
+  def exec_status_lo(*params)
+    # todo replace with Open3.capture2(params)
     puts "exec_status: #{params}"
     Open3.popen3(*params) { |_, out, _, wait_thr| [wait_thr.value, out.read] }
   end
@@ -56,6 +57,10 @@ module ShellCommands
       end
     end
     -1
+  end
+
+  def pipeline(cmd1, cmd2)
+    Open3.pipeline_r(cmd1, cmd2, {err: "/dev/null"}) { |out, wait_thr| out.read }
   end
 
   def exec_status_stderr(command)

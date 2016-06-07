@@ -32,11 +32,11 @@
   <% end %>
 <br><br>
 <b>Fencing (STONITH):</b><br>
-  <% if !@config.stonith.configured? %>
+  <% if !@config.fencing.configured? %>
   <%= 'Not configured (<a href="fencing">configure</a>)' %>
   <% else %>
   <%= 'Configured (<a href="fencing">reconfigure</a>)<br>' %>
-  <%= @config.stonith.description %>
+  <%= @config.fencing.description %>
   <% end %>
 <br><br>
 <b>Watchdog:</b><br>

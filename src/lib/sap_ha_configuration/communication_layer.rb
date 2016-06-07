@@ -27,8 +27,8 @@ module Yast
   # Communication Layer Configuration
   class CommunicationLayerConfiguration < BaseComponentConfiguration
     attr_reader :number_of_rings,
-      :transport_mode,
-      :cluster_name,
+      :transport_mode
+    attr_accessor :cluster_name,
       :expected_votes
 
     include Yast::UIShortcuts
@@ -58,10 +58,10 @@ module Yast
     end
 
     def table_items
-      if @transport_mode == :unicast
-        @rings.map { |k, v| Item(Id(k), k.to_s, v[:address], v[:port]) }
-      else
+      if multicast?
         @rings.map { |k, v| Item(Id(k), k.to_s, v[:address], v[:port], v[:mcast]) }
+      else
+        @rings.map { |k, v| Item(Id(k), k.to_s, v[:address], v[:port]) }
       end
     end
 
@@ -89,30 +89,36 @@ module Yast
       @rings[ring_id]
     end
 
+    def multicast?
+      @transport_mode == :multicast
+    end
+
     def all_rings
       @rings.dup
     end
 
     def update_ring(ring_id, values)
       [:address, :port].each { |e| @rings[ring_id][e] = values[e] }
-      @rings[ring_id][:mcast] = values[:mcast] if @transport_mode == :multicast
+      @rings[ring_id][:mcast] = values[:mcast] if multicast?
     end
 
     def transport_mode=(value)
       unless [:multicast, :unicast].include? value
-        raise CommunicationLayerConfigurationException,
+        raise ModelValidationException,
           "Error setting transport mode to #{value}"
       end
       @transport_mode = value
     end
 
     def configured?
-      flag = true
-      flag &= @rings.length == @number_of_rings
-      # TODO: shall we really check the semantics of the values here?
-      flag = @rings.all? { |_, v| !v[:address].empty? && !v[:port].empty? }
-      if @transport_mode == :multicast
-        flag &= @rings.all? { |_, v| !v[:mcast].empty? }
+      flag = @rings.all? { |_, v| validate_ring(v, :silent) }
+      flag &= SemanticChecks.instance.check(:silent) do |check|
+        check.equal(@rings.length, @number_of_rings, 'Number of table entries is not 
+          equal to the number of allowed rings.')
+        check.identifier(@cluster_name, 'Cluster name is incorrect')
+        # TODO: this has to be moved to another screen!
+        # We can only check this value if we know the number of nodes
+        # check.value_in_between(@expected_votes)
       end
       flag
     end
@@ -123,10 +129,18 @@ module Yast
       a << "&nbsp; Cluster name: #{@cluster_name}."
       a << "&nbsp; Expected votes: #{@expected_votes}."
       @rings.each do |_, r|
-        add = (@transport_mode == :multicast) ? "(mcast #{r[:mcast]})." : "."
-        a << "&nbsp; Ring #{r[:id]}: #{r[:address]}:#{r[:port]}#{add}"
+        add = (@transport_mode == :multicast) ? ", mcast #{r[:mcast]}." : "."
+        a << "&nbsp; #{r[:id]}. #{r[:address]}, port #{r[:port]}#{add}"
       end
       a.join('<br>')
+    end
+
+    def validate_ring(ring, verbosity)
+      SemanticChecks.instance.check(verbosity) do |check|
+        check.ipv4(ring[:address], 'IP Address')
+        check.port(ring[:port], 'Port Number')
+        check.ipv4_multicast(ring[:mcast], 'Multicast Address') if multicast?
+      end
     end
 
     def apply(role)

@@ -47,7 +47,7 @@ module Yast
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
-      @config = ScenarioConfiguration.new
+      @config = Configuration.new
       @config.debug = WFM.Args.include? 'debug'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
       @bogus = WFM.Args.include?('bogus')
@@ -66,9 +66,9 @@ module Yast
           cancel:            :abort,
           next:              "configure_network",
           unknown:           "product_not_supported",
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
-        "general_setup"         => {
+        "config_overview"         => {
           abort:             :abort,
           cancel:            :abort,
           config_members:    "configure_members",
@@ -85,21 +85,21 @@ module Yast
           abort:             :abort,
           cancel:            :abort,
           next:              :next,
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
         "configure_members"     => {
           next:              "ntp",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
         "configure_network"     => {
           next:              "configure_members",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
-          summary:           "general_setup",
+          summary:           "config_overview",
           join_cluster:      "join_cluster"
         },
         "join_cluster"          => {
@@ -107,28 +107,28 @@ module Yast
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
         "fencing"               => {
           next:              "watchdog",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
         "watchdog"              => {
           next:              "hana",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
         "hana"                  => {
-          next:              "general_setup",
+          next:              "config_overview",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
-          summary:           "general_setup"
+          summary:           "config_overview"
         },
         "ntp"                   => {
           next:              "fencing",
@@ -137,11 +137,19 @@ module Yast
           cancel:            :abort
         },
         "debug_run"             => {
-          general_setup:     "general_setup"
+          config_overview:   "config_overview"
         },
         "installation"          => {
+          next:              "summary",
+          summary:           "summary",
           abort:             :abort,
-          cancel:            :abort
+          cancel:            :abort,
+          back:              :back
+        },
+        "summary"               => {
+          abort:             :abort,
+          cancel:            :abort,
+          back:              :back
         }
       }
       @aliases = {
@@ -150,15 +158,16 @@ module Yast
         'product_not_supported' => -> { product_not_supported },
         'configure_members'     => -> { configure_members },
         'configure_network'     => -> { configure_comm_layer },
-        'general_setup'         => -> { general_setup },
+        'config_overview'       => -> { configuration_overview },
         'scenario_setup'        => -> { scenario_setup },
         'join_cluster'          => -> { join_existing_cluster },
         'fencing'               => -> { fencing_mechanism },
         'watchdog'              => -> { watchdog },
-        'hana'                  => -> { hana_configuration },
+        'hana'                  => -> { configure_hana },
         'debug_run'             => -> { debug_run },
         'installation'          => -> { run_installation },
-        'ntp'                   => -> { configure_ntp }
+        'ntp'                   => -> { configure_ntp },
+        'summary'               => -> { show_summary }
       }
     end
 
@@ -255,10 +264,9 @@ module Yast
       UI.UserInput()
     end
 
-    # TODO: rename to configuration_overview
-    def general_setup
+    def configuration_overview
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      ret = SetupSummaryPage.new(@config).run
+      ret = ConfigurationOverviewPage.new(@config).run
       log.error "--- #{self.class}.#{__callee__}: return=#{ret} ---"
       return :abort if ret == :back # TODO: find out why it returns "back"
       ret
@@ -289,8 +297,7 @@ module Yast
       WatchdogConfigurationPage.new(@config).run
     end
 
-    # TODO: rename to configure_hana
-    def hana_configuration
+    def configure_hana
       log.debug "--- called #{self.class}.#{__callee__} ---"
       HANAConfigurationPage.new(@config).run
     end
@@ -303,16 +310,29 @@ module Yast
     def run_installation
       log.debug "--- called #{self.class}.#{__callee__} ---"
       ui = GUIInstallationPage.new
-      inst = SAPHAInstallation.new(@config, ui)
-      inst.run
+      ret = SAPHAInstallation.new(@config, ui).run
+      log.debug "--- called #{self.class}.#{__callee__} returning #{ret}---"
+      # ret
+      # TODO: returning :abort here works, but returning anything else does not...
       :next
+    end
+
+    def show_summary
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      SAPHAGUI.richt_text(
+        'Installation summary',
+        'The High-Availability setup finished correctly!',
+        '',
+        false,
+        false
+      )
     end
 
     def debug_run
       @config.set_product_id "HANA"
       @config.set_scenario_name 'Performance-optimized'
       set_bogus_values if @bogus
-      :general_setup
+      :config_overview
     end
 
     def set_bogus_values
@@ -359,7 +379,7 @@ module Yast
           }
         }
       )
-    # @config.stonith.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
+    @config.fencing.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
     @config.watchdog.import(to_install: ['softdog'])
     @config.hana.import(
       system_id: 'XXX',

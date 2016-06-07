@@ -32,14 +32,14 @@ module Yast
     
     def initialize
       @storage = {}
+      # TODO: rethink this, since we are running RPC server by setting the ENV...
       if ENV['Y2DIR']  # tests or local run
-        @data_path = 'data/' 
+        @data_path = 'data/'
         @var_path = File.join(Dir.tmpdir, 'yast-sap-ha-tmp')
         begin
           Dir.mkdir(@var_path)
         rescue Exception => e
           log.debug "Cannot create the tmp_dir"
-          puts "craaap"
           puts e.message
         end
       else  # production
@@ -82,6 +82,10 @@ module Yast
     def var_file_path(basename)
       File.join(@var_path, basename)
     end
+
+    # def program_file_path(basename)
+    #   File.join(@yast_path, basename)
+    # end
 
     private
 

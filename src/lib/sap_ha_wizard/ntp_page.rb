@@ -58,10 +58,7 @@ module Yast
 
     def can_go_next
       return true if @model.no_validators
-      unless @my_model.configured?
-        dialog_cannot_continue
-        return false
-      end
+      return false unless @my_model.configured?
       true
     end
 

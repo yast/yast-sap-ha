@@ -22,6 +22,6 @@
 require_relative 'test_helper'
 require 'sap_ha/configuration'
 
-describe Yast::ScenarioConfiguration do
+describe Yast::Configuration do
   
 end
