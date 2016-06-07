@@ -146,5 +146,13 @@ module Yast
     def apply(role)
       return false if !configured?
     end
+
+    private
+
+    def render_csync2_config(group_name, includes, key_path, hosts)
+      return SAPHAHelpers.instance.render_template('tmpl_csync2_config.erb', binding)
+    end
+
+    def 
   end
 end

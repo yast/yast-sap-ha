@@ -53,7 +53,7 @@ module Yast
     def render_template(basename, binding)
       if !@storage.key? basename
         full_path = File.join(@data_path, basename)
-        template = ERB.new(read_file(full_path))
+        template = ERB.new(read_file(full_path), 1, '-')
         @storage[basename] = template
       end
       begin
