@@ -82,14 +82,59 @@ def process
   # s.call('system.listMethods')
 end
 
+c = init_config
+
+c.cluster.import(
+  number_of_rings: 2,
+  transport_mode: :unicast,
+  number_of_nodes: 2,
+  cluster_name: 'hana_sysrep',
+  expected_votes: 2,
+  rings: {
+    ring1: {
+      address:  '192.168.103.0',
+      port:     '5999',
+      id:       1,
+      mcast:    ''
+    },
+    ring2: {
+      address:  '192.168.101.0',
+      port:     '5999',
+      id:       2,
+      mcast:    ''
+    }
+  },
+  nodes: {
+    node1: {
+      host_name:  "hana01",
+      ip_ring1:   "192.168.101.21",
+      ip_ring2:   "192.168.103.21",
+      ip_ring3:   "",
+      node_id:    '1'
+    },
+    node2: {
+      host_name:  "hana02",
+      ip_ring1:   "192.168.101.22",
+      ip_ring2:   "192.168.103.23",
+      ip_ring3:   "",
+      node_id:    '2'
+    }
+  }
+
+)
+
 binding.pry
 
-flag = Yast::SemanticChecks.instance.check(:silent) do |check|
-  check.unique(['100', '100', '100'], true)
-end
 
-puts "Checks passed: #{flag}"
+
+puts nil
+
+# flag = Yast::SemanticChecks.instance.check(:silent) do |check|
+#   check.unique(['100', '100', '100'], true)
+# end
+
+# puts "Checks passed: #{flag}"
 
 # config.can_install?
 
-puts "haha"
+# puts "haha"

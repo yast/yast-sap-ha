@@ -45,7 +45,7 @@ module Yast
       refresh_view
     end
 
-    def handle_user_input(input)
+    def handle_user_input(input, event)
       case input
       when :join
         node_ip = value(:ip_address)

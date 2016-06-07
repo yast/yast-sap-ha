@@ -24,6 +24,8 @@ require 'open3'
 require_relative 'watchdog'
 
 Yast.import 'Service'
+Yast.import 'SystemdService'
+Yast.import 'SystemdSocket'
 
 module Yast
   class SAPHAClusterGUIWarningException < Exception
@@ -41,6 +43,42 @@ module Yast
     include Yast::Logger
 
     def initialize
+    end
+
+    def enable_service(service_name)
+      service = SystemdService.find(service_name)
+      return false if service.nil?
+      service.enable unless service.enabled?
+    end
+
+    def disable_service(service_name)
+      service = SystemdService.find(service_name)
+      return false if service.nil?
+      service.disable if service.enabled?
+    end
+
+    def start_service(service_name)
+      service = SystemdService.find(service_name)
+      return false if service.nil?
+      service.start
+    end
+
+    def stop_service(service_name)
+      service = SystemdService.find(service_name)
+      return false if service.nil?
+      service.stop
+    end
+
+    def enable_socket(socket_name)
+      socket = SystemdSocket.find(socket_name)
+      return false if socket.nil?
+      socket.enable unless socket.enabled?
+    end
+
+    def disable_socket(socket_name)
+      socket = SystemdSocket.find(socket_name)
+      return false if socket.nil?
+      socket.disable if socket.enabled?
     end
 
     # join an existing cluster

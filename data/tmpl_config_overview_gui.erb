@@ -33,24 +33,13 @@
         <th colspan="2">Configuration steps</th>
     </tr>
     <tr>
-        <td>Communication layer:</td>
+        <td>Cluster:</td>
         <td>
-            <% if !@config.communication_layer.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
+            <% if !@config.cluster.configured? %>
+            <%= '<font color="red">Not configured</font> (<a href="config_cluster">configure</a>)' %>
             <% else %>
-            <%= '<font color="green">Configured</font> (<a href="config_network">reconfigure</a> or <a href="join_cluster">join another cluster</a>)<br>' %>
-            <%= @config.communication_layer.description %>
-            <% end %>
-        </td>
-    </tr>
-    <tr>
-        <td>Cluster members:</td>
-        <td>
-            <% if !@config.cluster_members.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="config_members">configure</a>)' %>
-            <% else %>
-            <%= '<font color="green">Configured</font> (<a href="config_members">reconfigure</a>)<br>' %>
-            <%= @config.cluster_members.description %>
+            <%= '<font color="green">Configured</font> (<a href="config_cluster">reconfigure</a>)<br>' %>
+            <%= @config.cluster.description %>
             <% end %>
         </td>
     </tr>

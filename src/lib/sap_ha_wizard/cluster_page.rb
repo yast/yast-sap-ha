@@ -148,7 +148,7 @@ module Yast
     def nodes_table
       Table(
         Id(:node_definition_table),
-        Opt(:keepSorting),
+        Opt(:keepSorting, :notify, :immediate),
         nodes_table_header,
         []
       )
@@ -167,7 +167,7 @@ module Yast
         Integer(@my_model.number_of_rings) * 1.7,
         Table(
           Id(:ring_definition_table),
-          Opt(:keepSorting),
+          Opt(:keepSorting, :notify, :immediate),
           multicast? ?
             Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address'))
             : Header(_('Ring'), _('Address'), _('Port')),
@@ -192,24 +192,12 @@ module Yast
       end
     end
 
-    def handle_user_input(input)
+    def handle_user_input(input, event)
       case input
       when :edit_node
-        item_id = UI.QueryWidget(Id(:node_definition_table), :Value)
-        values = node_configuration_popup(@my_model.node_parameters(item_id))
-        Report.ClearErrors
-        log.info "Return from ring_configuration_popup: #{values}"
-        if !values.nil? && !values.empty?
-          @my_model.update_values(item_id, values)
-          refresh_view
-        end
+        edit_node
       when :edit_ring
-        item_id = UI.QueryWidget(Id(:ring_definition_table), :Value)
-        values = ring_configuration_popup(@my_model.ring_info(item_id))
-        if !values.nil? && !values.empty?
-          @my_model.update_ring(item_id, values)
-          refresh_view
-        end
+        edit_ring
       when :number_of_rings
         number = Integer(UI.QueryWidget(Id(:number_of_rings), :Value))
         log.warn "--- #{self.class}.#{__callee__}: calling @my_model.number_of_rings= ---"
@@ -222,15 +210,39 @@ module Yast
         refresh_view
       when :join_cluster # won't happen ever
         return :join_cluster
+      when :ring_definition_table
+        edit_ring if event['EventReason'] == 'Activated'
+      when :node_definition_table
+        edit_node if event['EventReason'] == 'Activated'
       else
         super
+      end
+    end
+
+    def edit_ring
+      item_id = UI.QueryWidget(Id(:ring_definition_table), :Value)
+      values = ring_configuration_popup(@my_model.ring_info(item_id))
+      if !values.nil? && !values.empty?
+        @my_model.update_ring(item_id, values)
+        refresh_view
+      end      
+    end
+
+    def edit_node
+      item_id = UI.QueryWidget(Id(:node_definition_table), :Value)
+      values = node_configuration_popup(@my_model.node_parameters(item_id))
+      Report.ClearErrors
+      log.info "Return from ring_configuration_popup: #{values}"
+      if !values.nil? && !values.empty?
+        @my_model.update_values(item_id, values)
+        refresh_view
       end
     end
 
     def node_configuration_popup(values)
       log.debug "--- #{self.class}.#{__callee__} --- "
       base_popup(
-        "Configuration for Node #{values[:node_id]}",
+        "Configuration for node #{values[:node_id]}",
         -> (args) { @my_model.validate_node(args, :verbose) },
         InputField(Id(:host_name), 'Host name:', values[:host_name] || ""),
         InputField(Id(:ip_ring1), 'IP Ring 1:', values[:ip_ring1] || ""),

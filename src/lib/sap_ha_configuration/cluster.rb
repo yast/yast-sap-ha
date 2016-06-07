@@ -23,8 +23,12 @@ require 'yast'
 require 'erb'
 require 'socket'
 require_relative 'base_component_configuration.rb'
+require 'sap_ha_system/cluster'
 
 Yast.import 'UI'
+Yast.import 'Cluster'
+Yast.import 'SuSEFirewallServices'
+Yast.import 'SuSEFirewall'
 
 module Yast
   class ClusterConfigurationException < ModelValidationException
@@ -139,8 +143,19 @@ module Yast
       return flag unless flag
       flag &= SemanticChecks.instance.check(:silent) do |check|
         check.unique(@nodes.map { |_, v| v[:ip_ring1] })
-        check.unique(@nodes.map { |_, v| v[:ip_ring2] }) if @number_of_rings >= 2
-        check.unique(@nodes.map { |_, v| v[:ip_ring3] }) if @number_of_rings == 3
+        check.ips_belong_to_net(@nodes.map { |_, v| v[:ip_ring1] },
+          @rings[:ring1][:address])
+        if @number_of_rings >= 2
+          check.unique(@nodes.map { |_, v| v[:ip_ring2] }) if @number_of_rings >= 2
+          check.ips_belong_to_net(@nodes.map { |_, v| v[:ip_ring2] },
+            @rings[:ring2][:address]
+          )
+        end
+        if @number_of_rings == 3
+          check.unique(@nodes.map { |_, v| v[:ip_ring3] }) 
+          check.ips_belong_to_net(@nodes.map { |_, v| v[:ip_ring3] },
+            @rings[:ring3][:address])
+        end
       end
       flag
     end
@@ -163,30 +178,28 @@ module Yast
 
     def description
       tmp = ERB.new(
-        '
-          <% @nodes.each_with_index do |(k, nd), ix| %>
-            <% ips = [nd[:ip_ring1], nd[:ip_ring2], nd[:ip_ring3]][0...@number_of_rings].join(", ") %>
-            <%= "&nbsp; #{nd[:node_id]}. #{nd[:host_name]} (#{ips})." %>
-            <% if ix != (@nodes.length-1) %>
-              <%= "<br>" %>
-            <% end %>
+        '&nbsp; Transport mode: <%= @transport_mode %>.<br>
+        &nbsp; Cluster name: <%= @cluster_name %>.<br>
+        &nbsp; Expected votes: <%= @expected_votes %>.<br>
+        &nbsp; Rings:<br>
+        <% @rings.each_with_index do |(k, ring), ix| -%>
+            &nbsp; <%= ring[:id] %>. <%= ring[:address] %>, port <%= ring[:port] %>
+            <% if multicast? -%>
+              <%= ring[:mcast] -%>
+            <% end -%>
+            <br>
+        <% end -%>
+        &nbsp; Nodes:<br>
+        <% @nodes.each_with_index do |(k, nd), ix| %>
+          <% ips = [nd[:ip_ring1], nd[:ip_ring2], nd[:ip_ring3]][0...@number_of_rings].join(", ") %>
+          <%= "&nbsp; #{nd[:node_id]}. #{nd[:host_name]} (#{ips})." %>
+          <% if ix != (@nodes.length-1) %>
+            <%= "<br>" %>
           <% end %>
-        '
-      )
+        <% end %>
+        ', 1, '-')
       tmp.result(binding)
     end
-
-    # def description
-    #   a = []
-    #   a << "&nbsp; Transport mode: #{@transport_mode}."
-    #   a << "&nbsp; Cluster name: #{@cluster_name}."
-    #   a << "&nbsp; Expected votes: #{@expected_votes}."
-    #   @rings.each do |_, r|
-    #     add = (@transport_mode == :multicast) ? ", mcast #{r[:mcast]}." : "."
-    #     a << "&nbsp; #{r[:id]}. #{r[:address]}, port #{r[:port]}#{add}"
-    #   end
-    #   a.join('<br>')
-    # end
 
     def fixed_number_of_nodes?
       !@fixed_number_of_nodes.nil?
@@ -226,7 +239,10 @@ module Yast
     # end
 
     def apply(role)
-      return false if !configured?
+      cluster_apply
+      SAPHACluster.instance.enable_socket('csync2')
+      SAPHACluster.instance.enable_service('pacemaker')
+      SAPHACluster.instance.start_service('pacemaker')
     end
 
     def validate
@@ -266,11 +282,71 @@ module Yast
       (1..@number_of_rings).each do |ix|
         @rings["ring#{ix}".to_sym] = {
           address: '',
-          port:    '',
+          port:    5405,
           id:      ix,
           mcast:   ''
         }
       end
+    end
+
+    def open_ports(role)
+      # 30865 for csync2
+      # 5560 for mgmtd
+      # 7630 for hawk2
+      # 21064 for dlm
+      tcp_ports = ["30865", "5560", "7630", "21064"]
+      udp_ports = @rings.map { |_, r| r[:port].to_s }[0...@number_of_rings].uniq
+      SuSEFirewallServices.SetNeededPortsAndProtocols(
+        "service:cluster", { "tcp_ports" => tcp_ports, "udp_ports" => udp_ports})
+      SuSEFirewall.AddService("cluster", "TCP", "EXT")
+      SuSEFirewall.AddService("cluster", "UDP", "EXT")
+      SuSEFirewall.Write
+      SuSEFirewall.ActivateConfiguration if role == :master
+      # TODO: make sure the configuration is activated on the exit of the XML RPC server
+    end
+
+    def cluster_apply
+      log.error "@nodes=#{@nodes}"
+      log.error "@rings=#{@rings}"
+      return unless configured?
+      memberaddr = @nodes.map { |_, e| {addr1: e[:ip_ring1]} }
+      host_names = @nodes.map { |_, e| e[:host_name] }
+      included_files = [
+        '/etc/corosync/corosync.conf',
+        '/etc/corosync/authkey',
+        '/etc/sysconfig/pacemaker',
+        '/etc/drbd.d',
+        '/etc/drbd.conf',
+        '/etc/lvm/lvm.conf',
+        '/etc/multipath.conf',
+        '/etc/ha.d/ldirectord.cf',
+        '/etc/ctdb/nodes',
+        '/etc/samba/smb.conf',
+        '/etc/booth',
+        '/etc/sysconfig/sbd',
+        '/etc/csync2/csync2.cfg',
+        '/etc/csync2/key_hagroup'
+      ]
+      cluster_export = {    "secauth" => true,
+        "transport" => "udpu",
+        "bindnetaddr1" => @rings[:ring1][:address],
+        "memberaddr" => memberaddr,
+        "mcastaddr1" => "",
+        "cluster_name" => @cluster_name,
+        "expected_votes" => @expected_votes.to_s,
+        "two_node" => "1",
+        "mcastport1" => @rings[:ring1][:port],
+        "enable2" => false, # use the second ring?
+        "bindnetaddr2" => "",
+        "mcastaddr2" => "",
+        "mcastport2" => "",
+        "autoid" => true,
+        "rrpmode" => "none",
+        "csync2_host" => host_names,
+        "csync2_include" => included_files
+      }
+      Cluster.Import(cluster_export)
+      Cluster.Write
     end
   end
 end

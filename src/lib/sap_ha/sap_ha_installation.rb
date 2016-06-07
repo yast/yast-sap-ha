@@ -14,8 +14,7 @@ module Yast
     end
 
     def run
-      @ui.next_node if @ui
-      # local_configuration
+      local_configuration
       @ui.next_node if @ui
       log.error "--- #{self.class}.#{__callee__}: configuring remote nodes ---"
       for node in @other_nodes
@@ -46,8 +45,8 @@ module Yast
       @ui.next_task if @ui
       for component_id in @config.components
         log.error "--- #{self.class}.#{__callee__}: configuring component #{component_id} on node #{node[:hostname]} ---"
-        func = "sapha.config_#{component_id.to_s[1..-1]}.bogus_apply"
-        rpc.call(func)
+        func = "sapha.config_#{component_id.to_s[1..-1]}.apply"
+        rpc.call(func, :slave)
         @ui.next_task
       end
     ensure
@@ -63,7 +62,7 @@ module Yast
       @ui.next_task if @ui # we are not connecting to this node
       for component_id in @config.components
         log.error "--- #{self.class}.#{__callee__}: configuring #{component_id} ---"
-        @config.instance_variable_get(component_id).bogus_apply
+        @config.instance_variable_get(component_id).apply(:master)
         @ui.next_task if @ui
       end
       log.error "--- #{self.class}.#{__callee__}: finished ---"
@@ -71,7 +70,7 @@ module Yast
 
     def prepare
       # TODO: rename other_nodes_ext
-      @other_nodes = @config.cluster_members.other_nodes_ext
+      @other_nodes = @config.cluster.other_nodes_ext
       calculate_gui if @ui
     end
 

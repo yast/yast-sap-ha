@@ -20,6 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
+require 'sap_ha_system/shell_commands'
 require_relative 'base_component_configuration.rb'
 Yast.import 'UI'
 
@@ -29,6 +30,7 @@ module Yast
     attr_reader :proposals, :sysconfig
     attr_accessor :sbd_options, :sbd_delayed_start
 
+    include ShellCommands
     include Yast::UIShortcuts
 
     def initialize
@@ -106,6 +108,16 @@ module Yast
       SCR.Write(Path.new('.sysconfig.sbd'), nil)
     end
 
+    def apply(role)
+      return false if !configured?
+      flag = write_sysconfig
+      if role == :master
+        flag &= initialize_sbd
+        flag &= add_stonith_resource
+      end
+      flag
+    end
+
     private
 
     def handle_sysconfig
@@ -124,9 +136,20 @@ module Yast
       @proposals = blk.select { |d| d[:type] == "part" || d[:type] == "disk" }
     end
 
-    def apply(role)
-      return false if !configured?
-      write_sysconfig
+    def initialize_sbd
+      flag = true
+      for device in @devices
+        log.warn "Initializing the SBD device on #{device[:name]}"
+        status = exec_status_l('sbd', '-d', device[:name], 'create')
+        log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
+        flag &= status.exitstatus == 0
+      end
+      flag
+    end
+
+    def add_stonith_resource
+      stat = exec_status_l('crm', 'configure', 'primitive', 'stonith-sbd', 'stonith:external/sbd')
+      stat.exitstatus == 0
     end
   end
 end

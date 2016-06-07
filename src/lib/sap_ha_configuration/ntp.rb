@@ -65,6 +65,7 @@ module Yast
       return true if role == :master
       NtpClient.Import @config
       NtpClient.Write
+      true
     end
   end
 end

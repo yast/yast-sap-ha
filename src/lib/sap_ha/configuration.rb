@@ -75,7 +75,7 @@ module Yast
       @watchdog = WatchdogConfiguration.new
       @hana = HANAConfiguration.new
       @ntp = NTPConfiguration.new
-      @components = [:@cluster, :@communication_layer, :@fencing, :@watchdog, :@ntp]
+      @components = [:@cluster, :@fencing, :@watchdog, :@ntp]
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found

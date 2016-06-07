@@ -75,6 +75,8 @@ module Yast
 
     def apply(role)
       return false if !configured?
+      # TODO: implement
+      true
     end
   end
 end

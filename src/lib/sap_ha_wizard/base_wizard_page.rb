@@ -62,8 +62,8 @@ module Yast
 
     # Handle custom user input
     # @param input [Symbol]
-    def handle_user_input(input)
-      log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect} ---"
+    def handle_user_input(input, event)
+      log.warn "--- #{self.class}.#{__callee__} : Unexpected user input=#{input.inspect}, event=#{event.inspect} ---"
     end
 
     # Set the contents of the Wizard's page and run the event loop
@@ -92,8 +92,11 @@ module Yast
     def main_loop
       log.debug "--- #{self.class}.#{__callee__} ---"
       loop do
-        input = Wizard.UserInput
+        # input = Wizard.UserInput
         log.debug "--- #{self.class}.#{__callee__} ---"
+        event = Wizard.WaitForEvent()
+        log.error "--- #{self.class}.#{__callee__}: event=#{event} ---"
+        input = event["ID"]
         case input
         # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
         # it should redefine the main_loop
@@ -107,7 +110,7 @@ module Yast
             dialog_cannot_continue
           end
         else
-          handle_user_input(input)
+          handle_user_input(input, event)
         end
       end
     end

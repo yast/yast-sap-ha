@@ -38,7 +38,7 @@ module Yast
         base_layout_with_label(
           'Select the appropriate watchdog modules to load at system startup',
           VBox(
-            SelectionBox(Id(:configured_wd), 'Configured watchdogs:', []),
+            SelectionBox(Id(:configured_wd), Opt(:notify, :immediate), 'Configured watchdogs:', []),
             HBox(
               PushButton(Id(:add_wd), 'Add'),
               PushButton(Id(:remove_wd), 'Remove')
@@ -63,7 +63,7 @@ module Yast
       UI.ChangeWidget(Id(:loaded_wd), :Items, @my_model.loaded)
     end
 
-    def handle_user_input(input)
+    def handle_user_input(input, event)
       case input
       when :add_wd
         to_add = wd_selection_popup

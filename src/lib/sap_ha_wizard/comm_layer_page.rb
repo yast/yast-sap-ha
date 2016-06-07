@@ -120,7 +120,7 @@ module Yast
       @my_model.transport_mode == :multicast
     end
 
-    def handle_user_input(input)
+    def handle_user_input(input, event)
       case input
       when :edit_ring
         item_id = UI.QueryWidget(Id(:ring_definition_table), :Value)

@@ -62,7 +62,7 @@ module Yast
       true
     end
 
-    def handle_user_input(input)
+    def handle_user_input(input, event)
       case input
       when :ntp_configure
         if WFM.ClientExists('ntp-client')

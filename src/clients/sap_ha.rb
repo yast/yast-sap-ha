@@ -330,13 +330,13 @@ module Yast
         expected_votes: 2,
         rings: {
           ring1: {
-            address:  '192.168.103.0',
+            address:  '192.168.101.0',
             port:     '5999',
             id:       1,
             mcast:    ''
           },
           ring2: {
-            address:  '192.168.101.0',
+            address:  '192.168.103.0',
             port:     '5999',
             id:       2,
             mcast:    ''

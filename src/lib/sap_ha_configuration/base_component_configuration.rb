@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'sap_ha/exceptions'
+require 'sap_ha/semantic_checks'
 
 module Yast
   # Base class for component configuration

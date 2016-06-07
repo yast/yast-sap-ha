@@ -89,7 +89,7 @@ module Yast
       @my_model.sbd_delayed_start = value(:sbd_delayed_start)
     end
 
-    def handle_user_input(input)
+    def handle_user_input(input, event)
       case input
       when :add_sbd_device
         sbd_dev_configuration

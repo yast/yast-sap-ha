@@ -29,6 +29,8 @@ require "sap_ha/helpers"
 require "sap_ha_system/shell_commands"
 require 'yaml'
 
+Yast.import 'SuSEFirewall'
+
 module SAPHA
   # RPC Server for inter-node communication
   #
@@ -76,7 +78,7 @@ module SAPHA
     end
 
     def shutdown
-      Thread.new { sleep 1; @server.shutdown }
+      Thread.new { sleep 3; @server.shutdown }
       return true
     end
 
@@ -112,4 +114,6 @@ if __FILE__ == $0
   at_exit { server.shutdown }
   server.start
   server.close_port
+  # The configuration is written by the XML RPC calls
+  SuSEFirewall.ActivateConfiguration
 end

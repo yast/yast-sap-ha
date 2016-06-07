@@ -125,6 +125,13 @@ module Yast
       return report_error(flag, message, field_name, value)
     end
 
+    def ips_belong_to_net(ips, net, message = '', field_name = '')
+      last_dot = net.rindex('.')
+      return report_error(false, message, field_name, value) if last_dot.nil?
+      flag = ips.all? { |ip| ip.start_with?(net[0..last_dot]) }
+      return report_error(flag, message, field_name, '')
+    end
+
     def check(verbosity, &block)
       old_silent = @silent
       if verbosity == :verbose
