@@ -33,18 +33,18 @@ module ShellCommands
   # @return [Process::Status]
   def exec_status(command)
     # TODO: remove
-    puts "exec_status: #{command}"
+    # puts "exec_status: #{command}"
     Open3.popen3(command) { |_, _, _, wait_thr| wait_thr.value }
   end
 
   def exec_status_l(*params)
-    puts "exec_status: #{params}"
+    # puts "exec_status: #{params}"
     Open3.popen3(*params) { |_, _, _, wait_thr| wait_thr.value }
   end
 
   def exec_status_lo(*params)
     # todo replace with Open3.capture2(params)
-    puts "exec_status: #{params}"
+    # puts "exec_status: #{params}"
     Open3.popen3(*params) { |_, out, _, wait_thr| [wait_thr.value, out.read] }
   end
 

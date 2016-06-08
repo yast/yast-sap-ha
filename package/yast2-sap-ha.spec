@@ -25,7 +25,7 @@ Source1:        yast2-sap-ha-rpmlintrc
 Requires:       yast2
 Requires:       yast2-ruby-bindings
 Requires:       xdg-utils
-Requires:       expect openssh yast2-cluster yast2-ntp-client ha-cluster-bootstrap
+Requires:       expect openssh yast2-cluster yast2-ntp-client ha-cluster-bootstrap util-linux
 
 BuildRequires:  yast2
 BuildRequires:  yast2-ruby-bindings

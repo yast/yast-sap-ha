@@ -22,6 +22,7 @@
 
 ENV['Y2DIR'] = File.expand_path('../../../../src', __FILE__)
 
+require 'pry'
 require 'yast'
 require "xmlrpc/server"
 require "sap_ha/configuration"
@@ -30,6 +31,7 @@ require "sap_ha_system/shell_commands"
 require 'yaml'
 
 Yast.import 'SuSEFirewall'
+Yast.import 'Service'
 
 module SAPHA
   # RPC Server for inter-node communication
@@ -84,7 +86,6 @@ module SAPHA
 
     def open_port
       rule_no = get_rule_number
-      puts "RULE NO #{rule_no}"
       return if rule_no
       rc, out = exec_status_lo('/usr/sbin/iptables', '-I', 
         'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
@@ -106,6 +107,11 @@ module SAPHA
       return nil if out.empty?
       Integer(out.strip)
     end
+
+    def write_log(str)
+      @fh.write(str)
+      @fh.flush
+    end
   end
 end
 
@@ -114,6 +120,16 @@ if __FILE__ == $0
   at_exit { server.shutdown }
   server.start
   server.close_port
+  pry.debug
+  # Yast::SuSEFirewall.WriteConfiguration
+  Yast::SuSEFirewall.ActivateConfiguration
+  # if Yast::Service.Active("SuSEfirewall2")
+  #   system("systemctl restart SuSEfirewall2")
+  #   system("nohup sh -c 'sleep 5 && systemctl restart SuSEfirewall2' > /dev/null &")
+  #   server.write_log("\tSlept\n")
+  # end
+  # server.write_log("Activated firewall\n")
   # The configuration is written by the XML RPC calls
-  SuSEFirewall.ActivateConfiguration
+  # Yast::SuSEFirewall.ActivateConfiguration
+  # exec_status_l('systemctl', 'restart', 'SuSEfirewall2')
 end

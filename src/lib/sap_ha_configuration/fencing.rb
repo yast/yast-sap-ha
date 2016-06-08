@@ -55,9 +55,14 @@ module Yast
 
     def description
       ds = @devices.map { |d| d[:name] }.join(', ')
+      options = if @sysconfig[:options].nil? || @sysconfig[:options].empty?
+                  'none'
+                else
+                  @sysconfig[:options]
+                end
       "&nbsp; Configured devices: #{ds}.<br>
-      &nbsp; Delayed start : #{@sysconfig[:dealy_start] || 'false'}.<br>
-      &nbsp; SBD options : #{@sysconfig[:options] || 'none'}."
+      &nbsp; Delayed start: #{@sysconfig[:dealy_start] || 'false'}.<br>
+      &nbsp; SBD options: #{options}."
     end
 
     # Drop-down box items

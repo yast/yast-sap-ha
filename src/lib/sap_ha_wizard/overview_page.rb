@@ -16,15 +16,15 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Setup summary page
+# Summary: SUSE High Availability Setup for SAP Products: Configuration overview page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
 require 'sap_ha/helpers'
 
 module Yast
-  # Setup summary page
-  class SetupSummaryPage < BaseWizardPage
+  # Configuration Overview page
+  class ConfigurationOverviewPage < BaseWizardPage
     attr_accessor :model
 
     def initialize(model)
@@ -34,31 +34,39 @@ module Yast
     def set_contents
       super
       base_rich_text(
-        "High-Availability Setup Summary",
-        # UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
-        # SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
-        '<h2>You made it!</h2>',
-        # SAPHAHelpers.instance.load_help('help_setup_summary.html'),
-        '',
+        "High-Availability Configuration Overview",
+        UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
+        SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
+        SAPHAHelpers.instance.load_help('help_setup_summary.html'),
         true,
         true
       )
-      # Checkbox: save configuration
-      # Button: show log
     end
 
     def refresh_view
       Wizard.DisableBackButton
-      Wizard.SetNextButton(:next, "&Finish")
-      Wizard.EnableNextButton
+      log.warn "--- #{self.class}.#{__callee__} : can_install=#{@config.can_install?.inspect} ---"
+      if @config.can_install?
+        Wizard.EnableNextButton
+      else
+        Wizard.DisableNextButton
+      end
+      Wizard.SetNextButton(:next, "&Install")
     end
 
     def can_go_next
-      true
+      false
     end
 
-    def handle_user_input(input, event)
-      log.error "--- called #{self.class}.#{__callee__}: input=#{input}, event=#{event} ---"
+    protected
+
+    def main_loop
+      # TODO: the 'x' button of the window doesn't work here...
+      log.debug "--- #{self.class}.#{__callee__} ---"
+      input = Wizard.UserInput
+      log.error "--- #{self.class}.#{__callee__}: input is #{input.inspect} ---"
+      Wizard.SetNextButton(:summary, "&Overview") unless input == :next
+      input.to_sym
     end
   end
 end

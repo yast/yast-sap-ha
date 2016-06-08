@@ -22,6 +22,7 @@
 require 'yast'
 require 'open3'
 require_relative 'watchdog'
+require_relative 'shell_commands'
 
 Yast.import 'Service'
 Yast.import 'SystemdService'
@@ -40,6 +41,7 @@ module Yast
   # Class for cluster configuration
   class SAPHACluster
     include Singleton
+    include ShellCommands
     include Yast::Logger
 
     def initialize
@@ -79,6 +81,19 @@ module Yast
       socket = SystemdSocket.find(socket_name)
       return false if socket.nil?
       socket.disable if socket.enabled?
+    end
+
+    def generate_csync_key
+
+    end
+
+    def generate_corosync_key
+      ret = exec_status_l('/usr/sbin/corosync-keygen', '-l')
+      ret.exitstatus
+    end
+
+    def read_corosync_key
+      exec_status_l()
     end
 
     # join an existing cluster

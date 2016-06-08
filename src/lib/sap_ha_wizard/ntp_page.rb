@@ -74,13 +74,6 @@ module Yast
           continue
         end
         @my_model.read_configuration
-        # TODO: NtpClient's bug
-        # log.error "PROGRESS IS RUNNING: #{Progress.IsRunning}"
-        # if Progress.IsRunning
-          # Progress.Finish
-          # log.error "PROGRESS IS RUNNING: #{Progress.IsRunning}"
-          # set_contents
-        # end
         refresh_view
       else
         super

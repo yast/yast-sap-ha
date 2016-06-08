@@ -78,5 +78,29 @@ module Yast
       # TODO: implement
       true
     end
+
+    def hana_make_backup
+      # TODO: the user name has to come from the user
+      cmd = 'hdbsql -u system -i 00 "BACKUP DATA USING FILE (\'backup\')"'
+    end
+
+    def hana_enable_primary
+      # issue as the SIDadm user
+      # TODO: site name has to come from the user
+      cmd = 'hdbnsutil -sr_enable --name=WALLDORF'
+    end
+
+    def hana_enable_secondary
+      # issued on the secondary node from SIDadm
+      # TODO: here we need to obtain a hostname of the remote host
+      # TODO: site name has to come from the user
+      # TODO: mode can come from the user
+      cmd = 'hdbnsutil -sr_register --remoteHost=suse01 --remoteInstance=00 --mode=sync --name=ROT'
+      cmd 
+    end
+
+    def configure_hawk
+      
+    end
   end
 end

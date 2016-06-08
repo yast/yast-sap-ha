@@ -28,6 +28,7 @@ require 'sap_ha_wizard/fencing_page'
 require 'sap_ha_wizard/watchdog_page'
 require 'sap_ha_wizard/hana_page'
 require 'sap_ha_wizard/ntp_page'
+require 'sap_ha_wizard/overview_page'
 require 'sap_ha_wizard/summary_page'
 require 'sap_ha_wizard/gui_installation_page'
 require 'sap_ha/configuration'
@@ -124,7 +125,8 @@ module Yast
           next:              "fencing",
           back:              :back,
           abort:             :abort,
-          cancel:            :abort
+          cancel:            :abort,
+          summary:           "config_overview"
         },
         "debug_run"             => {
           config_overview:   "config_overview"
@@ -139,7 +141,8 @@ module Yast
         "summary"               => {
           abort:             :abort,
           cancel:            :abort,
-          back:              :back
+          back:              :back,
+          next:              :ws_finish
         }
       }
       @aliases = {
@@ -166,7 +169,8 @@ module Yast
       Wizard.CreateDialog
       Wizard.SetDialogTitle("SAP High-Availability")
       begin
-        Sequencer.Run(@aliases, @sequence)
+        ret = Sequencer.Run(@aliases, @sequence)
+        log.error "Sequencer finished with #{ret}"
       ensure
         Wizard.CloseDialog
       end
@@ -256,7 +260,7 @@ module Yast
     def configuration_overview
       log.debug "--- called #{self.class}.#{__callee__} ---"
       ret = ConfigurationOverviewPage.new(@config).run
-      log.error "--- #{self.class}.#{__callee__}: return=#{ret} ---"
+      log.error "--- #{self.class}.#{__callee__}: return=#{ret.inspect} ---"
       return :abort if ret == :back # TODO: find out why it returns "back"
       ret
     end
@@ -293,23 +297,14 @@ module Yast
 
     def run_installation
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      return :next if WFM.Args.include? 'noinst'
       ui = GUIInstallationPage.new
-      ret = SAPHAInstallation.new(@config, ui).run
-      log.debug "--- called #{self.class}.#{__callee__} returning #{ret}---"
-      # ret
-      # TODO: returning :abort here works, but returning anything else does not...
-      :next
+      SAPHAInstallation.new(@config, ui).run
     end
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SAPHAGUI.richt_text(
-        'Installation summary',
-        'The High-Availability setup finished correctly!',
-        '',
-        false,
-        false
-      )
+      SetupSummaryPage.new(@config).run
     end
 
     def debug_run
@@ -331,13 +326,13 @@ module Yast
         rings: {
           ring1: {
             address:  '192.168.101.0',
-            port:     '5999',
+            port:     '5405',
             id:       1,
             mcast:    ''
           },
           ring2: {
             address:  '192.168.103.0',
-            port:     '5999',
+            port:     '5405',
             id:       2,
             mcast:    ''
           }
@@ -370,6 +365,21 @@ module Yast
       instance:  '05',
       virtual_ip: '192.168.101.100'
     )
+    ntp_cfg = {"synchronize_time"=>false,
+       "sync_interval"=>5,
+       "start_at_boot"=>true,
+       "start_in_chroot"=>false,
+       "ntp_policy"=>"auto",
+       "peers"=>
+        [{"type"=>"server",
+          "address"=>"ntp.local",
+          "options"=>" iburst",
+          "comment"=>"# key (6) for accessing server variables\n"}],
+       "restricts"=>[]}
+    Yast.import 'NtpClient'
+    NtpClient.Import ntp_cfg
+    NtpClient.Write
+    @config.ntp.read_configuration
     end
   end
 

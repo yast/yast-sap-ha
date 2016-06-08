@@ -1,0 +1,50 @@
+# TODO: is it supposed to be crm-...?
+configure property $id="cib-bootstrap-options" \
+    no-quorum-policy="ignore" \
+    stonith-enabled="true" \
+    stonith-action="reboot" \
+    stonith-timeout="150s"
+
+configure rsc_default $id="rsc-options" \
+    resource-stickiness="1000" \
+    migration-threshold="5000"
+
+configure op_defaults $id="op-options" \
+    timeout="600"
+
+configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
+    params \
+    ip="<%= @virtual_ip %>" \
+    op start timeout="20" op stop timeout="20" \
+    op monitor interval="10" timeout="20"
+
+configure primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHanaTopology \
+    params \
+    SID="<%= @system_id -%>" \
+    InstanceNumber="<%= @instance -%>" \
+    op monitor interval="10" timeout="600" \
+    op start interval="0" timeout="600" \
+    op stop interval="0" timeout="300" \
+
+configure primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
+    params \
+    SID="<%= @system_id -%>" \
+    InstanceNumber="<%= @instance -%>" \
+    PREFER_SITE_TAKEOVER="<%= @prefer_takeover -%>" \
+    AUTOMATED_REGISTER="<%= @auto_register -%>" \
+    DUPLICATE_PRIMARY_TIMEOUT="7200" \
+    op start interval="0" timeout="3600" \
+    op stop interval="0" timeout="3600" \
+    op promote interval="0" timeout="3600" \
+    op monitor interval="60" role="Master" timeout="700" \
+    op monitor interval="61" role="Slave" timeout="700"
+
+configure ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
+    meta clone-max="2" clone-node-max="1" interleave="true"
+
+configure clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
+    meta is-managed="true" clone-node-max="1" interleave="true"
+
+configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+
+configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>

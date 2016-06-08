@@ -243,6 +243,7 @@ module Yast
       SAPHACluster.instance.enable_socket('csync2')
       SAPHACluster.instance.enable_service('pacemaker')
       SAPHACluster.instance.start_service('pacemaker')
+      open_ports(role)
     end
 
     def validate
@@ -258,10 +259,6 @@ module Yast
         check.hostname(node[:host_name], 'Hostname')
         check.nonneg_integer(node[:node_id], 'Node ID')
       end
-    end
-
-    def check_ssh_connectivity
-
     end
 
     private
@@ -298,11 +295,28 @@ module Yast
       udp_ports = @rings.map { |_, r| r[:port].to_s }[0...@number_of_rings].uniq
       SuSEFirewallServices.SetNeededPortsAndProtocols(
         "service:cluster", { "tcp_ports" => tcp_ports, "udp_ports" => udp_ports})
-      SuSEFirewall.AddService("cluster", "TCP", "EXT")
-      SuSEFirewall.AddService("cluster", "UDP", "EXT")
+      SuSEFirewall.Read
+      SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
       SuSEFirewall.Write
       SuSEFirewall.ActivateConfiguration if role == :master
       # TODO: make sure the configuration is activated on the exit of the XML RPC server
+      true
+    end
+
+    def start_services
+      # TODO: start hawk2 and restart? the firewall
+    end
+
+    def generate_corosync_key
+
+    end
+
+    def generate_csync2_key
+    end
+
+    def change_password_for_hawk
+      # is to be called on all the nodes
+      `echo "sapcluster" | passwd hacluster --stdin`
     end
 
     def cluster_apply
@@ -335,6 +349,7 @@ module Yast
         "cluster_name" => @cluster_name,
         "expected_votes" => @expected_votes.to_s,
         "two_node" => "1",
+        # TODO: it seems this is not reflected in the config
         "mcastport1" => @rings[:ring1][:port],
         "enable2" => false, # use the second ring?
         "bindnetaddr2" => "",
