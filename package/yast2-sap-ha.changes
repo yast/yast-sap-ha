@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jun 14 14:43:04 UTC 2016 - imanyugin@suse.com
+
+- Update to version 0.6.6;
+- Fixed a bug in Cluster Configuration page;
+- fate#319068;
+
+-------------------------------------------------------------------
 Mon Jun 13 13:47:52 UTC 2016 - imanyugin@suse.com
 
 - Added XML RPC functionality to manipulate remote nodes;

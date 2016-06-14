@@ -280,7 +280,7 @@ module Yast
       (1..@number_of_rings).each do |ix|
         @rings["ring#{ix}".to_sym] = {
           address: '',
-          port:    5405,
+          port:    '5405',
           id:      ix,
           mcast:   ''
         }

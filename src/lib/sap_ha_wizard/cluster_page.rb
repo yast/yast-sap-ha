@@ -260,7 +260,7 @@ module Yast
         "Configuration for ring #{ring[:id]}",
         -> (args) { @my_model.validate_ring(args, :verbose) },
         MinWidth(15, InputField(Id(:address), 'IP Address:', ring[:address])),
-        MinWidth(5, InputField(Id(:port), 'Port Number:', ring[:port])),
+        MinWidth(5, InputField(Id(:port), 'Port Number:', ring[:port].to_s)),
         multicast? ? 
           MinWidth(15, InputField(Id(:mcast), 'Multicast Address', ring[:mcast]))
           : Empty()

@@ -107,7 +107,7 @@ module Yast
     def configure_crm
       crm_conf = SAPHAHelpers.instance.render_template('tmpl_cluster_config.erb', binding)
       file_path = SAPHAHelpers.instance.write_var_file('cluster.config', crm_conf)
-      status = exec_status_l('crm', 'configure', '--file', file_path)
+      status = exec_status_l('crm', '--file', file_path)
       status.exitstatus == 0
     end
 
