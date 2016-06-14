@@ -30,6 +30,7 @@ module Yast
       @config = config
       @yaml_config = config.dump(true)
       @ui = ui
+      @zlog = []
       prepare
     end
 
@@ -45,8 +46,6 @@ module Yast
       end
       if @ui
         @ui.unblock
-        log.error "--- #{self.class}.#{__callee__}: returning :next ---"
-        return :next
       else
         log.error "--- #{self.class}.#{__callee__}: UI is screwed ---"
       end
@@ -54,7 +53,8 @@ module Yast
       for node in @other_nodes
         node[:rpc].call('sapha.shutdown') if node[:rpc]
       end
-      true
+      @config.zlog = @zlog.join
+      :next
     end
 
     private
@@ -66,6 +66,7 @@ module Yast
       # Export config
       rpc = node[:rpc]
       rpc.call('sapha.import_config', @yaml_config)
+      rpc.call('sapha.config.start_setup')
       @ui.next_task if @ui
       for component_id in @config.components
         log.error "--- #{self.class}.#{__callee__}: configuring component #{component_id} on node #{node[:hostname]} ---"
@@ -73,6 +74,8 @@ module Yast
         rpc.call(func, :slave)
         @ui.next_task
       end
+      rpc.call('sapha.config.end_setup')
+      @zlog << rpc.call('sapha.config.collect_log')
     end
 
 
@@ -80,11 +83,15 @@ module Yast
       log.error "--- #{self.class}.#{__callee__}: configuring current node ---"
       @ui.next_node if @ui
       @ui.next_task if @ui # we are not connecting to this node
+      @config.start_setup
       for component_id in @config.components
         log.error "--- #{self.class}.#{__callee__}: configuring #{component_id} ---"
         @config.instance_variable_get(component_id).apply(:master)
         @ui.next_task if @ui
       end
+      @config.end_setup
+      @zlog << @config.collect_log
+      log.error "Log is #{@config.collect_log}"
       log.error "--- #{self.class}.#{__callee__}: finished ---"
     end
 

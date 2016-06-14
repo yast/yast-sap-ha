@@ -102,7 +102,6 @@ module Yast
     end
 
     def write_sysconfig
-      # always should be here
       devices = @devices.map { |e| e[:name] }.join(';')
       SCR.Write(Path.new('.sysconfig.sbd.SBD_DEVICE'), devices)
       SCR.Write(Path.new('.sysconfig.sbd.SBD_PACEMAKER'), "yes")
@@ -110,10 +109,17 @@ module Yast
       SCR.Write(Path.new('.sysconfig.sbd.SBD_DELAY_START'), @sbd_delayed_start)
       SCR.Write(Path.new('.sysconfig.sbd.SBD_WATCHDOG'), "yes")
       SCR.Write(Path.new('.sysconfig.sbd.SBD_OPTS'), @sbd_options)
-      SCR.Write(Path.new('.sysconfig.sbd'), nil)
+      commit = SCR.Write(Path.new('.sysconfig.sbd'), nil)
+      if commit
+        @nlog.info('Written SBD system configuration')
+      else
+        @nlog.warn('Could not write the SBD system configuration')
+      end
+      commit
     end
 
     def apply(role)
+      @nlog.info('Appying Fencing Configuration')
       return false if !configured?
       flag = write_sysconfig
       if role == :master
@@ -147,14 +153,26 @@ module Yast
         log.warn "Initializing the SBD device on #{device[:name]}"
         status = exec_status_l('sbd', '-d', device[:name], 'create')
         log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
+        if status.exitstatus == 0
+          @nlog.info "Successfully initialized the SBD device #{device[:name]}"
+        else
+          @nlog.error "Could not initialize the SBD device #{device[:name]}"
+        end
         flag &= status.exitstatus == 0
       end
       flag
     end
 
     def add_stonith_resource
-      stat = exec_status_l('crm', 'configure', 'primitive', 'stonith-sbd', 'stonith:external/sbd')
-      stat.exitstatus == 0
+      out, status = exec_outerr_status('crm', 'configure', 'primitive', 'stonith-sbd', 'stonith:external/sbd')
+      success = status.exitstatus == 0
+      if success
+        @nlog.info('Added a primitive to the cluster: stonith-sbd')
+      else
+        @nlog.error('Could not add the stonith-sbd primitive to the cluster')
+        @nlog.error("Output:\n #{out.strip}")
+      end
+      success
     end
   end
 end

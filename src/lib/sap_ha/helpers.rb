@@ -96,6 +96,18 @@ module Yast
       file_path
     end
 
+    def write_file(path, data)
+      begin
+        File.open(path, 'wb') do |fh|
+          fh.write(data)
+        end
+      rescue RuntimeError => e
+        log.error "Error writing file #{path}: #{e.message}"
+        return false
+      end
+      true
+    end
+
     private
 
     # Read file's contents

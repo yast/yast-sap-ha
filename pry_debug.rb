@@ -1,4 +1,5 @@
 require 'pry'
+require 'yaml'
 
 ENV['Y2DIR'] = File.expand_path('../src', __FILE__)
 
@@ -61,7 +62,7 @@ def rpc(node)
   end
   require "xmlrpc/client"
   XMLRPC::Client.new(ip, "/RPC2", 8080)
-  end
+end
 
 
 # cc = Hash[c.components.map { |config_name| [config_name, c.instance_variable_get(config_name).screen_name] }]
@@ -73,11 +74,14 @@ def process
   y = c.dump(true)
   s = rpc(:hana2)
   s.call('sapha.import_config', y)
+  s.call('sapha.config.start_setup')
   for component_id in c.components
     puts "--- configuring component #{component_id} ---"
     func = "sapha.config_#{component_id.to_s[1..-1]}.bogus_apply"
     s.call(func)
   end
+  s.call('sapha.config.end_setup')
+  puts s.call('sapha.config.collect_log')
   s.call('sapha.shutdown')
   # s.call('system.listMethods')
 end
@@ -121,7 +125,76 @@ c.cluster.import(
     }
   }
 )
+c.fencing.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
+c.watchdog.import(to_install: ['softdog'])
+c.hana.import(
+      system_id: 'XXX',
+      instance:  '05',
+      virtual_ip: '192.168.101.100'
+    )
 
+
+
+class FooBar
+  def initialize
+    @a = 1
+    @b = 2
+    @c = 3
+  end
+end
+
+class FooBaz < FooBar
+  def encode_with(coder)
+    super
+  end
+
+  def init_with(coder)
+    super
+  end
+end
+
+class FooBax < FooBar
+  def initialize
+    super
+    @log = 'FooBaxLog'
+    @yaml_exclude = [:@c, :@yaml_exclude, :@log]
+  end
+
+  def encode_with(coder)
+    puts "FooBax:encode_with"
+    instance_variables.each do |variable_name|
+      next if @yaml_exclude.include? variable_name
+      key = variable_name.to_s[1..-1]
+      coder[key] = instance_variable_get(variable_name)
+    end
+    coder['instance_variables'] = instance_variables - @yaml_exclude
+  end
+
+  def init_with(coder)
+    puts "FooBax:init_with"
+    coder['instance_variables'].each do |variable_name|
+      key = variable_name.to_s[1..-1]
+      instance_variable_set(variable_name, coder[key])
+    end
+    @coder = 'FooBaxLog_init'
+  end
+end
+
+
+class Meow < FooBax
+  def initialize
+    super
+    @d = 5
+    @f = 'hide me'
+    @yaml_exclude << :@f
+  end
+
+  def init_with(coder)
+    puts "Meow:init_with"
+    super
+    @f = 'hidden!'
+  end
+end
 
 binding.pry
 

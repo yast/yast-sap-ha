@@ -280,12 +280,12 @@ module Yast
       end
     end
 
-    def show_dialog_errors(error_list)
+    def show_dialog_errors(error_list, title = "Invalid input")
       log.error "--- #{self.class}.#{__callee__}: #{error_list} ---"
       html_str = "<ul>\n"
       html_str << error_list.map { |e| "<li>#{e}</li>" }.join("\n")
       html_str << "</ul>"
-      Popup.LongText("Invalid input", RichText(html_str), 60, 17)
+      Popup.LongText(title, RichText(html_str), 60, 17)
     end
 
     def dialog_cannot_continue(message=nil)

@@ -56,7 +56,6 @@ module SAPHA
   
       @server.add_handler('sapha.import_config') do |yaml_string|
         @config = YAML::load(yaml_string)
-
         @server.add_handler('sapha.config', @config)
         for config_name in @config.components
           func = "sapha.config_#{config_name.to_s[1..-1]}"

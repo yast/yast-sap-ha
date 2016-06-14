@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'sap_ha/helpers'
+require 'sap_ha_system/node_logger'
 
 module Yast
   # Setup summary page
@@ -33,18 +34,34 @@ module Yast
 
     def set_contents
       super
-      base_rich_text(
+      Wizard.SetContents(
         "High-Availability Setup Summary",
-        # UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
-        # SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
-        '<h2>You made it!</h2>',
-        # SAPHAHelpers.instance.load_help('help_setup_summary.html'),
+        VBox(
+          HBox(
+            HSpacing(3),
+            RichText(SapHA::NodeLogger.to_html(@config.zlog)),
+            HSpacing(3)
+          ),
+          HBox(
+            PushButton(Id(:save_log), 'Save Log')
+          )
+        ),
         '',
-        true,
+        false,
         true
       )
-      # Checkbox: save configuration
-      # Button: show log
+      # base_rich_text(
+        
+      #   # UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
+      #   # SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
+      #   SapHA::NodeLogger.to_html(@config.zlog),
+      #   # SAPHAHelpers.instance.load_help('help_setup_summary.html'),
+      #   '',
+      #   true,
+      #   true
+      # )
+      # # Checkbox: save configuration
+      # # Button: show log
     end
 
     def refresh_view
@@ -58,7 +75,17 @@ module Yast
     end
 
     def handle_user_input(input, event)
-      log.error "--- called #{self.class}.#{__callee__}: input=#{input}, event=#{event} ---"
+      case input
+      when :save_log
+        file_name = UI.AskForSaveFileName("/tmp", "*", "Save as...")
+        return unless file_name
+        success = SAPHAHelpers.instance.write_file(file_name, @config.zlog)
+        if success
+          show_dialog_errors(["Written log to #{file_name}"], 'Success')
+        else
+          show_dialog_errors(["Could not write log file #{file_name}"], 'Error')
+        end
+      end
     end
   end
 end

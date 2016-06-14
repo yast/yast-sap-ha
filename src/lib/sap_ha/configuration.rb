@@ -23,6 +23,7 @@ require 'yast'
 require 'erb'
 require 'yaml'
 
+require 'sap_ha_system/node_logger.rb'
 require 'sap_ha_configuration/cluster.rb'
 require 'sap_ha_configuration/fencing.rb'
 require 'sap_ha_configuration/watchdog.rb'
@@ -54,7 +55,8 @@ module Yast
       :fencing,
       :watchdog,
       :hana,
-      :ntp
+      :ntp,
+      :zlog
 
     include Yast::Logger
     include Yast::I18n
@@ -76,6 +78,7 @@ module Yast
       @hana = HANAConfiguration.new
       @ntp = NTPConfiguration.new
       @components = [:@cluster, :@fencing, :@watchdog, :@ntp]
+      @zlog = ''
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -137,6 +140,23 @@ module Yast
       repr = YAML.dump self
       @role = old_role
       repr
+    end
+
+    # Below are the methods for logging the setup process
+    def start_setup
+      SapHA::NodeLogger.instance.info(
+        "Starting setup process on node #{SapHA::NodeLogger.instance.node_name}")
+      true
+    end
+
+    def end_setup
+      SapHA::NodeLogger.instance.warn(
+        "Finished setup process on node #{SapHA::NodeLogger.instance.node_name}")
+      true
+    end
+
+    def collect_log
+      SapHA::NodeLogger.instance.text
     end
 
     private

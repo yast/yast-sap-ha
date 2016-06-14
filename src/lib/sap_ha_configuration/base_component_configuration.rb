@@ -22,6 +22,7 @@
 require 'yast'
 require 'sap_ha/exceptions'
 require 'sap_ha/semantic_checks'
+require 'sap_ha_system/node_logger'
 
 module Yast
   # Base class for component configuration
@@ -34,6 +35,25 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} ---"
       @screen_name = "Base Component Configuration"
       @exception_type = SAPHAException
+      @nlog = SapHA::NodeLogger.instance
+      @yaml_exclude = [:@yaml_exclude, :@nlog]
+    end
+
+    def encode_with(coder)
+      instance_variables.each do |variable_name|
+        next if @yaml_exclude.include? variable_name
+        key = variable_name.to_s[1..-1]
+        coder[key] = instance_variable_get(variable_name)
+      end
+      coder['instance_variables'] = instance_variables - @yaml_exclude
+    end
+
+    def init_with(coder)
+      coder['instance_variables'].each do |variable_name|
+        key = variable_name.to_s[1..-1]
+        instance_variable_set(variable_name, coder[key])
+      end
+      @nlog = SapHA::NodeLogger.instance
     end
 
     # Read system parameters

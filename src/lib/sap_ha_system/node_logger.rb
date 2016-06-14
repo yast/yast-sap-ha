@@ -28,6 +28,8 @@ module SapHA
   class NodeLogger
     include Singleton
 
+    attr_reader :node_name
+
     def initialize
       @fd = StringIO.new
       @logger = Logger.new(@fd)
@@ -55,16 +57,17 @@ module SapHA
     def self.to_html(txt)
       time_rex = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
       rules = [
-        { rex: /^\[(.*)\] (#{time_rex}) (DEBUG): (.*)$/,  color: 'grey'   },
-        { rex: /^\[(.*)\] (#{time_rex}) (INFO): (.*)$/,   color: 'green'  },
-        { rex: /^\[(.*)\] (#{time_rex}) (WARN): (.*)$/,   color: 'yellow' },
-        { rex: /^\[(.*)\] (#{time_rex}) (ERROR): (.*)$/,  color: 'red'    }
+        { rex: /^\[(.*)\] (#{time_rex}) (DEBUG): (.*)$/,  color: 'grey'     },
+        { rex: /^\[(.*)\] (#{time_rex}) (INFO): (.*)$/,   color: '#009900'  }, # green
+        { rex: /^\[(.*)\] (#{time_rex}) (WARN): (.*)$/,   color: '#e6b800'  }, # yellow
+        { rex: /^\[(.*)\] (#{time_rex}) (ERROR): (.*)$/,  color: '#800000'  }  # error
       ]
       lines = txt.split("\n").map do |line|
         rule = rules.find { |r| r[:rex].match(line) }
         if rule
           node, time, level, message = rule[:rex].match(line).captures
-          "[#{node}] #{time} #{level}: <font color=\"#{rule[:color]}\">#{message}</font>"
+          # "[#{node}] #{time} #{level}: <font color=\"#{rule[:color]}\">#{message}</font>"
+          "<font color=\"\#a6a6a6\">[#{node}] #{time}</font> <font color=\"#{rule[:color]}\">#{level.rjust(5,' ')}</font>: #{message}"
         else
           line
         end
