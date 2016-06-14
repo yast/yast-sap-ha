@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 
 Name:           yast2-sap-ha
-Version:        0.6.0
+Version:        0.6.5
 Release:        0
 BuildArch:      noarch
 
@@ -24,8 +24,17 @@ Source1:        yast2-sap-ha-rpmlintrc
 
 Requires:       yast2
 Requires:       yast2-ruby-bindings
+# for opening URLs
 Requires:       xdg-utils
-Requires:       expect openssh yast2-cluster yast2-ntp-client ha-cluster-bootstrap util-linux
+# for handling SSH client
+Requires:       expect
+Requires:       openssh
+Requires:       yast2-cluster
+Requires:       yast2-ntp-client
+Requires:       ha-cluster-bootstrap
+# for lsblk
+Requires:       util-linux
+# TODO: require SAPHanaSR
 
 BuildRequires:  yast2
 BuildRequires:  yast2-ruby-bindings
@@ -34,6 +43,8 @@ BuildRequires:  yast2-packager
 BuildRequires:  update-desktop-files
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
+BuildRequires:  yast2-ntp-client
+BuildRequires:  yast2-cluster
 
 Group:          System/YaST
 License:        GPL-2.0
@@ -53,6 +64,7 @@ rake test:unit
 
 %install
 mkdir -p %{buildroot}%{yast_dir}/data/sap_ha/
+mkdir -p %{yast_scrconfdir}
 rake install DESTDIR="%{buildroot}"
 install -m 644 data/*[!.expect] %{buildroot}%{yast_dir}/data/sap_ha/
 install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
@@ -64,5 +76,6 @@ install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 %yast_clientdir
 %yast_libdir
 %{yast_dir}/data/sap_ha/
+%{yast_scrconfdir}/*.scr
 
 %changelog

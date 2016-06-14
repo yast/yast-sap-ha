@@ -131,6 +131,7 @@ module Yast
     end
 
     def configured?
+      # TODO: check if our IP in the IP list
       flag = @rings.all? { |_, v| validate_ring(v, :silent) }
       flag &= SemanticChecks.instance.check(:silent) do |check|
         check.equal(@rings.length, @number_of_rings, 'Number of table entries is not 

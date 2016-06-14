@@ -1,3 +1,23 @@
+# encoding: utf-8
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Cluster setup class
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require 'yast'
 require 'xmlrpc/client'
 require 'sap_ha_system/ssh'
@@ -26,9 +46,13 @@ module Yast
       if @ui
         @ui.unblock
         log.error "--- #{self.class}.#{__callee__}: returning :next ---"
-        return :next 
+        return :next
       else
         log.error "--- #{self.class}.#{__callee__}: UI is screwed ---"
+      end
+      # make sure that the RPC servers are shut down
+      for node in @other_nodes
+        node[:rpc].call('sapha.shutdown') if node[:rpc]
       end
       true
     end
@@ -48,10 +72,6 @@ module Yast
         func = "sapha.config_#{component_id.to_s[1..-1]}.apply"
         rpc.call(func, :slave)
         @ui.next_task
-      end
-    ensure
-      if node[:rpc]
-        node[:rpc].call('sapha.shutdown')
       end
     end
 

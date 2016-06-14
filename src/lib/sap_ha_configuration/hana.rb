@@ -20,7 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require 'sap_ha_system/watchdog'
+require 'sap_ha_system/shell_commands'
 require_relative 'base_component_configuration.rb'
 
 module Yast
@@ -34,6 +34,7 @@ module Yast
       :auto_register
 
     include Yast::UIShortcuts
+    include ShellCommands
 
     def initialize
       super
@@ -64,18 +65,18 @@ module Yast
       "
     end
 
-    def add_to_config(wdt_module)
-      @to_install << wdt_module
-      @installed = @system.installed_watchdogs.concat(@to_install)
-    end
-
-    def combo_items
-      @proposals
-    end
-
     def apply(role)
       return false if !configured?
       # TODO: implement
+      return true
+
+      if role == :master
+        hana_make_backup
+        hana_enable_primary
+        configure_crm
+      elsif role == :slave
+        hana_enable_secondary
+      end
       true
     end
 
@@ -87,7 +88,9 @@ module Yast
     def hana_enable_primary
       # issue as the SIDadm user
       # TODO: site name has to come from the user
-      cmd = 'hdbnsutil -sr_enable --name=WALLDORF'
+      # cmd = "hdbnsutil -sr_enable --name=WALLDORF"
+      # exec_status_l('su', get_adm_user, 'hdbnsutil', '-sr_enable', '--name=WALLDORF')
+      true
     end
 
     def hana_enable_secondary
@@ -95,12 +98,21 @@ module Yast
       # TODO: here we need to obtain a hostname of the remote host
       # TODO: site name has to come from the user
       # TODO: mode can come from the user
-      cmd = 'hdbnsutil -sr_register --remoteHost=suse01 --remoteInstance=00 --mode=sync --name=ROT'
-      cmd 
+      # cmd = 'hdbnsutil -sr_register --remoteHost=suse01 --remoteInstance=00 --mode=sync --name=ROT'
+      # exec_status_l('su', get_adm_user, 'hdbnsutil', '-sr_register', "--remoteHost=#{primary_host}",
+      # "--remoteInstance=#{@instance}", '--mode=sync', '--name=ROT')
+      true
     end
 
-    def configure_hawk
-      
+    def configure_crm
+      crm_conf = SAPHAHelpers.instance.render_template('tmpl_cluster_config.erb', binding)
+      file_path = SAPHAHelpers.instance.write_var_file('cluster.config', crm_conf)
+      status = exec_status_l('crm', 'configure', '--file', file_path)
+      status.exitstatus == 0
+    end
+
+    def get_adm_user
+      @system_id.downcase + 'adm'
     end
   end
 end

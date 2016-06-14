@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Jun 13 13:47:52 UTC 2016 - imanyugin@suse.com
+
+- Added XML RPC functionality to manipulate remote nodes;
+- GUI changes: merged Communication Layer and Cluster Nodes pages of the wizard together, minor changes;
+- HANA cluster bootstrapping works, as part of fate#319068;
+
+-------------------------------------------------------------------
 Thu May 27 13:30:12 UTC 2016 - ilya.manyugin@suse.com
 
 - Initial release, version 0.6.0. fate#319068

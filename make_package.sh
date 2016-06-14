@@ -1,6 +1,4 @@
 #!/usr/bin/zsh
-# Accepted arguments: 
-# {prog | prod | both} [submit]
 
 C_RED="\e[31m"
 C_GREEN="\e[32m"
@@ -77,6 +75,8 @@ function build_package(){
     echo "${C_YELLOW}Packages:${C_NONE}"
     echo
     tail -n2 ${TMP_DIR}/$log_name
+    echo
+    echo "${C_YELLOW}Project path:${C_NONE} ${IBS_PROJECT_DIR}"
     echo
 }
 

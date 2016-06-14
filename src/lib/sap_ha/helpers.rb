@@ -88,6 +88,14 @@ module Yast
     #   File.join(@yast_path, basename)
     # end
 
+    def write_var_file(basename, data)
+      file_path = var_file_path(basename)
+      File.open(file_path, 'wb') do |fh|
+        fh.write(data)
+      end
+      file_path
+    end
+
     private
 
     # Read file's contents

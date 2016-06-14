@@ -39,12 +39,10 @@ module Yast
         base_layout_with_label(
           'Choose the STONITH method',
           VBox(
-            VBox(
-              HBox(
-                Label('STONITH Method:'),
-                ComboBox(Id(:stonith_method), '', ['SBD', 'IPMI'])
-                )
-              ),
+            HBox(
+              Label('STONITH Method:'),
+              ComboBox(Id(:stonith_method), '', ['SBD', 'IPMI'])
+            ),
             HBox(
               HSpacing(20),
               Table(
@@ -59,8 +57,10 @@ module Yast
               PushButton(Id(:add_sbd_device), _('Add')),
               PushButton(Id(:remove_sbd_device), _('Remove'))
             ),
-            InputField(Id(:sbd_options), 'SBD Options', ''),
-            ComboBox(Id(:sbd_delayed_start), 'Delay SBD Start', ['no', 'yes']),
+            VSpacing(1),
+            InputField(Id(:sbd_options), 'SBD Options:', ''),
+            VSpacing(1),
+            ComboBox(Id(:sbd_delayed_start), 'Delay SBD Start:', ['no', 'yes']),
             VSpacing(1),
             Label(_("Note that all the data on the selected devices WILL BE DESTROYED."))
           )

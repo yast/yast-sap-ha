@@ -2,7 +2,6 @@
     id: HANA
     string_name: SAP HANA
     scenarios:
-
       - name: Performance-optimized
         description: |
           <b>Performance-optimized scenario</b> allows to set up a synchronous system

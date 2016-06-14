@@ -1,3 +1,23 @@
+# encoding: utf-8
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 2 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+#
+# Summary: SUSE High Availability Setup for SAP Products: Tests
+# Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+
 require_relative 'test_helper'
 require 'sap_ha/semantic_checks'
 
@@ -28,9 +48,9 @@ describe Yast::SemanticChecks do
         check.ipv4('100')
         check.ipv4('192.168.100.100')
       end
-      
+
       expect(flag).to eq false
-      
+
       flag = subject.silent_check do |check|
         check.ipv4('192.168.100.100')
         check.ipv4('192.168.100.1')
@@ -79,7 +99,7 @@ describe Yast::SemanticChecks do
         check.hostname('suse-1')
         check.hostname('suse-com')
       end
-      
+
       expect(errors).to be_empty
       errors = subject.verbose_check do |check|
         check.hostname('suse-1!')

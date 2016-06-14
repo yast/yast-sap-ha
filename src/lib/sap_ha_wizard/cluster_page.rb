@@ -43,7 +43,7 @@ module Yast
           VBox(
             VBox(
               HBox(
-                ComboBox(Id(:transport_mode), Opt(:notify), 'Transport mode', ['Unicast', 'Multicast']),
+                ComboBox(Id(:transport_mode), Opt(:notify), 'Transport mode:', ['Unicast', 'Multicast']),
                 HSpacing(3),
                 ComboBox(Id(:number_of_rings), Opt(:notify), 'Number of rings:', ['1', '2', '3'])
               ),

@@ -38,12 +38,20 @@ module Yast
         base_layout_with_label(
           'Select the appropriate watchdog modules to load at system startup',
           VBox(
-            SelectionBox(Id(:configured_wd), Opt(:notify, :immediate), 'Configured watchdogs:', []),
+            HBox(
+              HSpacing(20),
+              SelectionBox(Id(:configured_wd), Opt(:notify, :immediate), 'Watchdogs to configure:', []),
+              HSpacing(20)
+              ),
             HBox(
               PushButton(Id(:add_wd), 'Add'),
               PushButton(Id(:remove_wd), 'Remove')
             ),
-            SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', [])
+            HBox(
+              HSpacing(20),
+              SelectionBox(Id(:loaded_wd), 'Automatically loaded watchdogs:', []),
+              HSpacing(20)
+            )
           )
         ),
         SAPHAHelpers.instance.load_help('help_watchdog.html'),

@@ -41,7 +41,11 @@ module Yast
           'Configure the Network Time Protocol settings',
           VBox(
               Label('Used servers:'),
-              SelectionBox(Id(:ntp_servers), '', []),
+              HBox(
+                HSpacing(20),
+                SelectionBox(Id(:ntp_servers), '', []),
+                HSpacing(20)
+              ),
               VSpacing(),
               HBox(Label('Starts at boot:'),
                 Label(Id(:ntp_enabled), '')),

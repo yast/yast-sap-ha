@@ -129,7 +129,7 @@ module Yast
     end
 
     # Dump this object to a YAML representation
-    # @param [Boolean] slave change the 
+    # @param [Boolean] slave
     def dump(slave = false)
       # TODO: the proposals are also kept in this way of duplicating...
       old_role = @role
