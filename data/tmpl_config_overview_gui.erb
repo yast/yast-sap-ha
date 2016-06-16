@@ -1,5 +1,41 @@
-<% textdomain "sap-ha" %>
-<!--<h2>Installation summary</h2>-->
+<html>
+<head>
+<style>
+    body {
+        background-color: "#ffffff";
+    }
+    table, th, td {
+        border-color: "black";
+        padding: "5";
+        border-width: 1px;   
+        border-style: none;
+        padding-top: 1px;
+        padding-left: 1px;
+        padding-right: 1px;
+        padding-bottom: 1px;
+    }
+    td {
+        padding-right: 10px;
+    }
+    .tbold {
+        font-weight: bold;
+    }
+    .col_red {
+        color: "#b30000";
+    }
+    .col_green {
+        color: "#008000";
+    }
+    a {
+        font-weight: bold;
+        color: "#003300";
+    }
+    .steps {
+        padding-top: 5px;
+    }
+</style>
+</head>
+<body>
 <table cellpadding="5">
     <tr>
         <td><b>Product:</b></td>
@@ -9,79 +45,77 @@
         <td><b>Scenario:</b></td>
         <td><%= @config.scenario_name %></td>
     </tr>
-    <tr>
-      <td colspan="2">
-        <%= @config.scenario['description']%>
-      </td>
-    </tr>
 </table>
+<p><%= @config.scenario['description']%></p>
+<hr>
 
-<table border="0" cellpadding="7">
+<%# not_configured = '<span class="col_red">Not configured</span>' %>
+<% configured = '<span class="col_green">Configured</span><br>' %>
+<% not_configured = '<p class="col_red">Not configured</p>' %>
+<%# configured = '<p class="col_green">Configured</p>' %>
+
+<center>
+    <% if !@config.can_install? %>
+       <%= '<p class="tbold col_red">Configuration is incomplete.</p>' %>
+    <% else %>
+       <%= '<p class="tbold col_green">Configuration is complete.</p>' %>
+    <% end %>
+</center>
+
+<hr>
+<table class="steps">
     <tr>
-        <td>Overall status:</td>
-        <td>
-            <% if !@config.can_install? %>
-               <%= '<font color="red">Configuration is incomplete.</font>' %>
-            <% else %>
-               <%= '<font color="green">Configuration is complete.</font>' %>
-            <% end %>
-        </td>
-    </tr>
-    <tr>
-        <th colspan="2">Configuration steps</th>
-    </tr>
-    <tr>
-        <td>Cluster:</td>
+        <td align="right"><a href="config_cluster">Cluster:</a></td>
         <td>
             <% if !@config.cluster.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="config_cluster">configure</a>)' %>
+            <%= not_configured %>
             <% else %>
-            <%= '<font color="green">Configured</font> (<a href="config_cluster">reconfigure</a>)<br>' %>
+            <%= configured %>
             <%= @config.cluster.description %>
             <% end %>
         </td>
     </tr>
     <tr>
-        <td>NTP Client:</td>
+        <td align="right"><a href="ntp">NTP Client:</a></td>
         <td>
             <% if !@config.ntp.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="ntp">configure</a>)' %>
+            <%= not_configured %>
             <% else %>
-            <%= '<font color="green">Configured</font> (<a href="ntp">reconfigure</a>)<br>' %>
+            <%= configured %>
             <%= @config.ntp.description %>
             <% end %>
         </td>
     </tr>
     <tr>
-        <td>Fencing (STONITH):</td>
+        <td align="right"><a href="fencing">Fencing (STONITH):</a></td>
         <td>
             <% if !@config.fencing.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="fencing">configure</a>)' %>
+            <%= not_configured %>
             <% else %>
-            <%= '<font color="green">Configured</font> (<a href="fencing">reconfigure</a>)<br>' %>
+            <%= configured %>
             <%= @config.fencing.description %>
             <% end %>
         </td>
     </tr>
     <tr>
-        <td>Watchdog:</td>
+        <td align="right"><a href="watchdog">Watchdog:</a></td>
         <td>
             <% if !@config.watchdog.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="watchdog">configure</a>)' %>
+            <%= not_configured %>
             <% else %>
-            <%= '<font color="green">Configured</font> (<a href="watchdog">reconfigure</a>)<br>' %>
+            <%= configured %>
             <%= @config.watchdog.description %>
             <% end %>
         </td>
     </tr>
     <% if @config.product_id == 'HANA' %>
     <tr>
-        <td>HANA configuration:</td>
+        <td align="right"><a href="hana">HANA configuration:</a></td>
         <td>
             <% if !@config.hana.configured? %>
-            <%= '<font color="red">Not configured</font> (<a href="hana">configure</a>)' %>
+            <%= not_configured %>
             <% else %>
-            <%= '<font color="green">Configured</font> (<a href="hana">reconfigure</a>)<br>' %>
+            <%= configured %>
             <%= @config.hana.description %>
             <% end %>
         </td>
@@ -89,4 +123,6 @@
     <% end %>
 </table>
 
-<p>Please review the settings above and click "Install" to proceed with cluster setup.</p>
+<p>Please review the settings above and click "Install" to proceed with cluster setup. To change individual settings, click the name of the step.</p>
+</body>
+</html>
