@@ -1,9 +1,31 @@
-<b>Cluster members:</b> configure the number of nodes and their names
-<br>
-<b>Network:</b> configure the corosync communication layer
-<br>
-<b>Watchdog:</b> configure the watchdog kernel modules
-<br>
-<b>Fencing:</b> configure the STONITH mechanism of the cluster
-<br>
-<b>Components:</b> configure the product components
+<!DOCTYPE html>
+<html>
+<head>
+    <style type="text/css">
+        dt {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<h2>High-Availability Configuration Overview</h2>
+<p>
+    This page allows you to review cluster settings before proceeding with the setup.
+    Click the name of the step in the dialog window to return to it.
+</p>
+<dl>
+    <dt>Cluster</dt>
+        <dd>configure the corosync communication layer, number of nodes,
+        their host names and IP addresses;</dd>
+    <dt>NTP Client</dt>
+        <dd>configure the Network Time Protocol client for time synchronization;</dd>
+    <dt>Fencing (STONITH)</dt>
+        <dd>configure cluster fencing mechanism;</dd>
+    <dt>Watchdog</dt>
+        <dd>configure watchdog kernel modules;</dd>
+    <dt>HANA Configuration</dt>
+        <dd>configure HANA-specific parameters;</dd>
+</dl>
+</body>
+</html>
