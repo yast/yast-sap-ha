@@ -35,9 +35,9 @@ module Yast
       super
       base_rich_text(
         "High-Availability Configuration Overview",
-        UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
+        # UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
         SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
-        SAPHAHelpers.instance.load_help('help_setup_summary.html'),
+        SAPHAHelpers.instance.load_help('setup_summary'),
         true,
         true
       )

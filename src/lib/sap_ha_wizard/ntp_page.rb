@@ -53,7 +53,7 @@ module Yast
               PushButton(Id(:ntp_configure), 'Reconfigure')
           )
         ),
-        SAPHAHelpers.instance.load_help('help_ntp.html'),
+        SAPHAHelpers.instance.load_help('ntp'),
         true,
         true
       )

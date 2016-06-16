@@ -62,10 +62,14 @@ module Yast
     def apply(role)
       return false unless configured?
       # Master has the configuration in place already
+      @nlog.info('Appying NTP Configuration')
       return true if role == :master
       NtpClient.Import @config
-      NtpClient.Write
-      true
+      stat = NtpClient.Write
+      @nlog.log_status(stat,
+        "Wrote NTP configuration",
+        "Could not write NPT configuration")
+      stat
     end
   end
 end

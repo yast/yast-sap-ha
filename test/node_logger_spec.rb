@@ -38,7 +38,7 @@ describe SapHA::NodeLogger do
   describe '#method_missing' do
     it 'proxies logger calls' do
       subject.method_missing(:unknown, unknown_msg)
-      expect(subject.text).to match(/ANY: #{unknown_msg}/)
+      expect(subject.text).to match(/OUTPUT: #{unknown_msg}/)
     end
   end
 
@@ -66,13 +66,19 @@ describe SapHA::NodeLogger do
 
   describe '#to_html' do
     it 'converts a plain-text log into HTML representation' do
-      text = subject.text
-      html = SapHA::NodeLogger.to_html(text)
-      expect(html).to match(/DEBUG: <font color="grey">#{debug_msg}<\/font>/)
-      expect(html).to match(/INFO: <font color="green">#{info_msg}<\/font>/)
-      expect(html).to match(/WARN: <font color="yellow">#{warn_msg}<\/font>/)
-      expect(html).to match(/ERROR: <font color="red">#{error_msg}<\/font>/)
-      expect(html).to match(/ANY: #{unknown_msg}/)
+
+      def colored_level(level_name)
+        '<font color="[^"]+"><b>\s+%s</b></font>' % level_name
+      end
+
+      html = SapHA::NodeLogger.to_html(subject.text)
+      expect(html).to match(/#{colored_level('DEBUG')}: #{debug_msg}/)
+      expect(html).to match(/#{colored_level('INFO')}: #{info_msg}/)
+      expect(html).to match(/#{colored_level('WARN')}: #{warn_msg}/)
+      expect(html).to match(/#{colored_level('ERROR')}: #{error_msg}/)
+      # the command output line is prepended only by the host name
+      expect(html).not_to match(/#{colored_level('OUTPUT')}: #{unknown_msg}/)
+      expect(html).to match(/font> #{unknown_msg}/)
     end
   end
 

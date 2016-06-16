@@ -45,6 +45,7 @@ module ShellCommands
     Open3.popen3(*params) { |_, out, _, wait_thr| [wait_thr.value, out.read] }
   end
 
+  # @return stdout_and_stderr, status
   def exec_outerr_status(*params)
     Open3.capture2e(*params)
   end

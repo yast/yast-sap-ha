@@ -78,7 +78,7 @@ module Yast
             ),
           )
         ),
-        SAPHAHelpers.instance.load_help('help_cluster.html'),
+        SAPHAHelpers.instance.load_help('cluster'),
         true,
         true
       )

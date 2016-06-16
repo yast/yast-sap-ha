@@ -38,7 +38,7 @@ module Yast
             PushButton(Id(:join), 'Join Cluster')
           )
         ),
-        SAPHAHelpers.instance.load_help('help_join_cluster.html'),
+        SAPHAHelpers.instance.load_help('join_cluster'),
         true,
         true
       )

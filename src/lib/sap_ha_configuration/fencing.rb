@@ -170,7 +170,7 @@ module Yast
         @nlog.info('Added a primitive to the cluster: stonith-sbd')
       else
         @nlog.error('Could not add the stonith-sbd primitive to the cluster')
-        @nlog.error("Output:\n #{out.strip}")
+        @nlog.output(out)
       end
       success
     end

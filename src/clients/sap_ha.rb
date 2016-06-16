@@ -206,12 +206,15 @@ module Yast
         true
       )
       selection = UI.UserInput()
-      if selection == :next
+      case selection
+      when :next
         begin
-          @config.set_scenario_name UI.QueryWidget(:selection_box, :Value)
+          @config.set_scenario_name(UI.QueryWidget(:selection_box, :Value))
         rescue ScenarioNotFoundException
           return :unknown
         end
+      when :abort
+        return :abort
       end
       set_bogus_values if @bogus
       selection
@@ -221,8 +224,8 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SAPHAGUI.richt_text(
         'Product not supported',
-        SAPHAHelpers.instance.load_help('help_product_not_found.html'),
-        SAPHAHelpers.instance.load_help('help_product_not_found.html'),
+        SAPHAHelpers.instance.load_help('product_not_found'),
+        SAPHAHelpers.instance.load_help('product_not_found'),
         false,
         false
       )
@@ -304,6 +307,23 @@ module Yast
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      if WFM.Args.include? 'noinst'
+        @config.logs = [
+          '[hana01] 2016-06-15 14:51:14 INFO: Starting setup process on node hana01',
+          '[hana01] 2016-06-15 14:51:14 INFO: Applying Cluster Configuration',
+          '[hana01] 2016-06-15 14:51:20 INFO: Wrote cluster settings',
+          '[hana01] 2016-06-15 14:51:20 INFO: Enabled service csync2',
+          '[hana01] 2016-06-15 14:51:20 INFO: Enabled service pacemaker',
+          '[hana01] 2016-06-15 14:51:21 INFO: Started service pacemaker',
+          '[hana01] 2016-06-15 14:51:21 INFO: Enabled service hawk',
+          '[hana01] 2016-06-15 14:51:22 INFO: Started service hawk',
+          '[hana01] 2016-06-15 14:51:23 ERROR: Have done something stupid. The log is:',
+          '[hana01] 2016-06-15 14:51:23 OUTPUT: Log line 1',
+          '[hana01] 2016-06-15 14:51:23 OUTPUT: Log line 2',
+          '[hana01] 2016-06-15 14:51:23 OUTPUT: Log line 3',
+          '[hana01] 2016-06-15 14:51:22 WARN: Finished with errors'
+        ].join("\n")
+      end
       SetupSummaryPage.new(@config).run
     end
 
@@ -315,9 +335,8 @@ module Yast
     end
 
     def set_bogus_values
-      log.info "BOGUS!"
-      @config.set_product_id "HANA"
-      @config.set_scenario_name 'Performance-optimized'
+      # @config.set_product_id "HANA"
+      # @config.set_scenario_name 'Performance-optimized'
       @config.cluster.import(
         number_of_rings: 2,
         transport_mode: :unicast,

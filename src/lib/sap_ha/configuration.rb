@@ -56,7 +56,7 @@ module Yast
       :watchdog,
       :hana,
       :ntp,
-      :zlog
+      :logs
 
     include Yast::Logger
     include Yast::I18n
@@ -78,7 +78,7 @@ module Yast
       @hana = HANAConfiguration.new
       @ntp = NTPConfiguration.new
       @components = [:@cluster, :@fencing, :@watchdog, :@ntp]
-      @zlog = ''
+      @logs = ''
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -93,9 +93,9 @@ module Yast
       @product_name = @product['string_name']
       case @product_id
       when "HANA"
-        @components << :@hana
+        @components << :@hana if !@components.include? :@hana
       when "NW"
-        @components << :@nw
+        @components << :@nw if !@components.include? :@nw
       end
     end
 
@@ -144,13 +144,14 @@ module Yast
 
     # Below are the methods for logging the setup process
     def start_setup
+      log.error "--- #{self.class}.#{__callee__}: setup components are #{@components}---"
       SapHA::NodeLogger.instance.info(
         "Starting setup process on node #{SapHA::NodeLogger.instance.node_name}")
       true
     end
 
     def end_setup
-      SapHA::NodeLogger.instance.warn(
+      SapHA::NodeLogger.instance.info(
         "Finished setup process on node #{SapHA::NodeLogger.instance.node_name}")
       true
     end

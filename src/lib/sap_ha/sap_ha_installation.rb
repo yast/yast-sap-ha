@@ -30,7 +30,7 @@ module Yast
       @config = config
       @yaml_config = config.dump(true)
       @ui = ui
-      @zlog = []
+      @logs = []
       prepare
     end
 
@@ -53,7 +53,7 @@ module Yast
       for node in @other_nodes
         node[:rpc].call('sapha.shutdown') if node[:rpc]
       end
-      @config.zlog = @zlog.join
+      @config.logs = @logs.join
       :next
     end
 
@@ -75,7 +75,7 @@ module Yast
         @ui.next_task
       end
       rpc.call('sapha.config.end_setup')
-      @zlog << rpc.call('sapha.config.collect_log')
+      @logs << rpc.call('sapha.config.collect_log')
     end
 
 
@@ -90,7 +90,7 @@ module Yast
         @ui.next_task if @ui
       end
       @config.end_setup
-      @zlog << @config.collect_log
+      @logs << @config.collect_log
       log.error "Log is #{@config.collect_log}"
       log.error "--- #{self.class}.#{__callee__}: finished ---"
     end

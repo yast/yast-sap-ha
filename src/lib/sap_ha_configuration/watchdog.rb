@@ -66,7 +66,13 @@ module Yast
 
     def apply(role)
       return false if !configured?
-      true
+      @nlog.info('Appying Watchdog Configuration')
+      # TODO
+      stat = true
+      @nlog.log_status(stat,
+        "Configured requested watchdog devices",
+        "Could not configure requested watchdog devices")
+      stat
     end
   end
 end

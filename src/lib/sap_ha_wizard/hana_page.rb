@@ -64,7 +64,7 @@ module Yast
               )
             )
         ),
-        SAPHAHelpers.instance.load_help('help_hana.html'),
+        SAPHAHelpers.instance.load_help('hana'),
         true,
         true
       )

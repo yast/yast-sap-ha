@@ -94,14 +94,11 @@ module Yast
       Hash[instance_variables.map { |name| [name, instance_variable_get(name)] }]
     end
 
+    # Apply the configuration
+    # @param role [Symbol|String] either :master or "slave"
     def apply(role)
       log.error "#{self.class}.#{__callee__} (role=#{role}) is not implemented yet"
       raise SAPHAException, '#{self.class}.#{__callee__} is not implemented yet'
-    end
-
-    def bogus_apply
-      sleep 0.5
-      true
     end
 
     # Validate model, raising an exception on error

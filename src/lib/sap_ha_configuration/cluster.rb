@@ -234,19 +234,6 @@ module Yast
       end.compact
     end
 
-    # def number_of_rings=(value)
-    #   @number_of_rings = value
-    #   log.info "--- #{self.class}.#{__callee__}: number_of_rings <- #{value} ---"
-    # end
-
-    def apply(role)
-      cluster_apply
-      SAPHACluster.instance.enable_socket('csync2')
-      SAPHACluster.instance.enable_service('pacemaker')
-      SAPHACluster.instance.start_service('pacemaker')
-      open_ports(role)
-    end
-
     def validate
       # TODO
       super
@@ -260,6 +247,13 @@ module Yast
         check.hostname(node[:host_name], 'Hostname')
         check.nonneg_integer(node[:node_id], 'Node ID')
       end
+    end
+
+    def apply(role)
+      @nlog.info('Applying Cluster Configuration')
+      cluster_apply
+      start_services
+      open_ports(role)
     end
 
     private
@@ -301,11 +295,24 @@ module Yast
       SuSEFirewall.Write
       SuSEFirewall.ActivateConfiguration if role == :master
       # TODO: make sure the configuration is activated on the exit of the XML RPC server
+      # TODO: log
+      @nlog.info('Opened necessary communication ports')
       true
     end
 
     def start_services
-      # TODO: start hawk2 and restart? the firewall
+      stat = SAPHACluster.instance.enable_socket('csync2')
+      @nlog.enable_unit(stat, 'csync2', :socket)
+      stat = SAPHACluster.instance.enable_service('pacemaker')
+      @nlog.enable_unit(stat, 'pacemaker', :service)
+      stat = SAPHACluster.instance.start_service('pacemaker')
+      @nlog.start_unit(stat, 'pacemaker', :service)
+      # TODO: hawk password
+      # echo "hacluster:linux" | chpasswd
+      stat = SAPHACluster.instance.enable_service('hawk')
+      @nlog.enable_unit(stat, 'hawk', :service)
+      stat = SAPHACluster.instance.start_service('hawk')
+      @nlog.start_unit(stat, 'hawk', :service)
     end
 
     def generate_corosync_key
@@ -362,7 +369,12 @@ module Yast
         "csync2_include" => included_files
       }
       Cluster.Import(cluster_export)
-      Cluster.Write
+      stat = Cluster.Write
+      if stat
+        @nlog.info('Wrote cluster settings')
+      else
+        @nlog.error('Could not write cluster settings')
+      end
     end
   end
 end

@@ -133,8 +133,10 @@ module Yast
       log.debug "--- #{self.class}.#{__callee__} ---"
       HBox(
         HSpacing(3),
+        # HStretch(),
         contents,
         HSpacing(3)
+        # HStretch()
       )
     end
 

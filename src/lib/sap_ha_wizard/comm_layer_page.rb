@@ -69,7 +69,7 @@ module Yast
             PushButton(Id(:join_cluster), 'Join existing cluster')
           )
         ),
-        SAPHAHelpers.instance.load_help('help_comm_layer.html'),
+        SAPHAHelpers.instance.load_help('comm_layer'),
         true,
         true
       )

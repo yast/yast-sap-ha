@@ -67,12 +67,14 @@ module Yast
 
     # Load the help file by its name
     def load_help(basename)
-      if !@storage.key? basename
-        full_path = File.join(@data_path, basename)
+      file_name = "help_#{basename}.html"
+      if !@storage.key? file_name
+        full_path = File.join(@data_path, file_name)
+        # TODO: apply the CSS
         contents = read_file(full_path)
-        @storage[basename] = contents
+        @storage[file_name] = contents
       end
-      @storage[basename]
+      @storage[file_name]
     end
 
     # Get the path to the file given its name
@@ -106,6 +108,15 @@ module Yast
         return false
       end
       true
+    end
+
+    def open_url(url)
+      require 'yast'
+      Yast.import 'UI'
+      UI.BusyCursor
+      system("xdg-open #{url}")
+      sleep 5
+      UI.NormalCursor
     end
 
     private

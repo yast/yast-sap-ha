@@ -43,7 +43,7 @@ module Yast
       base_rich_text(
         "High-Availability Setup Summary",
         text,
-        SAPHAHelpers.instance.load_help('help_setup_summary.html'),
+        SAPHAHelpers.instance.load_help('setup_summary'),
         true,
         true
       )

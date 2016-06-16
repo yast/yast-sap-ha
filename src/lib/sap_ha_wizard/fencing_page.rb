@@ -62,10 +62,10 @@ module Yast
             VSpacing(1),
             ComboBox(Id(:sbd_delayed_start), 'Delay SBD Start:', ['no', 'yes']),
             VSpacing(1),
-            Label(_("Note that all the data on the selected devices WILL BE DESTROYED."))
+            Label(_("Note that all data on the selected devices will be destroyed."))
           )
         ),
-        SAPHAHelpers.instance.load_help('help_fencing.html'),
+        SAPHAHelpers.instance.load_help('fencing'),
         true,
         true
       )

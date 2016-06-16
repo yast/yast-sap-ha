@@ -67,14 +67,15 @@ module Yast
 
     def apply(role)
       return false if !configured?
-      # TODO: implement
-      return true
-
+      @nlog.info('Appying HANA Configuration')
       if role == :master
-        hana_make_backup
+        unless hana_make_backup
+          @nlog.showstopper
+          return
+        end
         hana_enable_primary
         configure_crm
-      elsif role == :slave
+      else
         hana_enable_secondary
       end
       true
@@ -83,6 +84,14 @@ module Yast
     def hana_make_backup
       # TODO: the user name has to come from the user
       cmd = 'hdbsql -u system -i 00 "BACKUP DATA USING FILE (\'backup\')"'
+      status = true
+
+      if status
+        @nlog.info("Performed HANA backup")
+      else
+        @nlog.error("Could not perform a HANA backup")
+      end
+      status
     end
 
     def hana_enable_primary
@@ -90,7 +99,11 @@ module Yast
       # TODO: site name has to come from the user
       # cmd = "hdbnsutil -sr_enable --name=WALLDORF"
       # exec_status_l('su', get_adm_user, 'hdbnsutil', '-sr_enable', '--name=WALLDORF')
-      true
+      status = true
+      @nlog.log_status(status, 
+        "Enabled HANA System Replication on the primary host",
+        "Could not enable HANA System Replication on the primary host")
+      status
     end
 
     def hana_enable_secondary
@@ -101,13 +114,20 @@ module Yast
       # cmd = 'hdbnsutil -sr_register --remoteHost=suse01 --remoteInstance=00 --mode=sync --name=ROT'
       # exec_status_l('su', get_adm_user, 'hdbnsutil', '-sr_register', "--remoteHost=#{primary_host}",
       # "--remoteInstance=#{@instance}", '--mode=sync', '--name=ROT')
-      true
+      status = true
+      @nlog.log_status(status, 
+        "Enabled HANA System Replication on the secondary host",
+        "Could not enable HANA System Replication on the secondary host")
+      status
     end
 
     def configure_crm
       crm_conf = SAPHAHelpers.instance.render_template('tmpl_cluster_config.erb', binding)
       file_path = SAPHAHelpers.instance.write_var_file('cluster.config', crm_conf)
-      status = exec_status_l('crm', '--file', file_path)
+      out, status = exec_outerr_status('crm', '--file', file_path)
+      @nlog.log_status(status.exitstatus == 0,
+        'Configured necessary cluster resources for HANA',
+        'Could not configure HANA cluster resources', out)
       status.exitstatus == 0
     end
 

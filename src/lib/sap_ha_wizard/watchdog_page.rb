@@ -54,7 +54,7 @@ module Yast
             )
           )
         ),
-        SAPHAHelpers.instance.load_help('help_watchdog.html'),
+        SAPHAHelpers.instance.load_help('watchdog'),
         true,
         true
       )

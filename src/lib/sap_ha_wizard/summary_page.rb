@@ -39,29 +39,18 @@ module Yast
         VBox(
           HBox(
             HSpacing(3),
-            RichText(SapHA::NodeLogger.to_html(@config.zlog)),
+            RichText(SapHA::NodeLogger.to_html(@config.logs)),
             HSpacing(3)
           ),
           HBox(
-            PushButton(Id(:save_log), 'Save Log')
+            PushButton(Id(:save_log), 'Save Log'),
+            PushButton(Id(:open_hawk), 'Open Hawk')
           )
         ),
         '',
         false,
         true
       )
-      # base_rich_text(
-        
-      #   # UI.TextMode ? SAPHAHelpers.instance.render_template('tmpl_config_overview_con.erb', binding) :
-      #   # SAPHAHelpers.instance.render_template('tmpl_config_overview_gui.erb', binding),
-      #   SapHA::NodeLogger.to_html(@config.zlog),
-      #   # SAPHAHelpers.instance.load_help('help_setup_summary.html'),
-      #   '',
-      #   true,
-      #   true
-      # )
-      # # Checkbox: save configuration
-      # # Button: show log
     end
 
     def refresh_view
@@ -77,14 +66,22 @@ module Yast
     def handle_user_input(input, event)
       case input
       when :save_log
-        file_name = UI.AskForSaveFileName("/tmp", "*", "Save as...")
+        log.error "SAVE_LOG: event=#{event}"
+        file_name = UI.AskForSaveFileName("/tmp", "*.txt *.log *.html", "Save log file as...")
         return unless file_name
-        success = SAPHAHelpers.instance.write_file(file_name, @config.zlog)
-        if success
-          show_dialog_errors(["Written log to #{file_name}"], 'Success')
+        if file_name.end_with?('html') || file_name.end_with?('htm')
+          log = SapHA::NodeLogger.to_html(@config.logs)
         else
-          show_dialog_errors(["Could not write log file #{file_name}"], 'Error')
+          log = @config.logs
         end
+        success = SAPHAHelpers.instance.write_file(file_name, log)
+        if success
+          show_dialog_errors(["Log was written to <code>#{file_name}</code>"], 'Success')
+        else
+          show_dialog_errors(["Could not write log file <code>#{file_name}</code>"], 'Error')
+        end
+      when :open_hawk
+        SAPHAHelpers.instance.open_url('https://localhost:7630/')
       end
     end
   end
