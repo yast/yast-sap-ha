@@ -72,7 +72,7 @@ module Yast
         if WFM.ClientExists('ntp-client')
           WFM.CallFunction('ntp-client', [])
           # NTP Client rewrites the heading
-          Wizard.SetDialogTitle("SAP High-Availability")
+          Wizard.SetDialogTitle("HA Setup for SAP Products")
         else
           Popup.Error('Could not find the yast-ntp-client module!')
           continue

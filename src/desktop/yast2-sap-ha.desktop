@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=SUSE High Availability Setup for SAP Products
-GenericName=SUSE High Availability Setup for SAP Products
+Name=HA Setup for SAP Products
+GenericName=HA Setup for SAP Products
 Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-High_Availability;
 Icon=yast-high_availability
 Exec=/sbin/yast2 sap_ha

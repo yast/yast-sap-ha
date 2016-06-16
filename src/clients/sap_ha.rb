@@ -167,7 +167,7 @@ module Yast
       textdomain 'sap-ha'
       @sequence["ws_start"] = "debug_run" if @config.debug
       Wizard.CreateDialog
-      Wizard.SetDialogTitle("SAP High-Availability")
+      Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
         ret = Sequencer.Run(@aliases, @sequence)
         log.error "Sequencer finished with #{ret}"
