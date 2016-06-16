@@ -120,15 +120,5 @@ if __FILE__ == $0
   server.start
   server.close_port
   pry.debug
-  # Yast::SuSEFirewall.WriteConfiguration
   Yast::SuSEFirewall.ActivateConfiguration
-  # if Yast::Service.Active("SuSEfirewall2")
-  #   system("systemctl restart SuSEfirewall2")
-  #   system("nohup sh -c 'sleep 5 && systemctl restart SuSEfirewall2' > /dev/null &")
-  #   server.write_log("\tSlept\n")
-  # end
-  # server.write_log("Activated firewall\n")
-  # The configuration is written by the XML RPC calls
-  # Yast::SuSEFirewall.ActivateConfiguration
-  # exec_status_l('systemctl', 'restart', 'SuSEfirewall2')
 end

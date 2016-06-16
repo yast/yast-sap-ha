@@ -45,11 +45,13 @@ module Yast
             ),
             HBox(
               HSpacing(20),
-              Table(
-                Id(:sbd_dev_list_table),
-                Opt(:keepSorting, :immediate),
-                Header(_('#'), _('Mount Point'), _('Type'), _('UUID')),
-                @model.fencing.table_items
+              MinHeight(5,
+                Table(
+                  Id(:sbd_dev_list_table),
+                  Opt(:keepSorting, :immediate),
+                  Header(_('#'), _('Mount Point'), _('Type'), _('UUID')),
+                  @model.fencing.table_items
+                )  
               ),
               HSpacing(20)
             ),

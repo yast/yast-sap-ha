@@ -48,15 +48,6 @@ module Yast
     include ShellCommands
     include Yast::Logger
 
-    # # Warning: can block for a while
-    # def can_ssh?(host)
-    #   (exec_status_to "ssh root@#{host} -oStrictHostKeyChecking=no 'true'").exitstatus == 0
-    # end
-
-    # def can_ping?(host)
-    #   (exec_status_to "ping -c 1 #{host}").exitstatus == 0
-    # end
-
     def initialize
       log.debug "--- #{self.class}.#{__callee__} --- "
       @script_path = SAPHAHelpers.instance.data_file_path('check_ssh.expect')
@@ -179,12 +170,8 @@ module Yast
 
     def run_rpc_server(host)
       # TODO: change the path
-      # stat = exec_status_l("ssh", "-f", "root@#{host}", "/usr/bin/ruby", 
-      #   "/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
-      stat = exec_status_l("ssh", "-f", "root@#{host}", "systemd-cat /usr/bin/ruby /root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
-
-      # exec_status_l("ssh", "-f", "root@#{host}", "/urs/bin/ruby", 
-      #   SAPHAHelpers.instance.)
+      stat = exec_status_l("ssh", "-f", "root@#{host}", 
+        "systemd-cat /usr/bin/ruby /root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
       fortune_teller(binding)
     end
 

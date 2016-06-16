@@ -80,12 +80,6 @@ module Yast
           next:              "installation",
           back:              :back
         },
-        "scenario_setup"        => {
-          abort:             :abort,
-          cancel:            :abort,
-          next:              :next,
-          summary:           "config_overview"
-        },
         "configure_cluster"    => {
           next:              "ntp",
           back:              :back,
@@ -151,7 +145,6 @@ module Yast
         'product_not_supported' => -> { product_not_supported },
         'configure_cluster'     => -> { configure_cluster },
         'config_overview'       => -> { configuration_overview },
-        'scenario_setup'        => -> { scenario_setup },
         'join_cluster'          => -> { join_existing_cluster },
         'fencing'               => -> { fencing_mechanism },
         'watchdog'              => -> { watchdog },
@@ -247,18 +240,6 @@ module Yast
       UI.UserInput()
       :abort
     end    
-
-    def scenario_setup
-      log.debug "--- called #{self.class}.#{__callee__} ---"
-      SAPHAGUI.richt_text(
-        "HA Setup: #{@product_name} - #{@scenario_name}",
-        "Here we install the product #{@product_name} with scenario #{@scenario_name}",
-        'Here is help for the scenario',
-        true,
-        true
-      )
-      UI.UserInput()
-    end
 
     def configuration_overview
       log.debug "--- called #{self.class}.#{__callee__} ---"
