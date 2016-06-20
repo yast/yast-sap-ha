@@ -23,23 +23,17 @@ require 'yast'
 require 'erb'
 require 'yaml'
 
-require 'sap_ha_system/node_logger.rb'
-require 'sap_ha_configuration/cluster.rb'
-require 'sap_ha_configuration/fencing.rb'
-require 'sap_ha_configuration/watchdog.rb'
-require 'sap_ha_configuration/hana.rb'
-require 'sap_ha_configuration/ntp.rb'
+require 'sap_ha/helpers'
+require 'sap_ha/node_logger'
+require 'sap_ha/configuration/cluster'
+require 'sap_ha/configuration/fencing'
+require 'sap_ha/configuration/watchdog'
+require 'sap_ha/configuration/hana'
+require 'sap_ha/configuration/ntp'
 
-module Yast
-  # Exceptions
-  class ProductNotFoundException < Exception
-  end
-
-  class ScenarioNotFoundException < Exception
-  end
-
+module SapHA
   # Module's configuration
-  class Configuration
+  class HAConfiguration
     attr_reader :product_id,
       :scenario_name,
       # configuration components
@@ -60,6 +54,7 @@ module Yast
 
     include Yast::Logger
     include Yast::I18n
+    include SapHA::Exceptions
 
     def initialize(role = :master)
       @role = role
@@ -73,10 +68,12 @@ module Yast
       @scenario_summary = nil
       @cluster = nil # This depends on the scenario configuration
       @yaml_configuration = load_scenarios
-      @fencing = FencingConfiguration.new
-      @watchdog = WatchdogConfiguration.new
-      @hana = HANAConfiguration.new
-      @ntp = NTPConfiguration.new
+      @fencing = Configuration::Fencing.new
+      @watchdog = Configuration::Watchdog.new
+      @hana = Configuration::HANA.new
+      @ntp = Configuration::NTP.new
+      # TODO: critical: change the order of cluster construction:
+      # first SBD, then cluster. otherwise pacemaker won't start
       @components = [:@cluster, :@fencing, :@watchdog, :@ntp]
       @logs = ''
     end
@@ -103,21 +100,27 @@ module Yast
     # @param [String] value scenario name
     def set_scenario_name(value)
       log.info "Selected scenario is '#{value}' for product '#{@product_name}'"
+      raise ProductNotFoundException,
+        "Setting scenario name before setting the Product ID" if @product.nil?
       @scenario_name = value
       @scenario = @product['scenarios'].find { |s| s['name'] == @scenario_name }
       if !@scenario
         log.error("Scenario name '#{@scenario_name}' not found in the scenario list")
         raise ScenarioNotFoundException
       end
-      @cluster = ClusterConfiguration.new(@scenario['number_of_nodes'])
+      @cluster = Configuration::Cluster.new(@scenario['number_of_nodes'])
     end
 
     def all_scenarios
+      raise ProductNotFoundException,
+        "Getting scenarios list before setting the Product ID" if @product.nil?
       @product['scenarios'].map { |s| s['name'] }
     end
 
     # Generate help string for all scenarios
     def scenarios_help
+      raise ProductNotFoundException,
+        "Getting scenarios help before setting the Product ID" if @product.nil?
       (@product['scenarios'].map { |s| s['description'] }).join('<br><br>')
     end
 
@@ -134,6 +137,7 @@ module Yast
     # Dump this object to a YAML representation
     # @param [Boolean] slave
     def dump(slave = false)
+      return unless can_install?
       # TODO: the proposals are also kept in this way of duplicating...
       old_role = @role
       @role = :slave if slave
@@ -144,27 +148,26 @@ module Yast
 
     # Below are the methods for logging the setup process
     def start_setup
-      log.error "--- #{self.class}.#{__callee__}: setup components are #{@components}---"
-      SapHA::NodeLogger.instance.info(
-        "Starting setup process on node #{SapHA::NodeLogger.instance.node_name}")
+      NodeLogger.info(
+        "Starting setup process on node #{SapHA::NodeLogger.node_name}")
       true
     end
 
     def end_setup
-      SapHA::NodeLogger.instance.info(
-        "Finished setup process on node #{SapHA::NodeLogger.instance.node_name}")
+      NodeLogger.info(
+        "Finished setup process on node #{SapHA::NodeLogger.node_name}")
       true
     end
 
     def collect_log
-      SapHA::NodeLogger.instance.text
+      NodeLogger.text
     end
 
     private
 
     # Load scenarios from the YAML configuration file
     def load_scenarios
-      YAML.load_file(SAPHAHelpers.instance.data_file_path('scenarios.yaml'))
+      YAML.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
     end
   end # class ScenarioConfiguration
 end # module Yast

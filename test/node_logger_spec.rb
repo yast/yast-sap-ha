@@ -19,10 +19,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require_relative 'test_helper'
-require 'sap_ha_system/node_logger'
+require 'sap_ha/node_logger'
 
 describe SapHA::NodeLogger do
-  subject { SapHA::NodeLogger.instance }
+  subject { SapHA::NodeLogger }
   let(:unknown_msg) { 'This is an unknown message' }
   let(:debug_msg)   { 'This is a debug message' }
   let(:info_msg)    { 'This is an info message' }

@@ -20,9 +20,9 @@
 
 require 'yast'
 require 'xmlrpc/client'
-require 'sap_ha_system/ssh'
+require 'sap_ha/system/ssh'
 
-module Yast
+module SapHA
   class SAPHAInstallation
     include Yast::Logger
 
@@ -44,11 +44,7 @@ module Yast
         @ui.next_node if @ui
         log.error "--- #{self.class}.#{__callee__}: finished configuring node #{node[:hostname]} ---"
       end
-      if @ui
-        @ui.unblock
-      else
-        log.error "--- #{self.class}.#{__callee__}: UI is screwed ---"
-      end
+      @ui.unblock if @ui
       # make sure that the RPC servers are shut down
       for node in @other_nodes
         node[:rpc].call('sapha.shutdown') if node[:rpc]
@@ -117,9 +113,10 @@ module Yast
 
     def connect(node)
       # TODO: catch all the SSH exceptions
-      SSH.instance.run_rpc_server(node[:ip])
+      SapHA::System::SSH.instance.run_rpc_server(node[:ip])
       sleep 5
       # TODO: catch 'Connection refused'
+      # TODO: catch 'execution expired'
       node[:rpc] = XMLRPC::Client.new(node[:ip], "/RPC2", 8080)
     end
   end

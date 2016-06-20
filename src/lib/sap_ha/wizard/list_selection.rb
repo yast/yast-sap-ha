@@ -16,12 +16,25 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: test helper
+# Summary: SUSE High Availability Setup for SAP Products: Base List Selection view
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require_relative 'test_helper'
-require 'sap_ha/configuration'
+require 'yast'
+require 'sap_ha/helpers'
+require 'sap_ha/exceptions'
 
-describe Yast::Configuration do
-  
+module SapHA
+  module Wizard
+    # Simple List Selection page
+    class ListSelection < BaseWizardPage
+      def initialize
+        super(nil)
+      end
+
+      def run(title, message, list_contents, help, allow_back, allow_next)
+        base_list_selection(title, message, list_contents, help, allow_back, allow_next)
+        Yast::UI.UserInput()
+      end
+    end
+  end
 end

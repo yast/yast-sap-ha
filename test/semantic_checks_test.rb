@@ -21,8 +21,8 @@
 require_relative 'test_helper'
 require 'sap_ha/semantic_checks'
 
-describe Yast::SemanticChecks do
-  subject { Yast::SemanticChecks.instance }
+describe SapHA::SemanticChecks do
+  subject { SapHA::SemanticChecks.instance }
 
   describe '#ipv4' do
     it "reports validness of an IP address in silent mode" do

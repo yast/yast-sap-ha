@@ -19,12 +19,58 @@
 # Summary: SUSE High Availability Setup for SAP Products: Base exceptions
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-module Yast
-  # Base exceptions
-  class SAPHAException < StandardError
-  end
+module SapHA
+  module Exceptions
+    # Base exceptions
+    class BaseException < StandardError
+    end
 
-  # Base model validation exception
-  class ModelValidationException < SAPHAException
+    # Configuration component base exception
+    class BaseConfigException < BaseException
+    end
+
+    # Base model validation exception
+    class ModelValidationException < BaseException
+    end
+
+    class HAConfigurationException < BaseException
+    end
+
+    class ProductNotFoundException < HAConfigurationException
+    end
+
+    class ScenarioNotFoundException < HAConfigurationException
+    end
+
+    class SSHException < BaseException
+    end
+
+    class SSHConnectionException < SSHException
+    end
+
+    class SSHAuthException < SSHException
+    end
+
+    class SSHPassException < SSHException
+    end
+
+    class SSHKeyException < SSHException
+    end
+
+    # An exception that will display a message to the user
+    class GUIException < BaseException
+    end
+
+    class GUIWarning < GUIException
+    end
+
+    class GUIError < GUIException
+    end
+
+    class GUIFatal < GUIException
+    end
+
+    class ClusterConfigurationException < ModelValidationException
+    end
   end
 end

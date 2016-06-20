@@ -21,16 +21,17 @@
 
 require 'yast'
 require 'sap_ha/helpers'
-require 'sap_ha/gui'
-require 'sap_ha_wizard/cluster_page'
-require 'sap_ha_wizard/join_cluster_page'
-require 'sap_ha_wizard/fencing_page'
-require 'sap_ha_wizard/watchdog_page'
-require 'sap_ha_wizard/hana_page'
-require 'sap_ha_wizard/ntp_page'
-require 'sap_ha_wizard/overview_page'
-require 'sap_ha_wizard/summary_page'
-require 'sap_ha_wizard/gui_installation_page'
+require 'sap_ha/wizard/cluster_page'
+require 'sap_ha/wizard/join_cluster_page'
+require 'sap_ha/wizard/fencing_page'
+require 'sap_ha/wizard/watchdog_page'
+require 'sap_ha/wizard/hana_page'
+require 'sap_ha/wizard/ntp_page'
+require 'sap_ha/wizard/overview_page'
+require 'sap_ha/wizard/summary_page'
+require 'sap_ha/wizard/gui_installation_page'
+require 'sap_ha/wizard/list_selection'
+require 'sap_ha/wizard/rich_text'
 require 'sap_ha/configuration'
 
 # YaST module
@@ -47,7 +48,7 @@ module Yast
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
-      @config = Configuration.new
+      @config = SapHA::HAConfiguration.new
       @config.debug = WFM.Args.include? 'debug'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
       @bogus = WFM.Args.include?('bogus')
@@ -189,7 +190,7 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       scenarios = @config.all_scenarios
       help = @config.scenarios_help
-      SAPHAGUI.list_selection(
+      selection = SapHA::Wizard::ListSelection.new.run(
         "Scenario selection for #{@config.product_name}",
         "An #{@config.product_name} installation was detected. Select one of the high-avaliability "\
         "scenarios from the list below:",
@@ -198,7 +199,6 @@ module Yast
         false,
         true
       )
-      selection = UI.UserInput()
       case selection
       when :next
         begin
@@ -215,35 +215,33 @@ module Yast
 
     def product_not_supported
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SAPHAGUI.richt_text(
+      SapHA::Wizard::RichText.new.run(
         'Product not supported',
-        SAPHAHelpers.instance.load_help('product_not_found'),
-        SAPHAHelpers.instance.load_help('product_not_found'),
+        Helpers.load_help('product_not_found'),
+        Helpers.load_help('product_not_found'),
         false,
         false
       )
       log.error("No HA scenarios found for product #{@product_name}")
-      UI.UserInput()
       :abort
     end
 
     def scenarios_not_found
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SAPHAGUI.richt_text(
+      log.error("No HA scenarios found for product #{@product_name}")
+      SapHA::Wizard::RichText.new.run(
         'Scenarios not found',
         "There were no HA scenarios found for the product #{@product_name}",
         "The product you are installing is not supported by this module.<br>You can set up a cluster manually using the Cluster YaST module.",
         false,
         false
       )
-      log.error("No HA scenarios found for product #{@product_name}")
-      UI.UserInput()
       :abort
-    end    
+    end
 
     def configuration_overview
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      ret = ConfigurationOverviewPage.new(@config).run
+      ret = SapHA::Wizard::ConfigurationOverviewPage.new(@config).run
       log.error "--- #{self.class}.#{__callee__}: return=#{ret.inspect} ---"
       return :abort if ret == :back # TODO: find out why it returns "back"
       ret
@@ -251,39 +249,39 @@ module Yast
 
     def configure_cluster
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      ClusterConfigurationPage.new(@config).run
+      SapHA::Wizard::ClusterConfigurationPage.new(@config).run
     end
 
     def join_existing_cluster
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      JoinClusterPage.new(@config).run
+      SapHA::Wizard::JoinClusterPage.new(@config).run
     end
 
     def fencing_mechanism
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      FencingConfigurationPage.new(@config).run
+      SapHA::Wizard::FencingConfigurationPage.new(@config).run
     end
 
     def watchdog
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      WatchdogConfigurationPage.new(@config).run
+      SapHA::Wizard::WatchdogConfigurationPage.new(@config).run
     end
 
     def configure_hana
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      HANAConfigurationPage.new(@config).run
+      SapHA::Wizard::HANAConfigurationPage.new(@config).run
     end
 
     def configure_ntp
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      return NTPConfigurationPage.new(@config).run
+      return SapHA::Wizard::NTPConfigurationPage.new(@config).run
     end
 
     def run_installation
       log.debug "--- called #{self.class}.#{__callee__} ---"
       return :next if WFM.Args.include? 'noinst'
-      ui = GUIInstallationPage.new
-      SAPHAInstallation.new(@config, ui).run
+      ui = SapHA::Wizard::GUIInstallationPage.new
+      SapHA::SAPHAInstallation.new(@config, ui).run
     end
 
     def show_summary
@@ -305,7 +303,7 @@ module Yast
           '[hana01] 2016-06-15 14:51:22 WARN: Finished with errors'
         ].join("\n")
       end
-      SetupSummaryPage.new(@config).run
+      SapHA::Wizard::SetupSummaryPage.new(@config).run
     end
 
     def debug_run
@@ -385,5 +383,4 @@ module Yast
 
   SAPHA = SAPHAClass.new
   SAPHA.main
-
 end

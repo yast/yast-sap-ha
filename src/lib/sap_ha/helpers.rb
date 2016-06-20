@@ -22,14 +22,14 @@
 require 'erb'
 require 'tmpdir'
 
-module Yast
+module SapHA
   # Common routines
-  class SAPHAHelpers
+  class HelpersClass
     include Singleton
     include ERB::Util
     include Yast::Logger
     include Yast::I18n
-    
+
     def initialize
       @storage = {}
       # TODO: rethink this, since we are running RPC server by setting the ENV...
@@ -43,10 +43,10 @@ module Yast
           puts e.message
         end
       else  # production
-        @data_path = '/usr/share/YaST2/data/sap_ha' 
+        @data_path = '/usr/share/YaST2/data/sap_ha'
         @var_path = '/var/lib/YaST/sap_ha'
       end
-      
+
     end
 
     # Render an ERB template by its name
@@ -113,10 +113,10 @@ module Yast
     def open_url(url)
       require 'yast'
       Yast.import 'UI'
-      UI.BusyCursor
+      Yast::UI.BusyCursor
       system("xdg-open #{url}")
       sleep 5
-      UI.NormalCursor
+      Yast::UI.NormalCursor
     end
 
     private
@@ -132,4 +132,6 @@ module Yast
       raise _("Program data could not be accessed. Please reinstall the package.")
     end
   end
+
+  Helpers = HelpersClass.instance
 end

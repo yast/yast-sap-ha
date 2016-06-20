@@ -1,4 +1,7 @@
 - [ ] Clicking on 'x' window button goes back instead of aborting the Wizard. WTF?
+- [ ] when we wait for the SSH connection, we must time out
+- [ ] When creating a cluster, check `corosync-cfgtool -s`, an rc=1 means failure (also log the stdout)
+- [ ] check if the SBD fencing works (we need to add enable_service('sbd') _before_ pacemaker)
 
 This code gives error in ncurses but works in gui:
 

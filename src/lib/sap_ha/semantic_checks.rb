@@ -26,7 +26,7 @@ require 'erb'
 Yast.import 'IP'
 Yast.import 'Hostname'
 
-module Yast
+module SapHA
   # Input validators and checks
   class SemanticChecks
     include Singleton
@@ -45,19 +45,19 @@ module Yast
     end
 
     def ipv4(value, field_name = '')
-      flag = IP.Check4(value)
-      report_error(flag, IP.Valid4, field_name, value)
+      flag = Yast::IP.Check4(value)
+      report_error(flag, Yast::IP.Valid4, field_name, value)
     end
 
     def ipv4_multicast(value, field_name = '')
-      flag = IP.Check4(value) && value.start_with('239.')
+      flag = Yast::IP.Check4(value) && value.start_with('239.')
       msg = 'A valid IPv4 multicast address should belong to the 239.* network.'
       report_error(flag, msg, field_name, value)
     end
 
     def hostname(value, field_name = '')
-      flag = Hostname.Check(value)
-      report_error(flag, Hostname.ValidHost, field_name, value)
+      flag = Yast::Hostname.Check(value)
+      report_error(flag, Yast::Hostname.ValidHost, field_name, value)
     end
 
     def port(value, field_name = '')
@@ -147,7 +147,7 @@ module Yast
         transaction_end
         return @checks_passed
       end
-    ensure 
+    ensure
       @silent = old_silent
     end
 

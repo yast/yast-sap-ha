@@ -21,40 +21,42 @@
 
 require 'yast'
 require 'sap_ha/helpers'
-require 'sap_ha_wizard/base_wizard_page'
+require 'sap_ha/wizard/base_wizard_page'
 require 'sap_ha/sap_ha_installation'
 Yast.import 'Progress'
 
-module Yast
-  # GUI Installation Page
-  class GUIInstallationPage
-    def set(nodes, titles, tasks)
-      @tasks = tasks
-      Progress.New(
-        'SAP High-Availability Setup',
-        '',
-        titles.length,
-        nodes,
-        titles,
-        '')
-      Progress.SubprogressType(:progress, @tasks.length)
-      Progress.SubprogressTitle("")
-    end
+module SapHA
+  module Wizard
+    # GUI Installation Page
+    class GUIInstallationPage
+      def set(nodes, titles, tasks)
+        @tasks = tasks
+        Yast::Progress.New(
+          'SAP High-Availability Setup',
+          '',
+          titles.length,
+          nodes,
+          titles,
+          '')
+        Yast::Progress.SubprogressType(:progress, @tasks.length)
+        Yast::Progress.SubprogressTitle("")
+      end
 
-    def next_node
-      Progress.NextStage
-      @task_no = -1
-      next_task
-    end
+      def next_node
+        Yast::Progress.NextStage
+        @task_no = -1
+        next_task
+      end
 
-    def next_task
-      @task_no += 1
-      Progress.SubprogressValue(@task_no)
-      Progress.SubprogressTitle(@tasks[@task_no])
-    end
+      def next_task
+        @task_no += 1
+        Yast::Progress.SubprogressValue(@task_no)
+        Yast::Progress.SubprogressTitle(@tasks[@task_no])
+      end
 
-    def unblock
-      Progress.Finish
+      def unblock
+        Yast::Progress.Finish
+      end
     end
   end
 end

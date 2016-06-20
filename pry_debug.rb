@@ -4,7 +4,7 @@ require 'yaml'
 ENV['Y2DIR'] = File.expand_path('../src', __FILE__)
 
 require_relative 'src/lib/sap_ha/configuration.rb'
-require 'sap_ha_system/ssh'
+require 'sap_ha/system/ssh'
 require 'sap_ha/semantic_checks'
 
 require_relative 'src/clients/sap_ha.rb'

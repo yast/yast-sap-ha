@@ -25,7 +25,7 @@ require 'socket'
 
 module SapHA
   # Log info messages, warnings and errors into memory
-  class NodeLogger
+  class NodeLoggerClass
     include Singleton
 
     attr_reader :node_name
@@ -34,6 +34,7 @@ module SapHA
       @fd = StringIO.new
       @logger = Logger.new(@fd)
       @logger.level = Logger::INFO
+      # TODO call SapHA::System::Local.hostname
       @node_name = Socket.gethostname
       @logger.formatter = proc do |severity, datetime, _progname, msg|
         date = datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -45,8 +46,8 @@ module SapHA
     # Append command's stdout/stderr to the log
     # @param [String] str raw output
     def output(str)
-      str = str.strip()
-      str.split("\n").each { |line| @logger.unknown(line.strip()) }
+      str = str.strip
+      str.split("\n").each { |line| @logger.unknown(line.strip) }
     end
 
     # Proxy calls to the logger class if they are not found in NodeLogger
@@ -68,7 +69,7 @@ module SapHA
     end
 
     # Convert text log to an HTML representation
-    def self.to_html(txt)
+    def to_html(txt)
       time_rex = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
       rules = [
         { rex: /^\[(.*)\] (#{time_rex})\s+(OUTPUT): (.*)$/, color: '#808080'  }, # gray
@@ -84,9 +85,9 @@ module SapHA
           node, time, level, message = rule[:rex].match(line).captures
           if level == "OUTPUT"
             "<font color=\"\#a6a6a6\">[#{node}]</font> #{message}"
-          else  
+          else
             "<font color=\"\#a6a6a6\">[#{node}] #{time}</font> "\
-            "<font color=\"#{rule[:color]}\"><b>#{level.rjust(6,' ')}</b></font>: #{message}"
+            "<font color=\"#{rule[:color]}\"><b>#{level.rjust(6, " ")}</b></font>: #{message}"
           end
         else
           line
@@ -107,6 +108,7 @@ module SapHA
       else
         @logger.error("Could not enable #{unit_type} #{unit_name}")
       end
+      status
     end
 
     # Log the status of an attempt at starting a systemd unit
@@ -119,6 +121,7 @@ module SapHA
       else
         @logger.error("Could not start #{unit_type} #{unit_name}")
       end
+      status
     end
 
     # Log a general fatal error
@@ -138,6 +141,9 @@ module SapHA
         @logger.error(msg_if_false)
         output(stdout) if stdout
       end
+      status
     end
   end
+
+  NodeLogger = NodeLoggerClass.instance
 end

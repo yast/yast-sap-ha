@@ -16,21 +16,25 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Network configuration class
+# Summary: SUSE High Availability Setup for SAP Products: Base Rich Text view
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require 'open3'
-require 'timeout'
+require 'sap_ha/helpers'
+require 'sap_ha/exceptions'
 
-Yast.import 'NetworkInterfaces'
+module SapHA
+  module Wizard
+    # Simple RichText page
+    class RichText < BaseWizardPage
+      def initialize
+        super(nil)
+      end
 
-module Yast
-  # Network configuration class
-  class HANetwork
-    def self.list_all_interfaces
-      NetworkInterfaces.Read
-      NetworkInterfaces.List("")
+      def run(title, contents, help, allow_back, allow_next)
+        base_rich_text(title, contents, help, allow_back, allow_next)
+        Yast::UI.UserInput()
+      end
     end
   end
 end
