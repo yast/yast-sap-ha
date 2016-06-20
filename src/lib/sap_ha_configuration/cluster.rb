@@ -301,18 +301,12 @@ module Yast
     end
 
     def start_services
-      stat = SAPHACluster.instance.enable_socket('csync2')
-      @nlog.enable_unit(stat, 'csync2', :socket)
-      stat = SAPHACluster.instance.enable_service('pacemaker')
-      @nlog.enable_unit(stat, 'pacemaker', :service)
-      stat = SAPHACluster.instance.start_service('pacemaker')
-      @nlog.start_unit(stat, 'pacemaker', :service)
-      # TODO: hawk password
-      # echo "hacluster:linux" | chpasswd
-      stat = SAPHACluster.instance.enable_service('hawk')
-      @nlog.enable_unit(stat, 'hawk', :service)
-      stat = SAPHACluster.instance.start_service('hawk')
-      @nlog.start_unit(stat, 'hawk', :service)
+      @nlog.enable_unit(SAPHACluster.instance.enable_service('sbd'), 'sbd', :service)
+      @nlog.enable_unit(SAPHACluster.instance.enable_socket('csync2'), 'csync2', :socket)
+      @nlog.enable_unit(SAPHACluster.instance.enable_service('pacemaker'), 'pacemaker', :service)
+      @nlog.start_unit(SAPHACluster.instance.start_service('pacemaker'), 'pacemaker', :service)
+      @nlog.enable_unit(SAPHACluster.instance.enable_service('hawk'), 'hawk', :service)
+      @nlog.start_unit(SAPHACluster.instance.start_service('hawk'), 'hawk', :service)
     end
 
     def generate_corosync_key
