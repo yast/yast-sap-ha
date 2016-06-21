@@ -115,7 +115,7 @@ module SapHA
 
       def refresh_view
         super
-        if @my_model.fixed_number_of_nodes?
+        if @my_model.fixed_number_of_nodes
           set_value(:add_node, false, :Enabled)
           set_value(:delete_node, false, :Enabled)
         end

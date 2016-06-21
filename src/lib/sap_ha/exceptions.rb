@@ -29,6 +29,16 @@ module SapHA
     class BaseConfigException < BaseException
     end
 
+    class TemplateRenderException < BaseException
+        attr_reader :renderer_message
+        def renderer_message=(msg)
+            @renderer_message = msg
+        end
+    end
+
+    class LocalSystemException < BaseException
+    end
+
     # Base model validation exception
     class ModelValidationException < BaseException
     end

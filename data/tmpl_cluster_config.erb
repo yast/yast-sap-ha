@@ -1,15 +1,14 @@
-# TODO: is it supposed to be crm-...?
-configure property $id="cib-bootstrap-options" \
-    no-quorum-policy="ignore" \
+# TODO: remove this completely
+configure property \
     stonith-enabled="true" \
     stonith-action="reboot" \
     stonith-timeout="150s"
 
-configure rsc_default $id="rsc-options" \
+configure rsc_default \
     resource-stickiness="1000" \
     migration-threshold="5000"
 
-configure op_defaults $id="op-options" \
+configure op_defaults \
     timeout="600"
 
 configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \

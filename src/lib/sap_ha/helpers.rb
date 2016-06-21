@@ -21,6 +21,7 @@
 
 require 'erb'
 require 'tmpdir'
+require 'sap_ha/exceptions'
 
 module SapHA
   # Common routines
@@ -29,6 +30,7 @@ module SapHA
     include ERB::Util
     include Yast::Logger
     include Yast::I18n
+    include SapHA::Exceptions
 
     def initialize
       @storage = {}
@@ -61,7 +63,9 @@ module SapHA
         return @storage[basename].result(binding)
       rescue StandardError => e
         log.error("Error while rendering template '#{full_path}': #{e.message}")
-        raise _("Error rendering template.")
+        exc = TemplateRenderException.new("Error rendering template.")
+        exc.renderer_message = e.message
+        raise exc
       end
     end
 

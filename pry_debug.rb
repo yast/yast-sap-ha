@@ -6,12 +6,13 @@ ENV['Y2DIR'] = File.expand_path('../src', __FILE__)
 require_relative 'src/lib/sap_ha/configuration.rb'
 require 'sap_ha/system/ssh'
 require 'sap_ha/semantic_checks'
+require 'sap_ha/helpers'
 
 require_relative 'src/clients/sap_ha.rb'
 
-config = Yast::Configuration.new
+config = SapHA::HAConfiguration.new
 config.set_product_id "HANA"
-config.set_scenario_name "Performance-optimized"
+config.set_scenario_name "Scale Up: Performance-optimized"
 
 # ssh = Yast::SSH.instance
 
@@ -46,9 +47,9 @@ def sequence
 end
 
 def init_config
-  config = Yast::Configuration.new
+  config = SapHA::HAConfiguration.new
   config.set_product_id "HANA"
-  config.set_scenario_name "Performance-optimized"
+  config.set_scenario_name "Scale Up: Performance-optimized"
   config
 end
 
@@ -125,6 +126,7 @@ c.cluster.import(
     }
   }
 )
+c.cluster.set_fixed_nodes(true, 2)
 c.fencing.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
 c.watchdog.import(to_install: ['softdog'])
 c.hana.import(
@@ -135,66 +137,66 @@ c.hana.import(
 
 
 
-class FooBar
-  def initialize
-    @a = 1
-    @b = 2
-    @c = 3
-  end
-end
+# class FooBar
+#   def initialize
+#     @a = 1
+#     @b = 2
+#     @c = 3
+#   end
+# end
 
-class FooBaz < FooBar
-  def encode_with(coder)
-    super
-  end
+# class FooBaz < FooBar
+#   def encode_with(coder)
+#     super
+#   end
 
-  def init_with(coder)
-    super
-  end
-end
+#   def init_with(coder)
+#     super
+#   end
+# end
 
-class FooBax < FooBar
-  def initialize
-    super
-    @log = 'FooBaxLog'
-    @yaml_exclude = [:@c, :@yaml_exclude, :@log]
-  end
+# class FooBax < FooBar
+#   def initialize
+#     super
+#     @log = 'FooBaxLog'
+#     @yaml_exclude = [:@c, :@yaml_exclude, :@log]
+#   end
 
-  def encode_with(coder)
-    puts "FooBax:encode_with"
-    instance_variables.each do |variable_name|
-      next if @yaml_exclude.include? variable_name
-      key = variable_name.to_s[1..-1]
-      coder[key] = instance_variable_get(variable_name)
-    end
-    coder['instance_variables'] = instance_variables - @yaml_exclude
-  end
+#   def encode_with(coder)
+#     puts "FooBax:encode_with"
+#     instance_variables.each do |variable_name|
+#       next if @yaml_exclude.include? variable_name
+#       key = variable_name.to_s[1..-1]
+#       coder[key] = instance_variable_get(variable_name)
+#     end
+#     coder['instance_variables'] = instance_variables - @yaml_exclude
+#   end
 
-  def init_with(coder)
-    puts "FooBax:init_with"
-    coder['instance_variables'].each do |variable_name|
-      key = variable_name.to_s[1..-1]
-      instance_variable_set(variable_name, coder[key])
-    end
-    @coder = 'FooBaxLog_init'
-  end
-end
+#   def init_with(coder)
+#     puts "FooBax:init_with"
+#     coder['instance_variables'].each do |variable_name|
+#       key = variable_name.to_s[1..-1]
+#       instance_variable_set(variable_name, coder[key])
+#     end
+#     @coder = 'FooBaxLog_init'
+#   end
+# end
 
 
-class Meow < FooBax
-  def initialize
-    super
-    @d = 5
-    @f = 'hide me'
-    @yaml_exclude << :@f
-  end
+# class Meow < FooBax
+#   def initialize
+#     super
+#     @d = 5
+#     @f = 'hide me'
+#     @yaml_exclude << :@f
+#   end
 
-  def init_with(coder)
-    puts "Meow:init_with"
-    super
-    @f = 'hidden!'
-  end
-end
+#   def init_with(coder)
+#     puts "Meow:init_with"
+#     super
+#     @f = 'hidden!'
+#   end
+# end
 
 binding.pry
 

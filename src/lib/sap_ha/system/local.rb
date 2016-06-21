@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'socket'
+require 'sap_ha/exceptions'
 require_relative 'shell_commands'
 
 Yast.import 'NetworkInterfaces'
@@ -28,6 +29,7 @@ Yast.import 'SystemdService'
 Yast.import 'SystemdSocket'
 Yast.import 'SuSEFirewallServices'
 Yast.import 'SuSEFirewall'
+Yast.import 'Cluster'
 
 module SapHA
   module System
@@ -35,6 +37,7 @@ module SapHA
     class LocalClass
       include Singleton
       include ShellCommands
+      include SapHA::Exceptions
       include Yast::Logger
       
       def net_interfaces
@@ -63,40 +66,33 @@ module SapHA
         end.select { |d| d[:type] == "part" || d[:type] == "disk" }
       end
 
-      def enable_service(service_name)
-        service = Yast::SystemdService.find(service_name)
-        return false if service.nil?
-        service.enable unless service.enabled?
-      end
-
-      def disable_service(service_name)
-        service = Yast::SystemdService.find(service_name)
-        return false if service.nil?
-        service.disable if service.enabled?
-      end
-
-      def start_service(service_name)
-        service = Yast::SystemdService.find(service_name)
-        return false if service.nil?
-        service.start
-      end
-
-      def stop_service(service_name)
-        service = Yast::SystemdService.find(service_name)
-        return false if service.nil?
-        service.stop
-      end
-
-      def enable_socket(socket_name)
-        socket = Yast::SystemdSocket.find(socket_name)
-        return false if socket.nil?
-        socket.enable unless socket.enabled?
-      end
-
-      def disable_socket(socket_name)
-        socket = Yast::SystemdSocket.find(socket_name)
-        return false if socket.nil?
-        socket.disable if socket.enabled?
+      # Change the systemd's unit state
+      # @param action [Symbol] :enable, :disable, :start, :stop
+      # @param unit_type [Symbol] :service or :socket
+      # @param unit_name [String]
+      def systemd_unit(action, unit_type, unit_name)
+        verbs = {start: "Started", stop: "Stopped", enable: "Enabled", disable: "Disabled"}
+        unless verbs.keys.include? action
+          raise LocalSystemException, "Unknown action #{action} on systemd #{unit_type}"
+        end
+        unit = if unit_type == :service
+                 Yast::SystemdService.find(unit_name)
+               else
+                 Yast::SystemdSocket.find(unit_name)
+               end
+        if unit.nil?
+          NodeLogger.error "Could not #{action} #{unit_type} #{unit_name}: #{unit_type} does not exist"
+          return false
+        end
+        status = unit.send(action)
+        if status
+          verb = verbs[action]
+          NodeLogger.info "#{verb} #{unit_type} #{unit_name}"
+        else
+          NodeLogger.error "Could not #{action} #{unit_type} #{unit_name}"
+          NodeLogger.output unit.status unless unit.status.empty?
+        end
+        status
       end
 
       def generate_csync_key
@@ -128,27 +124,60 @@ module SapHA
           "service:cluster", { "tcp_ports" => tcp_ports, "udp_ports" => udp_ports})
         Yast::SuSEFirewall.Read
         Yast::SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
-        Yast::SuSEFirewall.Write
-        Yast::SuSEFirewall.ActivateConfiguration if role == :master
-        # TODO: make sure the configuration is activated on the exit of the XML RPC server
-        # TODO: log
+        written = Yast::SuSEFirewall.Write
+        if role == :master
+          Yast::SuSEFirewall.ActivateConfiguration
+        else
+          written
+        end
       end
 
       def start_cluster_services
         success = true
-        success &= NodeLogger.enable_unit(enable_service('sbd'), 'sbd', :service)
-        success &= NodeLogger.enable_unit(enable_socket('csync2'), 'csync2', :socket)
-        success &= NodeLogger.enable_unit(enable_service('pacemaker'), 'pacemaker', :service)
-        success &= NodeLogger.start_unit(start_service('pacemaker'), 'pacemaker', :service)
-        success &= NodeLogger.enable_unit(enable_service('hawk'), 'hawk', :service)
-        success &= NodeLogger.start_unit(start_service('hawk'), 'hawk', :service)
+        success &= systemd_unit(:enable, :service, 'sbd')
+        success &= systemd_unit(:enable, :socket, 'csync2')
+        success &= systemd_unit(:enable, :service, 'pacemaker')
+        success &= systemd_unit(:start, :service, 'pacemaker')
+        success &= systemd_unit(:enable, :service, 'hawk')
+        success &= systemd_unit(:start, :service, 'hawk')
         success
       end
 
       # Export to the Yast-Cluster module
-      def cluster_export
-        # TODO: move stuff from cluster.rb
+      def yast_cluster_export(settings)
+        Yast::Cluster.Import(settings)
+        stat = Yast::Cluster.Write
+        NodeLogger.log_status(stat, 'Wrote cluster settings', 'Could not write cluster settings')
       end
+
+      def add_stonith_resource
+        out, status = exec_outerr_status('crm', 'configure', 'primitive', 'stonith-sbd', 'stonith:external/sbd')
+        success = status.exitstatus == 0
+        if success
+          NodeLogger.info('Added a primitive to the cluster: stonith-sbd')
+        else
+          NodeLogger.error('Could not add the stonith-sbd primitive to the cluster')
+          NodeLogger.output(out)
+        end
+        success
+      end
+
+      def initialize_sbd(devices)
+        flag = true
+        for device in devices
+          log.warn "Initializing the SBD device on #{device[:name]}"
+          status = exec_status_l('sbd', '-d', device[:name], 'create')
+          log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
+          if status.exitstatus == 0
+            NodeLogger.info "Successfully initialized the SBD device #{device[:name]}"
+          else
+            NodeLogger.error "Could not initialize the SBD device #{device[:name]}"
+          end
+          flag &= status.exitstatus == 0
+        end
+        flag
+      end
+
     end
     Local = LocalClass.instance
   end

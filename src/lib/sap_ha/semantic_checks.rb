@@ -73,7 +73,6 @@ module SapHA
     end
 
     def nonneg_integer(value, field_name = '')
-      log.error "--- #{self.class}.#{__callee__} : value=#{value}, field_name=#{field_name} --- "
       flag = true
       begin
         int_ = Integer(value)

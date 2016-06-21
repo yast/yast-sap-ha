@@ -36,15 +36,14 @@ module SapHA
   class HAConfiguration
     attr_reader :product_id,
       :scenario_name,
-      # configuration components
-      :components
+      :config_sequence,
+      :scenario,
+      :product_name,
+      :product,
+      :scenario_summary
     attr_accessor :role,
       :debug,
       :no_validators,
-      :product_name,
-      :product,
-      :scenario,
-      :scenario_summary,
       :cluster,
       :fencing,
       :watchdog,
@@ -66,15 +65,13 @@ module SapHA
       @scenario_name = nil
       @scenario = nil
       @scenario_summary = nil
-      @cluster = nil # This depends on the scenario configuration
       @yaml_configuration = load_scenarios
+      @cluster = Configuration::Cluster.new
       @fencing = Configuration::Fencing.new
       @watchdog = Configuration::Watchdog.new
       @hana = Configuration::HANA.new
       @ntp = Configuration::NTP.new
-      # TODO: critical: change the order of cluster construction:
-      # first SBD, then cluster. otherwise pacemaker won't start
-      @components = [:@cluster, :@fencing, :@watchdog, :@ntp]
+      @config_sequence = []
       @logs = ''
     end
 
@@ -83,17 +80,11 @@ module SapHA
     def set_product_id(value)
       @product_id = value
       product = @yaml_configuration.find do |p|
-        p['product'] && p['product'].fetch('id', '') == @product_id
+        p.fetch('id', '') == @product_id
       end
-      raise ProductNotFoundException, "Could not find product1 with ID '#{value}'" unless product
-      @product = product['product']
+      raise ProductNotFoundException, "Could not find product with ID '#{value}'" unless product
+      @product = product.dup
       @product_name = @product['string_name']
-      case @product_id
-      when "HANA"
-        @components << :@hana if !@components.include? :@hana
-      when "NW"
-        @components << :@nw if !@components.include? :@nw
-      end
     end
 
     # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found
@@ -108,7 +99,33 @@ module SapHA
         log.error("Scenario name '#{@scenario_name}' not found in the scenario list")
         raise ScenarioNotFoundException
       end
-      @cluster = Configuration::Cluster.new(@scenario['number_of_nodes'])
+      apply_scenario
+    end
+
+    def apply_scenario
+      if @scenario['config_sequence']
+        @config_sequence = @scenario['config_sequence'].map do |el|
+          instv = "@#{el}".to_sym
+          unless instance_variable_defined?(instv)
+            log.error "Scenario #{@scenario} requires a configuration object #{el} which is not defined."
+            raise GUIFatal, "Scenario configuration is incorrect. Please check the logs."
+          end
+          { id: el,
+            var_name: instv,
+            object: instance_variable_get(instv), # local configuration object
+            screen_name: instance_variable_get(instv).screen_name, # screen name for GUI
+            rpc_object: "sapha.config_#{el}",
+            rpc_method: "sapha.config_#{el}.apply"
+          } 
+        end
+      else
+        log.error "Scenario #{@scenario} does not set a configuration sequence."
+        raise GUIFatal, "Scenario configuration is incorrect. Please check the logs."
+      end
+      @cluster.set_fixed_nodes(
+        @scenario.fetch('fixed_number_of_nodes', false),
+        @scenario.fetch('number_of_nodes', 2)
+      )
     end
 
     def all_scenarios
@@ -126,11 +143,11 @@ module SapHA
 
     # Can the cluster be set up?
     def can_install?
-      @components.map do |config|
-        next unless instance_variable_defined?(config)
-        conf = instance_variable_get(config)
-        next if conf.nil?
-        conf.configured?
+      return false if @config_sequence.empty?
+      @config_sequence.map do |config|
+        flag = config[:object].configured?
+        log.warn "Component #{config[:screen_name]} is not configured" unless flag
+        flag
       end.all?
     end
 

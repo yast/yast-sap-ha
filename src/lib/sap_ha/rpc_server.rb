@@ -45,7 +45,6 @@ module SapHA
     def initialize
       @fh = File.open('/tmp/rpc_serv', 'wb')
       @server = XMLRPC::Server.new(8080, '0.0.0.0', 3, @fh)
-      # @config = Yast::Configuration.new :slave
       open_port
       install_handlers
     end
@@ -56,10 +55,9 @@ module SapHA
       @server.add_handler('sapha.import_config') do |yaml_string|
         @config = YAML.load(yaml_string)
         @server.add_handler('sapha.config', @config)
-        for config_name in @config.components
-          func = "sapha.config_#{config_name.to_s[1..-1]}"
-          obj = @config.instance_variable_get(config_name)
-          @server.add_handler(func, obj)
+        @config.config_sequence.each do |component|
+          obj = @config.instance_variable_get(component[:var_name])
+          @server.add_handler(component[:rpc_object], obj)
         end
         true
       end

@@ -64,10 +64,9 @@ module SapHA
       rpc.call('sapha.import_config', @yaml_config)
       rpc.call('sapha.config.start_setup')
       @ui.next_task if @ui
-      for component_id in @config.components
-        log.error "--- #{self.class}.#{__callee__}: configuring component #{component_id} on node #{node[:hostname]} ---"
-        func = "sapha.config_#{component_id.to_s[1..-1]}.apply"
-        rpc.call(func, :slave)
+      @config.config_sequence.each do |component|
+        log.info "--- #{self.class}.#{__callee__}: configuring component #{component[:screen_name]} on node #{node[:hostname]} ---"
+        rpc.call(component[:rpc_method], :slave)
         @ui.next_task
       end
       rpc.call('sapha.config.end_setup')
@@ -80,9 +79,9 @@ module SapHA
       @ui.next_node if @ui
       @ui.next_task if @ui # we are not connecting to this node
       @config.start_setup
-      for component_id in @config.components
-        log.error "--- #{self.class}.#{__callee__}: configuring #{component_id} ---"
-        @config.instance_variable_get(component_id).apply(:master)
+      @config.config_sequence.each do |component|
+        log.error "--- #{self.class}.#{__callee__}: configuring #{component[:screen_name]} ---"
+        component[:object].apply(:master)
         @ui.next_task if @ui
       end
       @config.end_setup
@@ -98,10 +97,8 @@ module SapHA
     end
 
     def calculate_gui
-      config_components = Hash[@config.components.map { |config_name|
-        [config_name, @config.instance_variable_get(config_name).screen_name] }]
       tasks = ['Connecting']
-      tasks.concat(config_components.map { |k, v| v })
+      tasks.concat(@config.config_sequence.map { |e| e[:screen_name] })
       stages = ['Configure the local node']
       titles = ['Configuring the local node']
       @other_nodes.each do |n|

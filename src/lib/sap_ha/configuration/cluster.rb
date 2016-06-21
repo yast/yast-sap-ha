@@ -27,30 +27,23 @@ require 'sap_ha/system/local'
 require 'sap_ha/exceptions'
 
 Yast.import 'UI'
-Yast.import 'Cluster'
-Yast.import 'SuSEFirewallServices'
-Yast.import 'SuSEFirewall'
 
 module SapHA
   module Configuration
     # Cluster members configuration
     # TODO: think of merging this one and the CommLayer
     class Cluster < BaseConfig
-      attr_reader :nodes, :number_of_rings, :transport_mode
+      attr_reader :nodes, :number_of_rings, :transport_mode, :fixed_number_of_nodes
       attr_accessor :cluster_name, :expected_votes
 
       include Yast::UIShortcuts
       include SapHA::Exceptions
 
-      def initialize(fixed_number_of_nodes = nil)
+      def initialize
         super()
         @screen_name = "Cluster Configuration"
-        @fixed_number_of_nodes = fixed_number_of_nodes
-        number_of_nodes = if fixed_number_of_nodes
-                            fixed_number_of_nodes
-                          else
-                            2
-                          end
+        @fixed_number_of_nodes = false
+        @number_of_nodes = 2
         @number_of_rings = 1
         @nodes = {}
         @rings = {}
@@ -60,7 +53,13 @@ module SapHA
         @exception_type = ClusterConfigurationException
         @cluster_name = 'hacluster'
         init_rings
-        init_nodes(number_of_nodes)
+        init_nodes
+      end
+
+      def set_fixed_nodes(fixed, number)
+        @fixed_number_of_nodes = fixed
+        @number_of_nodes = number
+        init_nodes
       end
 
       def node_parameters(node_id)
@@ -143,17 +142,17 @@ module SapHA
         flag &= @nodes.all? { |_, v| validate_node(v, :silent) }
         return flag unless flag
         flag &= SemanticChecks.instance.check(:silent) do |check|
-          check.unique(@nodes.map { |_, v| v[:ip_ring1] })
+          check.unique(@nodes.map { |_, v| v[:ip_ring1] }, 'IP addresses in the ring #1 are not unique')
           check.ips_belong_to_net(@nodes.map { |_, v| v[:ip_ring1] },
             @rings[:ring1][:address])
           if @number_of_rings >= 2
-            check.unique(@nodes.map { |_, v| v[:ip_ring2] }) if @number_of_rings >= 2
+            check.unique(@nodes.map { |_, v| v[:ip_ring2] }, 'IP addresses in the ring #2 are not unique') if @number_of_rings >= 2
             check.ips_belong_to_net(@nodes.map { |_, v| v[:ip_ring2] },
               @rings[:ring2][:address]
             )
           end
           if @number_of_rings == 3
-            check.unique(@nodes.map { |_, v| v[:ip_ring3] })
+            check.unique(@nodes.map { |_, v| v[:ip_ring3] }, 'IP addresses in the ring #3 are not unique')
             check.ips_belong_to_net(@nodes.map { |_, v| v[:ip_ring3] },
               @rings[:ring3][:address])
           end
@@ -174,7 +173,7 @@ module SapHA
       end
 
       def render_csync2_config(group_name, includes, key_path, hosts)
-        return Helpers.render_template('tmpl_csync2_config.erb', binding)
+        return SapHA::Helpers.render_template('tmpl_csync2_config.erb', binding)
       end
 
       def description
@@ -202,26 +201,27 @@ module SapHA
         tmp.result(binding)
       end
 
-      def fixed_number_of_nodes?
-        !@fixed_number_of_nodes.nil?
-      end
-
       def add_node(values)
-        # TODO
+        if @fixed_number_of_nodes
+          log.error "Scenario defined a fixed number of nodes #{@number_of_nodes},"\
+            " but #{self.class}.#{__callee__} was called."
+          return
+        end
+        # TODO: NW
       end
 
       def remove_node(node_id)
-        # TODO
+        if @fixed_number_of_nodes
+          log.error "Scenario defined a fixed number of nodes #{@number_of_nodes},"\
+            " but #{self.class}.#{__callee__} was called."
+          return
+        end
+        # TODO: NW
       end
 
       # return IPs of the first ring for nodes other than current node
       def other_nodes
-        # TODO: move to SapHA::System
-        my_ips = Socket.getifaddrs.select do |iface|
-          iface.addr.ipv4? && !iface.addr.ip_address.start_with?("127.")
-        end.map{|iface| iface.addr.ip_address}
-        log.error "#{@nodes}"
-        ips = @nodes.map { |_, n| n[:ip_ring1] } - my_ips
+        ips = @nodes.map { |_, n| n[:ip_ring1] } - SapHA::System::Local.ip_addresses
         raise ClusterMembersConfException, "Empty IPs detected" if ips.any? { |e| e.empty? }
         ips
       end
@@ -252,20 +252,24 @@ module SapHA
 
       def apply(role)
         @nlog.info('Applying Cluster Configuration')
-        cluster_apply
+        flag = true
+        flag &= cluster_apply
         status = SapHA::System::Local.start_cluster_services
+        flag &= status
         @nlog.log_status(status, 'Enabled and started cluster-required systemd units',
           'Could not enable and start cluster-required systemd units')
+        flag &= SapHA::System::Local.add_stonith_resource if role == :master
         status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
+        flag &= status
         @nlog.log_status(status, 'Opened necessary communication ports',
           'Could not open necessary communication ports')
-        true
+        flag
       end
 
       private
 
-      def init_nodes(number_of_nodes)
-        (1..number_of_nodes).each do |i|
+      def init_nodes
+        (1..@number_of_nodes).each do |i|
           @nodes["node#{i}".to_sym] = {
             host_name: "node#{i}",
             ip_ring1:  '',
@@ -285,9 +289,6 @@ module SapHA
             mcast:   ''
           }
         end
-      end
-
-      def start_services
       end
 
       def generate_corosync_key
@@ -343,13 +344,7 @@ module SapHA
           "csync2_host" => host_names,
           "csync2_include" => included_files
         }
-        Yast::Cluster.Import(cluster_export)
-        stat = Yast::Cluster.Write
-        if stat
-          @nlog.info('Wrote cluster settings')
-        else
-          @nlog.error('Could not write cluster settings')
-        end
+        SapHA::System::Local.yast_cluster_export(cluster_export)
       end
     end
   end

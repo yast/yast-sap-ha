@@ -30,8 +30,6 @@ module SapHA
     class Fencing < BaseConfig
       attr_reader :proposals, :sysconfig
       attr_accessor :sbd_options, :sbd_delayed_start
-
-      include SapHA::System::ShellCommands
       include Yast::UIShortcuts
 
       def initialize
@@ -123,10 +121,7 @@ module SapHA
         @nlog.info('Appying Fencing Configuration')
         return false if !configured?
         flag = write_sysconfig
-        if role == :master
-          flag &= initialize_sbd
-          flag &= add_stonith_resource
-        end
+        flag &= SapHA::System::Local.initialize_sbd(@devices) if role == :master
         flag
       end
 
@@ -142,34 +137,6 @@ module SapHA
 
       def refresh_proposals
         @proposals = SapHA::System::Local.block_devices
-      end
-
-      def initialize_sbd
-        flag = true
-        for device in @devices
-          log.warn "Initializing the SBD device on #{device[:name]}"
-          status = exec_status_l('sbd', '-d', device[:name], 'create')
-          log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
-          if status.exitstatus == 0
-            @nlog.info "Successfully initialized the SBD device #{device[:name]}"
-          else
-            @nlog.error "Could not initialize the SBD device #{device[:name]}"
-          end
-          flag &= status.exitstatus == 0
-        end
-        flag
-      end
-
-      def add_stonith_resource
-        out, status = exec_outerr_status('crm', 'configure', 'primitive', 'stonith-sbd', 'stonith:external/sbd')
-        success = status.exitstatus == 0
-        if success
-          @nlog.info('Added a primitive to the cluster: stonith-sbd')
-        else
-          @nlog.error('Could not add the stonith-sbd primitive to the cluster')
-          @nlog.output(out)
-        end
-        success
       end
     end
   end

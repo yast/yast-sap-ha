@@ -43,8 +43,10 @@ module Yast
     Yast.import 'UI'
     Yast.import 'Wizard'
     Yast.import 'Sequencer'
+    Yast.import 'Popup'
     include Yast::UIShortcuts
     include Yast::Logger
+    include SapHA::Exceptions
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
@@ -205,6 +207,9 @@ module Yast
           @config.set_scenario_name(UI.QueryWidget(:selection_box, :Value))
         rescue ScenarioNotFoundException
           return :unknown
+        rescue GUIFatal => e
+          Popup.Error(e.message)
+          return :abort
         end
       when :abort
         return :abort
@@ -217,8 +222,8 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SapHA::Wizard::RichText.new.run(
         'Product not supported',
-        Helpers.load_help('product_not_found'),
-        Helpers.load_help('product_not_found'),
+        SapHA::Helpers.load_help('product_not_found'),
+        SapHA::Helpers.load_help('product_not_found'),
         false,
         false
       )
@@ -308,14 +313,12 @@ module Yast
 
     def debug_run
       @config.set_product_id "HANA"
-      @config.set_scenario_name 'Performance-optimized'
+      @config.set_scenario_name 'Scale Up: Performance-optimized'
       set_bogus_values if @bogus
       :config_overview
     end
 
     def set_bogus_values
-      # @config.set_product_id "HANA"
-      # @config.set_scenario_name 'Performance-optimized'
       @config.cluster.import(
         number_of_rings: 2,
         transport_mode: :unicast,

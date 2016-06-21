@@ -26,9 +26,22 @@
     .col_green {
         color: "#008000";
     }
+    .col_suse_dk_grn {
+        color: "#00843E";
+    }
+    .col_suse_grn {
+        color: "#7AC142";
+    }
+    .col_suse_med_grn {
+        color: "#00A54F";
+    }
+    .col_suse_dk_gray {
+        color: "#58585a";
+    }
     a {
         font-weight: bold;
-        color: "#003300";
+        /*color: "#003300";*/
+        color: "#00A54F";
     }
     .steps {
         padding-top: 5px;
@@ -38,27 +51,30 @@
 <body>
 <table cellpadding="5">
     <tr>
-        <td><b>Product:</b></td>
+        <td><p class="tbold col_suse_dk_grn">Product:</p></td>
         <td><%= @config.product_name %></td>
     </tr>
     <tr>
-        <td><b>Scenario:</b></td>
+        <td><p class="tbold col_suse_dk_grn">Scenario:</p></td>
         <td><%= @config.scenario_name %></td>
     </tr>
+    <tr>
+        <td><p class="tbold col_suse_dk_grn">Description:</p></td>
+        <td><%= @config.scenario['description']%></td>
+    </tr>
 </table>
-<p><%= @config.scenario['description']%></p>
 <hr>
 
 <%# not_configured = '<span class="col_red">Not configured</span>' %>
-<% configured = '<span class="col_green">Configured</span><br>' %>
-<% not_configured = '<p class="col_red">Not configured</p>' %>
+<% configured = '<span class="col_suse_grn">Configured</span><br>' %>
+<% not_configured = '<p class="col_suse_dk_gray">Not configured</p>' %>
 <%# configured = '<p class="col_green">Configured</p>' %>
 
 <center>
     <% if !@config.can_install? %>
        <%= '<p class="tbold col_red">Configuration is incomplete.</p>' %>
     <% else %>
-       <%= '<p class="tbold col_green">Configuration is complete.</p>' %>
+       <%= '<p class="tbold col_suse_med_grn">Configuration is complete.</p>' %>
     <% end %>
 </center>
 
