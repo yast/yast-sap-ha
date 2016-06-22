@@ -23,8 +23,6 @@ require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha/wizard/base_wizard_page'
 
-Yast.import 'Progress'
-
 module SapHA
   module Wizard
     # NTP configuration page

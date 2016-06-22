@@ -37,9 +37,10 @@ module SapHA
         @screen_name = "Fencing Mechanism"
         @devices = []
         @proposals = []
-        @sbd_options = ""
+        @sbd_options = "-W"
         @sbd_delayed_start = ""
         @sysconfig = {}
+        read_system
       end
 
       def read_system

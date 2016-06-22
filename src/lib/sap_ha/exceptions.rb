@@ -80,6 +80,9 @@ module SapHA
     class GUIFatal < GUIException
     end
 
+    class WatchdogConfigurationException < BaseException
+    end
+
     class ClusterConfigurationException < ModelValidationException
     end
   end

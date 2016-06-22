@@ -105,7 +105,12 @@ module SapHA
         stages << "Configure the remote node [#{n[:hostname]}]"
         titles << "Configuring the remote node [#{n[:hostname]}]"
       end
+      log.error "--- #{self.class}.#{__callee__}: calling ui.set ---"
+      log.error "--- #{self.class}.#{__callee__}: stages = #{stages.inspect} ---"
+      log.error "--- #{self.class}.#{__callee__}: titles = #{titles.inspect} ---"
+      log.error "--- #{self.class}.#{__callee__}: tasks = #{tasks.inspect} ---"
       @ui.set(stages, titles, tasks)
+      log.error "--- #{self.class}.#{__callee__}: finished ---"
     end
 
     def connect(node)

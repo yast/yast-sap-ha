@@ -30,7 +30,6 @@ module SapHA
       def initialize(model)
         super(model)
         @my_model = model.fencing
-        @my_model.read_system
       end
 
       def set_contents
@@ -72,7 +71,6 @@ module SapHA
           true,
           true
         )
-        set_value(:stonith_method, false, :Enabled)
       end
 
       def can_go_next
@@ -82,6 +80,7 @@ module SapHA
 
       def refresh_view
         super
+        set_value(:stonith_method, false, :Enabled)
         set_value(:sbd_dev_list_table, @my_model.table_items, :Items)
         set_value(:sbd_options, @my_model.sbd_options)
         set_value(:sbd_delayed_start, @my_model.sbd_delayed_start)

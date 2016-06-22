@@ -51,9 +51,9 @@ module Yast
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
       @config = SapHA::HAConfiguration.new
-      @config.debug = WFM.Args.include? 'debug'
+      @config.debug = WFM.Args.include? 'over'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
-      @bogus = WFM.Args.include?('bogus')
+      @test = WFM.Args.include?('tst')
       Wizard.SetTitleIcon('yast-heartbeat')
       @sequence = {
         "ws_start"              => "product_check",
@@ -214,7 +214,7 @@ module Yast
       when :abort
         return :abort
       end
-      set_bogus_values if @bogus
+      set_test_values if @test
       selection
     end
 
@@ -314,11 +314,11 @@ module Yast
     def debug_run
       @config.set_product_id "HANA"
       @config.set_scenario_name 'Scale Up: Performance-optimized'
-      set_bogus_values if @bogus
+      set_test_values if @test
       :config_overview
     end
 
-    def set_bogus_values
+    def set_test_values
       @config.cluster.import(
         number_of_rings: 2,
         transport_mode: :unicast,
@@ -359,28 +359,28 @@ module Yast
           }
         }
       )
-    @config.fencing.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
-    @config.watchdog.import(to_install: ['softdog'])
-    @config.hana.import(
-      system_id: 'XXX',
-      instance:  '05',
-      virtual_ip: '192.168.101.100'
-    )
-    ntp_cfg = {"synchronize_time"=>false,
-       "sync_interval"=>5,
-       "start_at_boot"=>true,
-       "start_in_chroot"=>false,
-       "ntp_policy"=>"auto",
-       "peers"=>
-        [{"type"=>"server",
-          "address"=>"ntp.local",
-          "options"=>" iburst",
-          "comment"=>"# key (6) for accessing server variables\n"}],
-       "restricts"=>[]}
-    Yast.import 'NtpClient'
-    NtpClient.Import ntp_cfg
-    NtpClient.Write
-    @config.ntp.read_configuration
+      @config.fencing.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
+      @config.watchdog.import(to_install: ['softdog'])
+      @config.hana.import(
+        system_id: 'XXX',
+        instance:  '05',
+        virtual_ip: '192.168.101.100'
+      )
+      ntp_cfg = {"synchronize_time"=>false,
+         "sync_interval"=>5,
+         "start_at_boot"=>true,
+         "start_in_chroot"=>false,
+         "ntp_policy"=>"auto",
+         "peers"=>
+          [{"type"=>"server",
+            "address"=>"ntp.local",
+            "options"=>" iburst",
+            "comment"=>"# key (6) for accessing server variables\n"}],
+         "restricts"=>[]}
+      Yast.import 'NtpClient'
+      NtpClient.Import ntp_cfg
+      NtpClient.Write
+      @config.ntp.read_configuration
     end
   end
 

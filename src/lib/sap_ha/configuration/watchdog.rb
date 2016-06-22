@@ -28,48 +28,50 @@ module SapHA
     # Watchdog configuration
     class Watchdog < BaseConfig
 
-      attr_reader :installed, :proposals, :loaded
+      attr_reader :to_install, :configured, :proposals, :loaded
 
       include Yast::UIShortcuts
 
       def initialize
         super
         @screen_name = "Watchdog Setup"
-        @loaded = System::Watchdog.instance.loaded_watchdogs
-        @installed = System::Watchdog.instance.installed_watchdogs
+        @loaded = System::Watchdog.loaded_watchdogs
+        @configured = System::Watchdog.installed_watchdogs
         @to_install = []
-        @proposals = System::Watchdog.instance.list_watchdogs
+        @proposals = System::Watchdog.list_watchdogs
       end
 
       def configured?
-        !@loaded.empty? || !@installed.empty? || !@to_install.empty?
+        !@loaded.empty? || !@configured.empty? || !@to_install.empty?
       end
 
       def description
         s = []
-        s << "&nbsp; Configured modules: #{@installed.join(', ')}." unless @installed.empty?
+        s << "&nbsp; Configured modules: #{@configured.join(', ')}." unless @configured.empty?
         s << "&nbsp; Already loaded modules: #{@loaded.join(', ')}." unless @loaded.empty?
         s << "&nbsp; Modules to install: #{@to_install.join(', ')}." unless @to_install.empty?
-        return '' if s.empty?
         s.join('<br>')
       end
 
       def add_to_config(wdt_module)
-        @to_install << wdt_module
-        @installed = Watchdog.instance.installed_watchdogs.concat(@to_install)
+        raise WatchdogConfigurationException,
+          "Module #{wdt_module} is already configured." if @configured.include? wdt_module
+        @to_install << wdt_module unless @to_install.include? wdt_module
       end
 
       def remove_from_config(wdt_module)
         return unless @to_install.include? wdt_module
         @to_install -= [wdt_module]
-        @installed = Watchdog.instance.installed_watchdogs.concat(@to_install)
       end
 
       def apply(role)
         return false if !configured?
         @nlog.info('Appying Watchdog Configuration')
-        # TODO
         stat = true
+        @to_install.each do |module_name|
+          stat &= System::Watchdog.install(module_name)
+          stat &= System::Watchdog.load(module_name)
+        end
         @nlog.log_status(stat,
           "Configured requested watchdog devices",
           "Could not configure requested watchdog devices")

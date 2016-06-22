@@ -41,7 +41,7 @@ module SapHA
             VBox(
               HBox(
                 HSpacing(20),
-                SelectionBox(Id(:configured_wd), Opt(:notify, :immediate), 'Watchdogs to configure:', []),
+                SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate), 'Watchdogs to Configure:', []),
                 HSpacing(20)
                 ),
               HBox(
@@ -50,7 +50,12 @@ module SapHA
               ),
               HBox(
                 HSpacing(20),
-                SelectionBox(Id(:loaded_wd), 'Automatically loaded watchdogs:', []),
+                SelectionBox(Id(:configured_wd), Opt(:notify, :immediate), 'Configured Watchdogs:', []),
+                HSpacing(20)
+              ),
+              HBox(
+                HSpacing(20),
+                SelectionBox(Id(:loaded_wd), 'Loaded Watchdogs:', []),
                 HSpacing(20)
               )
             )
@@ -68,7 +73,8 @@ module SapHA
 
       def refresh_view
         super
-        set_value(:configured_wd, @my_model.installed, :Items)
+        set_value(:wd_to_configure, @my_model.to_install, :Items)
+        set_value(:configured_wd, @my_model.configured, :Items)
         set_value(:loaded_wd, @my_model.loaded, :Items)
       end
 
@@ -77,10 +83,14 @@ module SapHA
         when :add_wd
           to_add = wd_selection_popup
           return if to_add.nil?
-          @my_model.add_to_config(to_add[:selected])
+          begin
+            @my_model.add_to_config(to_add[:selected])
+          rescue WatchdogConfigurationException => e
+            show_dialog_errors([e.message], "Wrong selection")
+          end
           refresh_view
         when :remove_wd
-          to_remove = value(:configured_wd, :CurrentItem)
+          to_remove = value(:wd_to_configure, :CurrentItem)
           @my_model.remove_from_config(to_remove)
           refresh_view
         else
@@ -91,7 +101,7 @@ module SapHA
       def wd_selection_popup
         log.debug "--- #{self.class}.#{__callee__} --- "
         base_popup(
-          "Select a module to configure",
+          "Select a module to add",
           nil,
           MinHeight(10,
             SelectionBox(Id(:selected), 'Available modules:', @my_model.proposals))

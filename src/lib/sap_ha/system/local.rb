@@ -22,6 +22,7 @@
 require 'yast'
 require 'socket'
 require 'sap_ha/exceptions'
+require 'sap_ha/node_logger'
 require_relative 'shell_commands'
 
 Yast.import 'NetworkInterfaces'
@@ -122,14 +123,16 @@ module SapHA
         udp_ports = rings.map { |_, r| r[:port].to_s }[0...number_of_rings].uniq
         Yast::SuSEFirewallServices.SetNeededPortsAndProtocols(
           "service:cluster", { "tcp_ports" => tcp_ports, "udp_ports" => udp_ports})
+        Yast::SuSEFirewall.ResetReadFlag
         Yast::SuSEFirewall.Read
         Yast::SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
         written = Yast::SuSEFirewall.Write
-        if role == :master
-          Yast::SuSEFirewall.ActivateConfiguration
-        else
-          written
-        end
+        # TODO: remove debug
+        # if role == :master
+        Yast::SuSEFirewall.ActivateConfiguration
+        # else
+        #   written
+        # end
       end
 
       def start_cluster_services

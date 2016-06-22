@@ -22,6 +22,8 @@
 require 'yast'
 require 'open3'
 require_relative 'shell_commands'
+require 'sap_ha/node_logger'
+
 Yast.import 'Kernel'
 
 module SapHA
@@ -30,7 +32,7 @@ module SapHA
     end
 
     # System watchdog configuration
-    class Watchdog
+    class WatchdogClass
       include Singleton
       include Yast::Logger
       include ShellCommands
@@ -38,13 +40,19 @@ module SapHA
       MODULES_PATH = '/usr/src/linux/drivers/watchdog'.freeze
 
       # Add the watchdog with the given name to the /etc/modules-load.d
-      # @param watchdog [String]
+      # @param module_name [String]
       # @return [Boolean]
-      def install(watchdog)
-        return true if installed?(watchdog)
-        return false unless can_install?(watchdog)
-        Kernel.AddModuleToLoad(watchdog)
-        true
+      def install(module_name)
+        if installed?(module_name)
+          NodeLogger.info("Watchdog module #{module_name} is already installed")
+          return true 
+        end
+        unless watchdog? module_name
+          NodeLogger.error("Cannot install a watchdog module #{module_name}")
+          return false 
+        end
+        stat = Yast::Kernel.AddModuleToLoad(module_name)
+        NodeLogger.info("Installed watchdog module #{module_name}") if stat
       end
 
       # Check if any of the known watchdogs are loaded into the current kernel
@@ -54,10 +62,10 @@ module SapHA
       end
 
       # Check if the watchdog with the given name is loaded into the current kernel
-      # @param watchdog [String]
+      # @param module_name [String]
       # @return [Boolean]
-      def loaded?(watchdog)
-        !([watchdog] & lsmod).empty?
+      def loaded?(module_name)
+        !([module_name] & lsmod).empty?
       end
 
       # List all watchdog modules loaded into the current kernel
@@ -73,9 +81,9 @@ module SapHA
       # Check if the watchdog with the given name is added to the /etc/modules-load.d
       # @param watchdog [String]
       # @return [Boolean]
-      def installed?(watchdog)
-        if can_install? watchdog
-          !([watchdog] & modules_to_load).empty?
+      def installed?(module_name)
+        if watchdog? module_name
+          !([module_name] & modules_to_load).empty?
         else
           false
         end
@@ -84,9 +92,9 @@ module SapHA
       # Check if the given kernel module a known watchdog module
       # @param watchdog [String]
       # @return [Boolean]
-      def watchdog?(watchdog)
-        if ([watchdog] & list_watchdogs).empty?
-          log.error "Cannot install module '#{watchdog}': this is not a watchdog!"
+      def watchdog?(module_name)
+        if ([module_name] & list_watchdogs).empty?
+          log.error "Module '#{module_name}' is not a watchdog!"
           return false
         end
         true
@@ -114,10 +122,15 @@ module SapHA
       end
 
       def load(module_name)
-        rc = exec_status_l('/usr/sbin/modprobe', module_name)
-        unless rc.exitstatus == 0
-          log.error "Could not load module #{module_name}. modprobe returned rc=#{rc}"
-          raise WatchdogException, "Could not load module #{module_name}."
+        out, rc = exec_outerr_status('/usr/sbin/modprobe', module_name)
+        if rc.exitstatus == 0
+          NodeLogger.info("Loaded watchdog module #{module_name}")
+          return true
+        else
+          log.error "Could not load module #{module_name}. modprobe returned rc=#{rc.exitstatus}"
+          NodeLogger.error("Could not load module #{module_name}. modprobe returned rc=#{rc.exitstatus}")
+          NodeLogger.output(out)
+          return false
         end
       end
 
@@ -129,5 +142,6 @@ module SapHA
         end
       end
     end # class
+    Watchdog = WatchdogClass.instance
   end # module
 end # module
