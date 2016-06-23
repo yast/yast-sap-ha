@@ -46,10 +46,18 @@ module SapHA
         NetworkInterfaces.List("")
       end
 
+      # Get local machine's IPv4 addresses excluding the loopback iface
       def ip_addresses
         Socket.getifaddrs.select do |iface|
-          iface.addr.ipv4? && !iface.addr.ip_address.start_with?("127.")
+          iface.addr.ipv4? && !iface.addr.ipv4_loopback?
         end.map{|iface| iface.addr.ip_address}
+      end
+
+      # Get a list of network addresses on the local node's interface
+      def network_addresses
+        Socket.getifaddrs.select do |iface|
+          iface.addr.ipv4? && !iface.addr.ipv4_loopback?
+        end.map{ |iface| IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s }
       end
 
       def hostname

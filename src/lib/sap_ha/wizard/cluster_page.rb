@@ -245,7 +245,8 @@ module SapHA
         base_popup(
           "Configuration for ring #{ring[:id]}",
           -> (args) { @my_model.validate_ring(args, :verbose) },
-          MinWidth(15, InputField(Id(:address), 'IP Address:', ring[:address])),
+          # MinWidth(15, InputField(Id(:address), 'IP Address:', ring[:address])),
+          MinWidth(15, ComboBox(Id(:address), 'IP Address:', [ring[:address]] | @my_model.ring_addresses)),
           MinWidth(5, InputField(Id(:port), 'Port Number:', ring[:port].to_s)),
           multicast? ?
             MinWidth(15, InputField(Id(:mcast), 'Multicast Address', ring[:mcast]))

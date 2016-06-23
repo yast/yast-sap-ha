@@ -226,6 +226,10 @@ module SapHA
         ips
       end
 
+      def ring_addresses
+        SapHA::System::Local.network_addresses
+      end
+
       # TODO: rename and document
       def other_nodes_ext
         others_ip = other_nodes
