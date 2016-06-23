@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'sap_ha/system/shell_commands'
+require 'sap_ha/system/local'
 require_relative 'base_config'
 
 module SapHA
@@ -32,7 +33,11 @@ module SapHA
         :instance,
         :virtual_ip,
         :prefer_takeover,
-        :auto_register
+        :auto_register,
+        :site_name_1,
+        :site_name_2,
+        :backup_file,
+        :backup_user
 
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
@@ -40,21 +45,28 @@ module SapHA
       def initialize
         super
         @screen_name = "HANA Configuration"
-        @system_id = 'NDB' # TODO
-        @instance = '00'
+        @system_id = 'HA1' # TODO
+        @instance = '10'
         @virtual_ip = ''
         @prefer_takeover = true
         @auto_register = false
+        @site_name_1 = 'WALLDORF'
+        @site_name_2 = 'ROT'
+        @backup_user = 'system'
+        @backup_file = 'backup'
       end
 
       def configured?
         # TODO: HANA validators
         !@virtual_ip.empty?
-        flag = true
-        flag &= SemanticChecks.instance.check(:silent) do |check|
+        SemanticChecks.instance.check(:silent) do |check|
           check.ipv4(@virtual_ip)
           check.integer_in_range(@instance, 0, 99)
           check.sap_sid(@system_id)
+          # check.sap_site_name(@site_name_1)
+          # check.sap_site_name(@site_name_2)
+          # check.sap_backup_user(@backup_user)
+          # check.sap_backup_file(@backup_file)
         end
       end
 
@@ -62,7 +74,9 @@ module SapHA
         "&nbsp; System ID: #{@system_id}, Instance: #{@instance}.<br>
         &nbsp; Virtual IP: #{@virtual_ip}.<br>
         &nbsp; Prefer takeover: #{@prefer_takeover}.<br>
-        &nbsp; Automatic Registration: #{@auto_register}.
+        &nbsp; Automatic registration: #{@auto_register}.<br>
+        &nbsp; Site 1: #{@site_name_1}, Site 2: #{@site_name_2}.<br>
+        &nbsp; Backup user: #{@backup_user}, Backup file: #{@backup_file}.
         "
       end
 
@@ -70,56 +84,16 @@ module SapHA
         return false if !configured?
         @nlog.info('Appying HANA Configuration')
         if role == :master
-          unless hana_make_backup
-            @nlog.showstopper
-            return
-          end
-          hana_enable_primary
+          SapHA::System::Local.hana_make_backup(@backup_user, @backup_file, @instance)
+          SapHA::System::Local.hana_enable_primary(@system_id, @site_name_1)
+          # TODO
+          # SapHA::System::Local.configure_crm
           configure_crm
         else
-          hana_enable_secondary
+          # TODO: get the parameter from @CONFIG
+          SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_1, 'hana01', @instance)
         end
         true
-      end
-
-      def hana_make_backup
-        # TODO: the user name has to come from the user
-        cmd = 'hdbsql -u system -i 00 "BACKUP DATA USING FILE (\'backup\')"'
-        status = true
-
-        if status
-          @nlog.info("Performed HANA backup")
-        else
-          @nlog.error("Could not perform a HANA backup")
-        end
-        status
-      end
-
-      def hana_enable_primary
-        # issue as the SIDadm user
-        # TODO: site name has to come from the user
-        # cmd = "hdbnsutil -sr_enable --name=WALLDORF"
-        # exec_status_l('su', get_adm_user, 'hdbnsutil', '-sr_enable', '--name=WALLDORF')
-        status = true
-        @nlog.log_status(status,
-          "Enabled HANA System Replication on the primary host",
-          "Could not enable HANA System Replication on the primary host")
-        status
-      end
-
-      def hana_enable_secondary
-        # issued on the secondary node from SIDadm
-        # TODO: here we need to obtain a hostname of the remote host
-        # TODO: site name has to come from the user
-        # TODO: mode can come from the user
-        # cmd = 'hdbnsutil -sr_register --remoteHost=suse01 --remoteInstance=00 --mode=sync --name=ROT'
-        # exec_status_l('su', get_adm_user, 'hdbnsutil', '-sr_register', "--remoteHost=#{primary_host}",
-        # "--remoteInstance=#{@instance}", '--mode=sync', '--name=ROT')
-        status = true
-        @nlog.log_status(status,
-          "Enabled HANA System Replication on the secondary host",
-          "Could not enable HANA System Replication on the secondary host")
-        status
       end
 
       def configure_crm
@@ -129,11 +103,6 @@ module SapHA
         @nlog.log_status(status.exitstatus == 0,
           'Configured necessary cluster resources for HANA',
           'Could not configure HANA cluster resources', out)
-        status.exitstatus == 0
-      end
-
-      def get_adm_user
-        @system_id.downcase + 'adm'
       end
     end
   end

@@ -40,30 +40,20 @@ module SapHA
             'Set the HANA-specific parameters up',
             VBox(
               HBox(
-                # Label('System ID:'),
-                # InputField(Id(:hana_sid), '', '')
-                InputField(Id(:hana_sid), 'System ID:', '')
-                ),
-              HBox(
-                # Label('Instance number:'),
-                # InputField(Id(:hana_inst), '', '')
+                InputField(Id(:hana_sid), 'System ID:', ''),
                 InputField(Id(:hana_inst), 'Instance number:', '')
-                ),
+              ),
+              InputField(Id(:hana_vip), 'Virtual IP Address:', ''),  # TODO: validators
               HBox(
-                # Label(),
-                InputField(Id(:hana_vip), 'Virtual IP Address:', '')  # TODO: validators
-                ),
-              HBox(
-                # Label('Prefer Site Takeover:'),
-                base_true_false_combo(:site_takover, 'Prefer Site Takeover:')
-                # CheckBox(Id(:site_takover), 'Prefer Site Takeover:', true)
-                ),
-              HBox(
-                # Label('Automatic Registration:'),
+                base_true_false_combo(:site_takover, 'Prefer Site Takeover:'),
                 base_true_false_combo(:auto_reg, 'Automatic Registration', false)
-                # CheckBox(Id(:auto_reg), 'Automatic Registration', false)
-                )
-              )
+              ),
+              HBox(
+                InputField(Id(:site_name_1), 'Site name 1', ''),
+                InputField(Id(:site_name_2), 'Site name 2', '')
+              ),
+              PushButton(Id(:configure_backup), 'Backup Settings')
+            )
           ),
           Helpers.load_help('hana'),
           true,
@@ -77,6 +67,8 @@ module SapHA
         @my_model.virtual_ip = value(:hana_vip)
         @my_model.prefer_takeover = value(:site_takover)
         @my_model.auto_register = value(:auto_reg)
+        @my_model.site_name_1 = value(:site_name_1)
+        @my_model.site_name_2 = value(:site_name_2)
       end
 
       def can_go_next
@@ -91,6 +83,29 @@ module SapHA
         set_value(:hana_vip, @my_model.virtual_ip)
         set_value(:site_takover, @my_model.prefer_takeover)
         set_value(:auto_reg, @my_model.auto_register)
+        set_value(:site_name_1, @my_model.site_name_1)
+        set_value(:site_name_2, @my_model.site_name_2)
+      end
+
+      def handle_user_input(input, event)
+        case input
+        when :configure_backup
+          values = hana_backup_popup
+          @my_model.import(values)
+        else
+          super
+        end
+      end
+
+      def hana_backup_popup
+        log.debug "--- #{self.class}.#{__callee__} --- "
+        base_popup(
+          "Initial HANA Backup Settings",
+          # TODO: validators
+          nil,
+          InputField(Id(:backup_file), 'Backup File Name:', @my_model.backup_file),
+          InputField(Id(:backup_user), 'Backup User:', @my_model.backup_user)
+        )
       end
     end
   end

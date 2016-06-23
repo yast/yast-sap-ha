@@ -40,24 +40,28 @@ module SapHA
       include ShellCommands
       include SapHA::Exceptions
       include Yast::Logger
-      
+
       def net_interfaces
-        NetworkInterfaces.Read
-        NetworkInterfaces.List("")
+        Yast::NetworkInterfaces.Read
+        Yast::NetworkInterfaces.List("")
       end
 
       # Get local machine's IPv4 addresses excluding the loopback iface
       def ip_addresses
-        Socket.getifaddrs.select do |iface|
+        interfaces = Socket.getifaddrs.select do |iface|
           iface.addr.ipv4? && !iface.addr.ipv4_loopback?
-        end.map{|iface| iface.addr.ip_address}
+        end
+        interfaces.map { |iface| iface.addr.ip_address }
       end
 
       # Get a list of network addresses on the local node's interface
       def network_addresses
-        Socket.getifaddrs.select do |iface|
+        interfaces = Socket.getifaddrs.select do |iface|
           iface.addr.ipv4? && !iface.addr.ipv4_loopback?
-        end.map{ |iface| IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s }
+        end
+        interfaces.map do |iface|
+          IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s
+        end
       end
 
       def hostname
@@ -70,9 +74,10 @@ module SapHA
           log.error "Failed calling lsblk: #{out}"
           return []
         end
-        out.split("\n").map do |s|
+        devices = out.split("\n").map do |s|
           Hash[[:name, :type, :uuid].zip(s.split)]
-        end.select { |d| d[:type] == "part" || d[:type] == "disk" }
+        end
+        devices.select { |d| d[:type] == "part" || d[:type] == "disk" || d[:type] == "lvm" }
       end
 
       # Change the systemd's unit state
@@ -80,7 +85,7 @@ module SapHA
       # @param unit_type [Symbol] :service or :socket
       # @param unit_name [String]
       def systemd_unit(action, unit_type, unit_name)
-        verbs = {start: "Started", stop: "Stopped", enable: "Enabled", disable: "Disabled"}
+        verbs = { start: "Started", stop: "Stopped", enable: "Enabled", disable: "Disabled" }
         unless verbs.keys.include? action
           raise LocalSystemException, "Unknown action #{action} on systemd #{unit_type}"
         end
@@ -90,7 +95,8 @@ module SapHA
                  Yast::SystemdSocket.find(unit_name)
                end
         if unit.nil?
-          NodeLogger.error "Could not #{action} #{unit_type} #{unit_name}: #{unit_type} does not exist"
+          NodeLogger.error "Could not #{action} #{unit_type} "\
+          "#{unit_name}: #{unit_type} does not exist"
           return false
         end
         status = unit.send(action)
@@ -105,7 +111,6 @@ module SapHA
       end
 
       def generate_csync_key
-
       end
 
       def generate_corosync_key
@@ -130,11 +135,11 @@ module SapHA
         tcp_ports = ["30865", "5560", "7630", "21064"]
         udp_ports = rings.map { |_, r| r[:port].to_s }[0...number_of_rings].uniq
         Yast::SuSEFirewallServices.SetNeededPortsAndProtocols(
-          "service:cluster", { "tcp_ports" => tcp_ports, "udp_ports" => udp_ports})
+          "service:cluster", "tcp_ports" => tcp_ports, "udp_ports" => udp_ports)
         Yast::SuSEFirewall.ResetReadFlag
         Yast::SuSEFirewall.Read
         Yast::SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
-        written = Yast::SuSEFirewall.Write
+        Yast::SuSEFirewall.Write
         # TODO: remove debug
         # if role == :master
         Yast::SuSEFirewall.ActivateConfiguration
@@ -161,35 +166,84 @@ module SapHA
         NodeLogger.log_status(stat, 'Wrote cluster settings', 'Could not write cluster settings')
       end
 
+      # Add the SBD stonith resource to the cluster
       def add_stonith_resource
-        out, status = exec_outerr_status('crm', 'configure', 'primitive', 'stonith-sbd', 'stonith:external/sbd')
-        success = status.exitstatus == 0
-        if success
-          NodeLogger.info('Added a primitive to the cluster: stonith-sbd')
-        else
-          NodeLogger.error('Could not add the stonith-sbd primitive to the cluster')
-          NodeLogger.output(out)
-        end
-        success
+        out, status = exec_outerr_status('crm', 'configure',
+          'primitive', 'stonith-sbd', 'stonith:external/sbd')
+        NodeLogger.log_status(status.exitstatus == 0,
+          'Added a primitive to the cluster: stonith-sbd',
+          'Could not add the stonith-sbd primitive to the cluster',
+          out
+        )
       end
 
+      # Initialize the SBD devices
+      # @param devices [Array[String]] devices paths
       def initialize_sbd(devices)
         flag = true
-        for device in devices
+        devices.each do |device|
           log.warn "Initializing the SBD device on #{device[:name]}"
           status = exec_status_l('sbd', '-d', device[:name], 'create')
           log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
-          if status.exitstatus == 0
-            NodeLogger.info "Successfully initialized the SBD device #{device[:name]}"
-          else
-            NodeLogger.error "Could not initialize the SBD device #{device[:name]}"
-          end
-          flag &= status.exitstatus == 0
+          flag &= NodeLogger.log_status(status.exitstatus == 0,
+            "Successfully initialized the SBD device #{device[:name]}",
+            "Could not initialize the SBD device #{device[:name]}"
+          )
         end
         flag
       end
 
+      # Make initial HANA backup for the system replication
+      # @param user_name [String] HANA username to perform the backup on behalf of
+      # @param file_name [String] HANA backup file
+      # @param instance_number [String] HANA instance number
+      def hana_make_backup(user_name, file_name, instance_number)
+        command = ['hdbsql']
+        command << (user_name == 'system' ? '-u' : '-U')
+        command << user_name
+        command << '-i' << instance_number if user_name == 'system'
+        command << "BACKUP DATA USING FILE ('#{file_name}')"
+        out, status = exec_outerr_status(*command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Created an initial HANA backup for user #{user_name} into file #{file_name}",
+          "Could not perform an initial HANA backup for user #{user_name} into file #{file_name}",
+          out
+        )
+      end
+
+      # Enable System Replication on the primary HANA system
+      # @param system_id [String] HANA System ID
+      # @param site_name [String] HANA site name of the primary instance
+      def hana_enable_primary(system_id, site_name)
+        user_name = "#{system_id.downcase}adm"
+        command = ['hdbnsutil', '-sr_enable', "--name=#{site_name}"]
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Enabled HANA System Replication on the primary site #{site_name}",
+          "Could not enable HANA System Replication on the primary site #{site_name}",
+          out
+        )
+      end
+
+      # Enable System Replication on the secondary HANA system
+      # @param system_id [String] HANA System ID
+      # @param site_name [String] HANA site name of the secondary instance
+      # @param host_name_primary [String] host name of the primary node
+      # @param instance [String] instance number of the primary
+      # @param mode [String] replication mode
+      def hana_enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
+        user_name = "#{system_id.downcase}adm"
+        command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
+          "--remoteInstance=#{instance}", "--mode=#{mode}", "--name=#{site_name}"]
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Enabled HANA System Replication on the secondary host #{site_name}",
+          "Could not enable HANA System Replication on the secondary host",
+          out
+        )
+      end
     end
+
     Local = LocalClass.instance
   end
 end

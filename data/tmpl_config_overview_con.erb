@@ -1,8 +1,6 @@
-<b>Product:</b> <%= @config.product_name %> <br>
-<b>Scenario:</b> <%= @config.scenario_name %>
-<br>
-<%= @config.scenario['description']%>
-<br>
+<p><b>Product:</b> <%= @config.product_name %></p>
+<p><b>Scenario:</b> <%= @config.scenario_name %></p>
+<p><%= @config.scenario['description']%></p>
 <br>
 <b>Overall status:</b>&nbsp; 
 <% if !@config.can_install? %>
@@ -12,45 +10,50 @@
 <% end %>
 <br>
 <br>
+
 <h3>Configuration steps</h3>
-<b>Communication layer:</b><br>
-  <% if !@config.communication_layer.configured? %>
-  <%= 'Not configured (<a href="config_network">configure</a> or <a href="join_cluster">join an existing cluster</a>)' %>
+
+<p><a href="config_cluster">Cluster:</a><br></p>
+  <% if !@config.cluster.configured? %>
+  <%= '<p>Not configured</p>' %>
   <% else %>
-  <%= 'Configured (<a href="config_network">reconfigure</a> or <a href="join_cluster">join an another cluster</a>)<br>' %>
-  <%= @config.communication_layer.description %>
+  <%= '<p>Configured</p>' %>
+  <%= "<p>#{@config.cluster.description}</p>" %>
   <% end %>
-<br><br>
-<b>Cluster members:</b><br>
-  <% if !@config.cluster_members.configured? %>
-  <%= 'Not configured (<a href="config_members">configure</a>)' %>
+
+<p><a href="ntp">NTP Client:</a></p>
+  <% if !@config.ntp.configured? %>
+  <%= '<p>Not configured</p>' %>
   <% else %>
-  <%= 'Configured (<a href="config_members">reconfigure</a>)<br>' %>
-  <%= @config.cluster_members.description %>
+  <%= '<p>Configured</p>' %>
+  <%= "<p>#{@config.ntp.description}</p>" %>
   <% end %>
-<br><br>
-<b>Fencing (STONITH):</b><br>
+
+<p><a href="fencing">Fencing (STONITH):</a></p>
   <% if !@config.fencing.configured? %>
-  <%= 'Not configured (<a href="fencing">configure</a>)' %>
+  <%= '<p>Not configured</p>' %>
   <% else %>
-  <%= 'Configured (<a href="fencing">reconfigure</a>)<br>' %>
-  <%= @config.fencing.description %>
+  <%= '<p>Configured</p>' %>
+  <%= "<p>#{@config.fencing.description}</p>" %>
   <% end %>
-<br><br>
-<b>Watchdog:</b><br>
+
+<p><a href="watchdog">Watchdog:</a></p>
   <% if !@config.watchdog.configured? %>
-  <%= 'Not configured (<a href="watchdog">configure</a>)' %>
+  <%= '<p>Not configured</p>' %>
   <% else %>
-  <%= 'Configured (<a href="watchdog">reconfigure</a>)<br>' %>
-  <%= @config.watchdog.description %>
+  <%= '<p>Configured</p>' %>
+  <%= "<p>#{@config.watchdog.description}</p>" %>
   <% end %>
-<br><br>
+
 <% if @config.product_id == 'HANA' %>
-  <b>HANA configuration:</b><br>
-    <% if !@config.hana.configured? %>
-    <%= 'Not configured (<a href="hana">configure</a>)' %>
-    <% else %>
-    <%= 'Configured (<a href="hana">reconfigure</a>)<br>' %>
-    <%= @config.hana.description %>
-    <% end %>
+  <p><a href="hana">HANA configuration:</a></p>
+  <% if !@config.hana.configured? %>
+  <%= '<p>Not configured</p>' %>
+  <% else %>
+  <%= '<p>Configured</p>' %>
+  <%= "<p>#{@config.hana.description}</p>" %>
+  <% end %>
 <% end %>
+
+<p>Please review the settings above and press "Install" to proceed with cluster setup.
+To change individual settings, select the name of the step.</p>

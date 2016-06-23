@@ -20,7 +20,6 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-require 'sap_ha/system/shell_commands'
 require_relative 'base_config'
 Yast.import 'UI'
 

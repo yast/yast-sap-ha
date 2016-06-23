@@ -26,6 +26,14 @@ module SapHA
   module System
     # Shell commands proxy mix-in
     module ShellCommands
+
+      class FakeProcessStatus
+        attr_reader :exitstatus
+        def initialize(rc)
+          @exitstatus = rc
+        end
+      end
+
       def exec_stdout(command)
         Open3.popen3(command) do |_, stdout, _, _|
           stdout
@@ -42,7 +50,7 @@ module SapHA
       end
 
       def exec_status_lo(*params)
-        # todo replace with Open3.capture2(params)
+        # TODO: replace with Open3.capture2(params)
         # puts "exec_status: #{params}"
         Open3.popen3(*params) { |_, out, _, wait_thr| [wait_thr.value, out.read] }
       end
@@ -50,6 +58,15 @@ module SapHA
       # @return stdout_and_stderr, status
       def exec_outerr_status(*params)
         Open3.capture2e(*params)
+      rescue SystemCallError => e
+        return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
+      end
+
+      # @return stdout_and_stderr, status
+      def su_exec_outerr_status(user_name, *params)
+        Open3.capture2e('su', '-l', user_name, params.join(' '))
+      rescue SystemCallError => e
+        return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
       end
 
       def exec_status_to(command, timeout = 5)
