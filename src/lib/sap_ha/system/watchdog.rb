@@ -45,13 +45,14 @@ module SapHA
       def install(module_name)
         if installed?(module_name)
           NodeLogger.info("Watchdog module #{module_name} is already installed")
-          return true 
+          return true
         end
         unless watchdog? module_name
           NodeLogger.error("Cannot install a watchdog module #{module_name}")
-          return false 
+          return false
         end
-        stat = Yast::Kernel.AddModuleToLoad(module_name)
+        Yast::Kernel.AddModuleToLoad(module_name)
+        stat = Yast::Kernel.SaveModulesToLoad
         NodeLogger.info("Installed watchdog module #{module_name}") if stat
       end
 
@@ -123,21 +124,16 @@ module SapHA
 
       def load(module_name)
         out, rc = exec_outerr_status('/usr/sbin/modprobe', module_name)
-        if rc.exitstatus == 0
-          NodeLogger.info("Loaded watchdog module #{module_name}")
-          return true
-        else
-          log.error "Could not load module #{module_name}. modprobe returned rc=#{rc.exitstatus}"
-          NodeLogger.error("Could not load module #{module_name}. modprobe returned rc=#{rc.exitstatus}")
-          NodeLogger.output(out)
-          return false
-        end
+        NodeLogger.log_status(rc.exitstatus == 0,
+          "Loaded watchdog module #{module_name}",
+          "Could not load module #{module_name}. modprobe returned rc=#{rc.exitstatus}",
+          out)
       end
 
       private
 
       def lsmod
-        Open3.popen3("lsmod") do |_, stdout, _, _|
+        Open3.popen3("/usr/sbin/lsmod") do |_, stdout, _, _|
           stdout.map { |l| l.split[0] }[1..-1]
         end
       end

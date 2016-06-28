@@ -34,13 +34,13 @@ module SapHA
       @fd = StringIO.new
       @logger = Logger.new(@fd)
       @logger.level = Logger::INFO
-      # TODO call SapHA::System::Local.hostname
       @node_name = Socket.gethostname
       @logger.formatter = proc do |severity, datetime, _progname, msg|
         date = datetime.strftime("%Y-%m-%d %H:%M:%S")
         severity = "OUTPUT" if severity == "ANY"
         "[#{@node_name}] #{date} #{severity.rjust(6)}: #{msg}\n"
       end
+      @highest_level = Logger::INFO
     end
 
     # Append command's stdout/stderr to the log
@@ -66,6 +66,32 @@ module SapHA
     def text
       @fd.flush
       @fd.string
+    end
+
+    # Return log as HTML
+    def html
+      to_html(text)
+    end
+
+    # Import log from another node
+    # @param txt [String] other node's log
+    def import(txt)
+      @fd.write(txt)
+    end
+
+    # Append a summary line to the log
+    def summary
+      txt = text
+      if txt =~ /FATAL:/
+        @logger.error "Overall status: RED. Setup was halted due to a fatal error."
+      elsif txt =~ /ERROR:/
+        @logger.error "Overall status: RED. There were errors during the setup."
+      elsif txt =~ /WARN:/
+        @logger.warn "Overall status: YELLOW. There were warnings during the setup."
+      else
+        # elsif txt ~= /INFO:/
+        @logger.info "Overall status: GREEN. There were no errors."
+      end
     end
 
     # Convert text log to an HTML representation

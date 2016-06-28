@@ -156,13 +156,14 @@ module SapHA
       end
 
       def run_rpc_server(host)
-        # TODO: change the path
-        stat = exec_status_l("ssh", "-f", "root@#{host}",
-          "systemd-cat /usr/bin/ruby /root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb")
-
+        stat = exec_status_l("ssh", "-f", "root@#{host}", SapHA::Helpers.rpc_server_cmd)
         fortune_teller(binding)
       end
 
+      def run_command(host, *cmd)
+        exec_status_l("ssh", "-f", "root@#{host}", *cmd)
+      end
+      
       private
 
       def authorize_own_keys

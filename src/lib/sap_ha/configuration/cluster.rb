@@ -33,7 +33,7 @@ module SapHA
     # Cluster members configuration
     # TODO: think of merging this one and the CommLayer
     class Cluster < BaseConfig
-      attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes
+      attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes, :keys
       attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2
 
       include Yast::UIShortcuts

@@ -40,7 +40,7 @@ module SapHA
           VBox(
             HBox(
               HSpacing(3),
-              RichText(SapHA::NodeLogger.to_html(@config.logs)),
+              RichText(SapHA::NodeLogger.html),
               HSpacing(3)
             ),
             HBox(
@@ -72,9 +72,9 @@ module SapHA
             "Save log file as...")
           return unless file_name
           log = if file_name.end_with?('html', 'htm')
-                  SapHA::NodeLogger.to_html(@config.logs)
+                  SapHA::NodeLogger.html
                 else
-                  @config.logs
+                  SapHA::NodeLogger.text
                 end
           success = SapHA::Helpers.write_file(file_name, log)
           if success

@@ -305,7 +305,7 @@ module Yast
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
       if WFM.Args.include? 'noinst'
-        @config.logs = [
+        NodeLogger.import [
           '[hana01] 2016-06-15 14:51:14 INFO: Starting setup process on node hana01',
           '[hana01] 2016-06-15 14:51:14 INFO: Applying Cluster Configuration',
           '[hana01] 2016-06-15 14:51:20 INFO: Wrote cluster settings',

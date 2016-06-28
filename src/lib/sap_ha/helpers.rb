@@ -32,30 +32,32 @@ module SapHA
     include Yast::I18n
     include SapHA::Exceptions
 
+    attr_reader :rpc_server_cmd
+
     def initialize
       @storage = {}
-      # TODO: rethink this, since we are running RPC server by setting the ENV...
-      if ENV['Y2DIR']  # tests or local run
+      if ENV['Y2DIR'] # tests/local run
         @data_path = 'data/'
         @var_path = File.join(Dir.tmpdir, 'yast-sap-ha-tmp')
         begin
           Dir.mkdir(@var_path)
-        rescue Exception => e
-          log.debug "Cannot create the tmp_dir"
-          puts e.message
+        rescue StandardError => e
+          log.debug "Cannot create the tmp_dir: #{e.message}"
         end
-      else  # production
+        @rpc_server_cmd = 'systemd-cat /usr/bin/ruby '\
+          '/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb'
+      else # production
         @data_path = '/usr/share/YaST2/data/sap_ha'
         @var_path = '/var/lib/YaST/sap_ha'
+        # /sbin/yast in SLES, /usr/sbin/yast in OpenSuse
+        @rpc_server_cmd = 'yast sap_ha_rpc'
       end
-
     end
 
     # Render an ERB template by its name
     def render_template(basename, binding)
       if !@storage.key? basename
         full_path = File.join(@data_path, basename)
-        # template = ERB.new(read_file(full_path), nil, '-')
         template = ERB.new(read_file(full_path), nil, '-')
         @storage[basename] = template
       end

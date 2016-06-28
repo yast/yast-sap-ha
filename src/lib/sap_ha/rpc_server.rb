@@ -53,11 +53,16 @@ module SapHA
       # debug
       # @server.add_introspection
       @server.add_handler('sapha.import_config') do |yaml_string|
-        @config = YAML.load(yaml_string)
-        @server.add_handler('sapha.config', @config)
-        @config.config_sequence.each do |component|
-          obj = @config.instance_variable_get(component[:var_name])
-          @server.add_handler(component[:rpc_object], obj)
+        begin
+          SapHA::Helpers.write_var_file('sapha_config.yaml', yaml_string)
+          @config = YAML.load(yaml_string)
+          @server.add_handler('sapha.config', @config)
+          @config.config_sequence.each do |component|
+            obj = @config.instance_variable_get(component[:var_name])
+            @server.add_handler(component[:rpc_object], obj)
+          end
+        rescue StandardError => e
+          @fh.write("#{e.message}\n")
         end
         true
       end

@@ -48,8 +48,7 @@ module SapHA
       :fencing,
       :watchdog,
       :hana,
-      :ntp,
-      :logs
+      :ntp
 
     include Yast::Logger
     include Yast::I18n
@@ -72,7 +71,6 @@ module SapHA
       @hana = Configuration::HANA.new
       @ntp = Configuration::NTP.new
       @config_sequence = []
-      @logs = ''
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -107,15 +105,16 @@ module SapHA
         @config_sequence = @scenario['config_sequence'].map do |el|
           instv = "@#{el}".to_sym
           unless instance_variable_defined?(instv)
-            log.error "Scenario #{@scenario} requires a configuration object #{el} which is not defined."
+            log.error "Scenario #{@scenario} requires a configuration object"\
+              " #{el} which is not defined."
             raise GUIFatal, "Scenario configuration is incorrect. Please check the logs."
           end
-          { id: el,
-            var_name: instv,
-            object: instance_variable_get(instv), # local configuration object
+          { id:          el,
+            var_name:    instv,
+            object:      instance_variable_get(instv), # local configuration object
             screen_name: instance_variable_get(instv).screen_name, # screen name for GUI
-            rpc_object: "sapha.config_#{el}",
-            rpc_method: "sapha.config_#{el}.apply"
+            rpc_object:  "sapha.config_#{el}",
+            rpc_method:  "sapha.config_#{el}.apply"
           } 
         end
       else
