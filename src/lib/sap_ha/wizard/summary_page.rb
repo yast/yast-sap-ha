@@ -44,8 +44,9 @@ module SapHA
               HSpacing(3)
             ),
             HBox(
-              PushButton(Id(:save_log), 'Save Log'),
-              PushButton(Id(:open_hawk), 'Open Hawk')
+              PushButton(Id(:save_config), 'Save configuration'),
+              PushButton(Id(:save_log), 'Save log'),
+              PushButton(Id(:open_hawk), 'Open HAWK2')
             )
           ),
           '',
@@ -60,27 +61,37 @@ module SapHA
         Yast::Wizard.EnableNextButton
       end
 
-      def can_go_next
+      def can_go_next?
         true
       end
 
-      def handle_user_input(input, event)
+      def handle_user_input(input, _event)
         case input
         when :save_log
-          log.error "SAVE_LOG: event=#{event}"
           file_name = Yast::UI.AskForSaveFileName("/tmp", "*.txt *.log *.html",
             "Save log file as...")
           return unless file_name
-          if file_name.end_with?('html') || file_name.end_with?('htm')
-            log = SapHA::NodeLogger.to_html(@config.logs)
-          else
-            log = @config.logs
-          end
+          log = if file_name.end_with?('html', 'htm')
+                  SapHA::NodeLogger.to_html(@config.logs)
+                else
+                  @config.logs
+                end
           success = SapHA::Helpers.write_file(file_name, log)
           if success
             show_dialog_errors(["Log was written to <code>#{file_name}</code>"], 'Success')
           else
             show_dialog_errors(["Could not write log file <code>#{file_name}</code>"], 'Error')
+          end
+        when :save_config
+          file_name = Yast::UI.AskForSaveFileName("/tmp", "*.yml", "Save configuration file as...")
+          return unless file_name
+          success = SapHA::Helpers.write_file(file_name, @config.dump)
+          if success
+            show_dialog_errors(["Configuration was written to <code>#{file_name}</code>"],
+              'Success')
+          else
+            show_dialog_errors(["Could not write configuration file <code>#{file_name}</code>"],
+              'Error')
           end
         when :open_hawk
           SapHA::Helpers.open_url('https://localhost:7630/')

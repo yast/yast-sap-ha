@@ -33,9 +33,12 @@ module SapHA
     include Yast::Logger
 
     attr_accessor :silent
+    attr_reader :checks_passed
 
     IDENTIFIER_REGEXP = Regexp.new('^[_a-zA-Z][_a-zA-Z0-9]{0,30}$')
-    SAP_SID_REGEXP = Regexp.new('^[A-Z]{3}$')
+    SAP_SID_REGEXP = Regexp.new('^[A-Z][A-Z0-9]{2}$')
+    RESERVED_SAP_SIDS = %w(ADD ALL AND ANY ASC COM DBA END EPS FOR GID IBM INT KEY LOG MON NIX
+                           NOT OFF OMS RAW ROW SAP SET SGA SHG SID SQL SYS TMP UID USR VAR).freeze
 
     def initialize
       @transaction = false
@@ -44,34 +47,83 @@ module SapHA
       @silent = false
     end
 
+    # Check if the string is a valid IPv4 address
+    # @param value [String] IP address
+    # @param field_name [String] name of the field in the form
     def ipv4(value, field_name = '')
       flag = Yast::IP.Check4(value)
       report_error(flag, Yast::IP.Valid4, field_name, value)
     end
 
+    # Check if the string is a valid IPv4 multicast address
+    # @param value [String] IP address
+    # @param field_name [String] name of the field in the form
     def ipv4_multicast(value, field_name = '')
-      flag = Yast::IP.Check4(value) && value.start_with('239.')
+      flag = Yast::IP.Check4(value) && value.start_with?('239.')
       msg = 'A valid IPv4 multicast address should belong to the 239.* network.'
       report_error(flag, msg, field_name, value)
     end
 
+    # Check if the IP belongs to the specified network
+    # @param ip [String] IP address
+    # @param network [String] IP address
+    # @param field_name [String] name of the field in the form
+    def ipv4_in_network(ip, network, field_name = '')
+      flag = (network.split('.') - ip.split('.')).all? { |e| e == '0' }
+      msg = "IP address has to belong to the network #{network}."
+      report_error(flag, msg, field_name, ip)
+    end
+
+    # Check if the IP belongs to one of the specified networks
+    # @param ip [String] IP address
+    # @param networks [Array[String]] network IP addresses
+    # @param field_name [String] name of the field in the form
+    def ipv4_in_networks(ip, networks, field_name = '')
+      ip_in_net = ->(net) { (net.split('.') - ip.split('.')).all? { |e| e == '0' } }
+      flag = networks.map { |net| ip_in_net.call(net) }.any?
+      msg = "IP address has to belong to one of the networks [#{networks.join(", ")}]."
+      report_error(flag, msg, field_name, ip)
+    end
+
+    # Check if the provided IPs belong to the network
+    # @param ips [Array[String]]
+    # @param net [String]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
+    def ipsv4_in_network(ips, network, message = '', field_name = '')
+      message = "IP addresses have to belong to the network #{network}" \
+        if message.nil? || message.empty?
+      ip_in_net = ->(ip) { (network.split('.') - ip.split('.')).all? { |e| e == '0' } }
+      flag = ips.map { |ip| ip_in_net.call(ip) }.any?
+      report_error(flag, message, field_name, '')
+    end
+
+    # Check if the provided value is a valid hostname
+    # @param value [String] hostname to check
+    # @param field_name [String] name of the field in the form
     def hostname(value, field_name = '')
       flag = Yast::Hostname.Check(value)
       report_error(flag, Yast::Hostname.ValidHost, field_name, value)
     end
 
+    # Check if the provided value is a valid port number
+    # @param value [String] port number to check
+    # @param field_name [String] name of the field in the form
     def port(value, field_name = '')
       max_port_number = 65_535
-      msg = "The port number must be in the interval from 1 to #{max_port_number}."
+      msg = "The port number must be in between 1 and #{max_port_number}."
       begin
         portn = Integer(value)
-        flag = 1 <= portn && portn < 65_535
-      rescue ArgumentError
+        flag = 1 <= portn && portn <= 65_535
+      rescue ArgumentError, TypeError
         return report_error(false, msg, field_name, value)
       end
       report_error(flag, msg, field_name, value)
     end
 
+    # Check if the provided value is a non-negative integer
+    # @param value [Integer] value to check
+    # @param field_name [String] name of the field in the form
     def nonneg_integer(value, field_name = '')
       flag = true
       begin
@@ -83,69 +135,118 @@ module SapHA
       report_error(flag, 'The value must be a non-negative integer.', field_name, value)
     end
 
+    # Check if the element belongs to the set
+    # @param element [Any]
+    # @param set [Array[Any]]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the field in the form
+    def element_in_set(element, set, message = '', field_name = '')
+      flag = set.include? element
+      message = "The value must be in the set [#{set.join(', ')}]" if message.nil? || message.empty?
+      report_error(flag, message, field_name, element)
+    end
+
+    # Check if the intersection of two sets is not empty
+    # @param set1 [Array]
+    # @param set2 [Array]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
+    def intersection_not_empty(set1, set2, message = '', field_name = '')
+      flag = !(set1 & set2).empty?
+      report_error(flag, message, field_name, '')
+    end
+
+    # Check if the values match
+    # @param rvalue [Any]
+    # @param lvalue [Any]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
     def equal(rvalue, lvalue, message = '', field_name = '')
       eq = rvalue == lvalue
       report_error(eq, message, field_name, nil)
     end
 
+    # Check if the values don't match
+    # @param rvalue [Any]
+    # @param lvalue [Any]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
     def not_equal(rvalue, lvalue, message = '', field_name = '')
       neq = rvalue != lvalue
       report_error(neq, message, field_name, nil)
     end
 
-    def unique(args, message = '', field_name = '')
-      uniq = (args == (args & args))
+    # Check if the set has only unique elements
+    # @param set [Array]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
+    def unique(set, message = '', field_name = '')
+      uniq = (set == (set & set))
       report_error(uniq, message, field_name, nil)
     end
 
-    def not_unique(args, message = '', field_name = '')
-      uniq = (args != (args & args))
+    # Check if the set has non-unique elements
+    # @param set [Array]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
+    def not_unique(set, message = '', field_name = '')
+      uniq = (set != (set & set))
       report_error(uniq, message, field_name, nil)
     end
 
+    # Check if the provided value is a valid identifier (i.e., a name)
+    # @param value [String]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
     def identifier(value, message = '', field_name = '')
       flag = !IDENTIFIER_REGEXP.match(value).nil?
+      message = 'The value should be a valid identifier' if message.nil? || message.empty?
       report_error(flag, message, field_name, value)
     end
 
+    # Check if the provided integer is in the range [low, high]
+    # @param value [Integer]
+    # @param low [Integer]
+    # @param high [Integer]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
     def integer_in_range(value, low, high, message = '', field_name = '')
-      msg = "The value must be in the range between #{low} and #{high}."
+      message = "The value must be in the range between #{low} and #{high}." \
+        if message.nil? || message.empty?
       begin
         int = Integer(value)
         flag = low <= int && int <= high
-      rescue ArgumentError
-        return report_error(false, msg, field_name, value)
+      rescue ArgumentError, TypeError
+        return report_error(false, message, field_name, value)
       end
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
+    # Check if the provided value is a correct SAP System ID
+    # @param value [String]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
     def sap_sid(value, message = '', field_name = '')
-      flag = value.length == 3 && !SAP_SID_REGEXP.match(value).nil?
-      return report_error(flag, message, field_name, value)
+      message = "A valid SAP System ID consists of three characters, starts with a letter, and "\
+      " must not collide with one of the reserved IDs" if message.nil? || message.empty?
+      flag = !SAP_SID_REGEXP.match(value).nil?
+      flag &= !RESERVED_SAP_SIDS.include?(value)
+      report_error(flag, message, field_name, value)
     end
 
-    def ips_belong_to_net(ips, net, message = '', field_name = '')
-      last_dot = net.rindex('.')
-      return report_error(false, message, field_name, value) if last_dot.nil?
-      flag = ips.all? { |ip| ip.start_with?(net[0..last_dot]) }
-      return report_error(flag, message, field_name, '')
-    end
-
-    def check(verbosity, &block)
+    # Start a transactional check
+    def check(verbosity)
       old_silent = @silent
-      if verbosity == :verbose
-        @silent = false
-      else
-        @silent = true
-      end
+      @silent = if verbosity == :verbose
+                  false
+                else
+                  true
+                end
       transaction_begin
       yield self
-      if verbosity == :verbose
-        return transaction_end
-      else
-        transaction_end
-        return @checks_passed
-      end
+      return transaction_end if verbosity == :verbose
+      transaction_end
+      return @checks_passed
     ensure
       @silent = old_silent
     end
@@ -169,6 +270,15 @@ module SapHA
       @checks_passed
     ensure
       @silent = old_silent
+    end
+
+    # Check the values entered in the popup dialog
+    # @param method [Method] validation routine
+    # @param hash [Hash] values to validate
+    def check_popup(method, hash)
+      check(:verbose) do |check|
+        method.call(check, hash)
+      end
     end
 
     private

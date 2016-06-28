@@ -21,7 +21,8 @@
 
 require 'yast'
 require 'sap_ha/helpers'
-require 'sap_ha/wizard/cluster_page'
+require 'sap_ha/wizard/cluster_nodes_page'
+require 'sap_ha/wizard/comm_layer_page'
 require 'sap_ha/wizard/join_cluster_page'
 require 'sap_ha/wizard/fencing_page'
 require 'sap_ha/wizard/watchdog_page'
@@ -67,13 +68,14 @@ module Yast
         "scenario_selection"    => {
           abort:             :abort,
           cancel:            :abort,
-          next:              "configure_cluster",
+          next:              "configure_comm_layer",
           unknown:           "product_not_supported",
           summary:           "config_overview"
         },
-        "config_overview"         => {
+        "config_overview"       => {
           abort:             :abort,
           cancel:            :abort,
+          comm_layer:        "configure_comm_layer",
           config_cluster:    "configure_cluster",
           join_cluster:      "join_cluster",
           fencing:           "fencing",
@@ -85,6 +87,13 @@ module Yast
         },
         "configure_cluster"    => {
           next:              "ntp",
+          back:              :back,
+          abort:             :abort,
+          cancel:            :abort,
+          summary:           "config_overview"
+        },
+        "configure_comm_layer" => {
+          next:              "configure_cluster",
           back:              :back,
           abort:             :abort,
           cancel:            :abort,
@@ -147,7 +156,7 @@ module Yast
         'scenario_selection'    => -> { scenario_selection },
         'product_not_supported' => -> { product_not_supported },
         'configure_cluster'     => -> { configure_cluster },
-        'config_overview'       => -> { configuration_overview },
+        'configure_comm_layer'  => -> { configure_comm_layer },
         'join_cluster'          => -> { join_existing_cluster },
         'fencing'               => -> { fencing_mechanism },
         'watchdog'              => -> { watchdog },
@@ -155,6 +164,7 @@ module Yast
         'debug_run'             => -> { debug_run },
         'installation'          => -> { run_installation },
         'ntp'                   => -> { configure_ntp },
+        'config_overview'       => -> { configuration_overview },
         'summary'               => -> { show_summary }
       }
     end
@@ -166,7 +176,6 @@ module Yast
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
         ret = Sequencer.Run(@aliases, @sequence)
-        log.error "Sequencer finished with #{ret}"
       ensure
         Wizard.CloseDialog
       end
@@ -247,14 +256,18 @@ module Yast
     def configuration_overview
       log.debug "--- called #{self.class}.#{__callee__} ---"
       ret = SapHA::Wizard::ConfigurationOverviewPage.new(@config).run
-      log.error "--- #{self.class}.#{__callee__}: return=#{ret.inspect} ---"
       return :abort if ret == :back # TODO: find out why it returns "back"
       ret
     end
 
     def configure_cluster
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SapHA::Wizard::ClusterConfigurationPage.new(@config).run
+      SapHA::Wizard::ClusterNodesConfigurationPage.new(@config).run
+    end
+
+    def configure_comm_layer
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      SapHA::Wizard::CommLayerConfigurationPage.new(@config).run
     end
 
     def join_existing_cluster
@@ -279,7 +292,7 @@ module Yast
 
     def configure_ntp
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      return SapHA::Wizard::NTPConfigurationPage.new(@config).run
+      SapHA::Wizard::NTPConfigurationPage.new(@config).run
     end
 
     def run_installation

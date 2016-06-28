@@ -151,6 +151,13 @@ module SapHA
       end.all?
     end
 
+    def verbose_validate
+      return ["Configuration sequence is empty"] if @config_sequence.empty?
+      @config_sequence.map do |config|
+        config[:object].validate
+      end.flatten
+    end
+
     # Dump this object to a YAML representation
     # @param [Boolean] slave
     def dump(slave = false)

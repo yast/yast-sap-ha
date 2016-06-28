@@ -30,6 +30,7 @@ module SapHA
       def initialize(model)
         super(model)
         @my_model = model.watchdog
+        @page_validator = @my_model.method(:validate)
       end
 
       def set_contents
@@ -41,21 +42,22 @@ module SapHA
             VBox(
               HBox(
                 HSpacing(20),
-                SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate), 'Watchdogs to Configure:', []),
-                HSpacing(20)
-                ),
+                SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate),
+                  'Watchdogs to configure:', []),
+                HSpacing(20)),
               HBox(
                 PushButton(Id(:add_wd), 'Add'),
                 PushButton(Id(:remove_wd), 'Remove')
               ),
               HBox(
                 HSpacing(20),
-                SelectionBox(Id(:configured_wd), Opt(:notify, :immediate), 'Configured Watchdogs:', []),
+                SelectionBox(Id(:configured_wd), Opt(:notify, :immediate),
+                  'Configured watchdogs:', []),
                 HSpacing(20)
               ),
               HBox(
                 HSpacing(20),
-                SelectionBox(Id(:loaded_wd), 'Loaded Watchdogs:', []),
+                SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', []),
                 HSpacing(20)
               )
             )
@@ -66,9 +68,9 @@ module SapHA
         )
       end
 
-      def can_go_next
+      def can_go_next?
         return true if @model.no_validators
-        true
+        @my_model.configured?
       end
 
       def refresh_view

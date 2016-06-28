@@ -37,7 +37,7 @@ module SapHA
         @devices = []
         @proposals = []
         @sbd_options = "-W"
-        @sbd_delayed_start = ""
+        @sbd_delayed_start = "no"
         @sysconfig = {}
         read_system
       end
@@ -52,15 +52,20 @@ module SapHA
         !@devices.empty?
       end
 
+      def validate(verbosity = :verbose)
+        if verbosity == :verbose
+          return ["Please specify at least one SBD device."] unless configured?
+          return []
+        else
+          return configured?
+        end
+      end
+
       def description
         ds = @devices.map { |d| d[:name] }.join(', ')
-        options = if @sysconfig[:options].nil? || @sysconfig[:options].empty?
-                    'none'
-                  else
-                    @sysconfig[:options]
-                  end
+        options = @sbd_options.empty? ? 'none' : @sbd_options
         "&nbsp; Configured devices: #{ds}.<br>
-        &nbsp; Delayed start: #{@sysconfig[:dealy_start] || 'false'}.<br>
+        &nbsp; Delayed start: #{@sbd_delayed_start}.<br>
         &nbsp; SBD options: #{options}."
       end
 
@@ -74,6 +79,7 @@ module SapHA
       end
 
       def add_device(dev_path)
+        return if @devices.find { |e| e[:name] == dev_path }
         @devices << @proposals.find { |e| e[:name] == dev_path }.dup
       end
 
@@ -82,20 +88,20 @@ module SapHA
       end
 
       def remove_device_by_id(dev_id)
-        dev = @devices.each_with_index.find { |e, ix| ix == dev_id }
-        return if dev.empty?
+        dev = @devices.each_with_index.find { |_, ix| ix == dev_id }
+        return if dev.nil? || dev.empty?
         log.error "--- called #{self.class}.#{__callee__} dev=#{dev} ---"
         remove_device(dev[0][:name])
       end
 
       def read_sysconfig
         @sysconfig = {
-          device: Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_DEVICE')),
-          pacemaker: Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_PACEMAKER')),
-          startmode: Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_STARTMODE')),
+          device:      Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_DEVICE')),
+          pacemaker:   Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_PACEMAKER')),
+          startmode:   Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_STARTMODE')),
           delay_start: Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_DELAY_START')),
-          watchdog: Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_WATCHDOG')),
-          options: Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_OPTS'))
+          watchdog:    Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_WATCHDOG')),
+          options:     Yast::SCR.Read(Yast::Path.new('.sysconfig.sbd.SBD_OPTS'))
         }
         true
       end
@@ -128,10 +134,11 @@ module SapHA
       private
 
       def handle_sysconfig
+        handle = ->(sett, default) { (sett.nil? || sett.empty?) ? default : sett }
         devices = @sysconfig[:device].split(";")
         @devices = devices.map { |d| @proposals.find { |p| p[:name] == d } }.compact
-        @sbd_options = @sysconfig[:options] || ""
-        @sbd_delayed_start = @sysconfig[:delay_start] || "no"
+        @sbd_options = handle.call(@sysconfig[:options], @sbd_options)
+        @sbd_delayed_start = handle.call(@sysconfig[:delay_start], @sbd_delayed_start)
         true
       end
 

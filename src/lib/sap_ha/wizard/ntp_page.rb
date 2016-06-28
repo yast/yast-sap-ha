@@ -30,6 +30,7 @@ module SapHA
       def initialize(model)
         super(model)
         @my_model = model.ntp
+        @page_validator = @my_model.method(:validate)
       end
 
       def set_contents
@@ -59,7 +60,7 @@ module SapHA
       end
 
 
-      def can_go_next
+      def can_go_next?
         return true if @model.no_validators
         return false unless @my_model.configured?
         true

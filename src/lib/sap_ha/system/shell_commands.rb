@@ -62,6 +62,12 @@ module SapHA
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
       end
 
+      # Pipe the commands and return the common status
+      def pipe(*commands)
+        stats = Open3.pipeline(*commands)
+        stats.all? { |s| s.exitstatus == 0 }
+      end
+
       # @return stdout_and_stderr, status
       def su_exec_outerr_status(user_name, *params)
         Open3.capture2e('su', '-l', user_name, params.join(' '))

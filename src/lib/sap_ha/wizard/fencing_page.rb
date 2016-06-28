@@ -30,6 +30,7 @@ module SapHA
       def initialize(model)
         super(model)
         @my_model = model.fencing
+        @page_validator = @my_model.method(:validate)
       end
 
       def set_contents
@@ -40,7 +41,7 @@ module SapHA
             'Choose the STONITH method',
             VBox(
               HBox(
-                Label('STONITH Method:'),
+                Label('STONITH method:'),
                 ComboBox(Id(:stonith_method), '', ['SBD', 'IPMI'])
               ),
               HBox(
@@ -49,7 +50,7 @@ module SapHA
                   Table(
                     Id(:sbd_dev_list_table),
                     Opt(:keepSorting, :immediate),
-                    Header(_('#'), _('Mount Point'), _('Type'), _('UUID')),
+                    Header(_('#'), _('Mount point'), _('Type'), _('UUID')),
                     @model.fencing.table_items
                   )
                 ),
@@ -60,9 +61,9 @@ module SapHA
                 PushButton(Id(:remove_sbd_device), _('Remove'))
               ),
               VSpacing(1),
-              InputField(Id(:sbd_options), 'SBD Options:', ''),
+              InputField(Id(:sbd_options), 'SBD options:', ''),
               VSpacing(1),
-              ComboBox(Id(:sbd_delayed_start), 'Delay SBD Start:', ['no', 'yes']),
+              ComboBox(Id(:sbd_delayed_start), 'Delay SBD start:', ['no', 'yes']),
               VSpacing(1),
               Label(_("Note that all data on the selected devices will be destroyed."))
             )
@@ -73,7 +74,7 @@ module SapHA
         )
       end
 
-      def can_go_next
+      def can_go_next?
         return true if @model.no_validators
         @my_model.configured?
       end

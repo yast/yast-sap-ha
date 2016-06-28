@@ -41,6 +41,9 @@ module SapHA
       include SapHA::Exceptions
       include Yast::Logger
 
+      COROSYNC_KEY_PATH = '/etc/corosync/authkey'.freeze
+      CSYNC2_KEY_PATH = '/etc/csync2/key_hagroup'.freeze
+
       def net_interfaces
         Yast::NetworkInterfaces.Read
         Yast::NetworkInterfaces.List("")
@@ -110,20 +113,64 @@ module SapHA
         status
       end
 
-      def generate_csync_key
+      def generate_csync2_key
+        out, status = exec_outerr_status('/usr/sbin/csync2', '-k', CSYNC2_KEY_PATH)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Generated the csync2 authentication key",
+          "Could not generate the csync2 authentication key",
+          out)
+      end
+
+      def read_csync2_key
+        out, status = exec_outerr_status('uuencode', '-m', CSYNC2_KEY_PATH, '/dev/stdout')
+        return out if status.exitstatus == 0
+        NodeLogger.error "Could not read the csync2 authentication key"
+        NodeLogger.output out
+        nil
+      end
+
+      def write_csync2_key(data)
+        if data.nil?
+          NodeLogger.warn "Attempted to write the csync2 secure key, "\
+            "but the key data is empty"
+          return false
+        end
+        status = pipe(['echo', data], ['uudecode', '-o', CSYNC2_KEY_PATH])
+        NodeLogger.log_status(status,
+          "Wrote the shared csync2 authentication key",
+          "Could not write the shared csync2 authentication key")
       end
 
       def generate_corosync_key
-        ret = exec_status_l('/usr/sbin/corosync-keygen', '-l')
-        ret.exitstatus
+        out, status = exec_outerr_status('/usr/sbin/corosync-keygen', '-l')
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Generated the corosync authentication key",
+          "Could not generate the corosync authentication key",
+          out)
       end
 
       def read_corosync_key
-        exec_status_l()
+        out, status = exec_outerr_status('uuencode', '-m', COROSYNC_KEY_PATH, '/dev/stdout')
+        return out if status.exitstatus == 0
+        NodeLogger.error "Could not read the corosync authentication key"
+        NodeLogger.output out
+        nil
+      end
+
+      def write_corosync_key(data)
+        if data.nil?
+          NodeLogger.warn "Attempted to write the corosync secure authentication key, "\
+            "but the key data is empty"
+          return false
+        end
+        status = pipe(['echo', data], ['uudecode', '-o', COROSYNC_KEY_PATH])
+        NodeLogger.log_status(status,
+          "Wrote the shared corosync secure authentication key",
+          "Could not write the shared corosync secure authentication key")
       end
 
       # join an existing cluster
-      def join_cluster(ip_address)
+      def join_cluster(_ip_address)
         raise 'Not implemented'
       end
 
@@ -234,7 +281,7 @@ module SapHA
       def hana_enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
         user_name = "#{system_id.downcase}adm"
         command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
-          "--remoteInstance=#{instance}", "--mode=#{mode}", "--name=#{site_name}"]
+                   "--remoteInstance=#{instance}", "--mode=#{mode}", "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
           "Enabled HANA System Replication on the secondary host #{site_name}",

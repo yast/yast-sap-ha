@@ -24,6 +24,13 @@
     
     <p><i>Note:</i> the number of nodes for HANA scale-up clusters is fixed and cannot be changed.</p>
 
+    <p><b>Enable Corosync Secure Authentication</b>:
+    require the HMAC/SHA1 authentication for cluster messages authentication.
+    This option reduces total throughput of the cluster messaging level and consumes extra CPU cycles for encryption.
+    </p>
+
+    <p><b>Enable csync2</b>: enable the <code>csync2</code> service that synchronizes cluster-related configuration files between nodes.</p>
+
     <h3>On passwordless SSH</h3>
     <p>When the "Next" button is clicked, the Wizard will check if it can connect to the remote node(s) via SSH protocol without a password.
     If it fails to do so, it will require the root password for the remote node, connect to it and propagate its own SSH keys (both private and public) to the slave node(s).</p>

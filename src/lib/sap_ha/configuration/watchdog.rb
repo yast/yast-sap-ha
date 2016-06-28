@@ -45,6 +45,15 @@ module SapHA
         !@loaded.empty? || !@configured.empty? || !@to_install.empty?
       end
 
+      def validate(verbosity = :verbose)
+        if verbosity == :verbose
+          return ["At least one watchdog must be configured for every node."] unless configured?
+          return []
+        else
+          return configured?
+        end
+      end
+
       def description
         s = []
         s << "&nbsp; Configured modules: #{@configured.join(', ')}." unless @configured.empty?

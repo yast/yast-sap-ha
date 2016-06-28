@@ -50,6 +50,15 @@ module SapHA
         (start_at_boot? || @ntpd_cron) && !@used_servers.empty?
       end
 
+      def validate(verbosity = :verbose)
+        if verbosity == :verbose
+          return ["Every node has to sync with at least one NTP server."] unless configured?
+          return []
+        else
+          return configured?
+        end
+      end
+
       def description
         s = @used_servers.join(', ')
         "&nbsp;Synchronize with servers: #{s}.<br>&nbsp;Start at boot: #{start_at_boot?}."

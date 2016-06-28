@@ -50,8 +50,8 @@ module SapHA
     end
 
     def install_handlers
-      @server.add_introspection
-
+      # debug
+      # @server.add_introspection
       @server.add_handler('sapha.import_config') do |yaml_string|
         @config = YAML.load(yaml_string)
         @server.add_handler('sapha.config', @config)
@@ -76,14 +76,17 @@ module SapHA
     end
 
     def shutdown
-      Thread.new { sleep 3; @server.shutdown }
+      Thread.new {
+        sleep 3
+        @server.shutdown
+      }
       true
     end
 
     def open_port
       rule_no = get_rule_number
       return if rule_no
-      rc, out = exec_status_lo('/usr/sbin/iptables', '-I',
+      rc, _out = exec_status_lo('/usr/sbin/iptables', '-I',
         'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
       rc.exitstatus == 0
     end

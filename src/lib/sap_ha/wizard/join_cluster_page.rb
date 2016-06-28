@@ -35,7 +35,8 @@ module SapHA
             _("Please provide the IP address of the existing cluster"),
             VBox(
               InputField(Id(:ip_address), 'IP Address', ''),
-              ComboBox(Id(:interface), 'Local Network Interface', SapHA::System::Local.net_interfaces),
+              ComboBox(Id(:interface), 'Local Network Interface',
+                SapHA::System::Local.net_interfaces),
               PushButton(Id(:join), 'Join Cluster')
             )
           ),
@@ -74,7 +75,7 @@ module SapHA
         super
       end
 
-      def can_go_next
+      def can_go_next?
         return true if @model.no_validators
         super
       end

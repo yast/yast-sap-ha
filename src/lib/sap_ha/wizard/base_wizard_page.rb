@@ -22,6 +22,7 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha/exceptions'
+require 'sap_ha/semantic_checks'
 
 Yast.import 'Wizard'
 
@@ -37,11 +38,13 @@ module SapHA
 
       attr_accessor :model
 
+      INPUT_WIDGETS = [:InputField, :TextEntry, :Password, :CheckBox, :SelectionBox].freeze
+      WRAPPING_WIDGETS = { MinWidth: 1, MinHeight: 1, MinSize: 2, Left: 0 }.freeze
+
       # Initialize the Wizard page
       def initialize(model)
         log.debug "--- called #{self.class}.#{__callee__} ---"
         @model = model
-        @my_model = nil
       end
 
       # Set the Wizard's contents, help and the back/next buttons
@@ -59,7 +62,12 @@ module SapHA
 
       # Return true if the user can proceed to the next screen
       # Use this if additional verification of the data is needed
-      def can_go_next
+      def can_go_next?
+        true
+      end
+
+      # Show the error dialog if model validation failed?
+      def show_errors?
         true
       end
 
@@ -96,8 +104,8 @@ module SapHA
             return input
           when :next, :summary
             update_model
-            return input if can_go_next
-            dialog_cannot_continue
+            return input if can_go_next?
+            show_dialog_errors(@page_validator.call) if show_errors?
           else
             handle_user_input(input, event)
           end
@@ -148,10 +156,18 @@ module SapHA
       # @param widget_id [Symbol]
       # @param property [Symbol]
       def value(widget_id, property = :Value)
+        unless Yast::UI.WidgetExists(Id(widget_id))
+          log.error "--- #{self.class}.#{__callee__}: widget with "\
+            "ID=#{widget_id} does not exist ---"
+        end
         Yast::UI.QueryWidget(Id(widget_id), property)
       end
 
       def set_value(widget_id, value, property = :Value)
+        unless Yast::UI.WidgetExists(Id(widget_id))
+          log.error "--- #{self.class}.#{__callee__}: widget with "\
+            "ID=#{widget_id} does not exist ---"
+        end
         Yast::UI.ChangeWidget(Id(widget_id), property, value)
       end
 
@@ -185,12 +201,10 @@ module SapHA
       # A dynamic popup showing the message and the widgets.
       # Runs the validators method to check user input
       # @param message [String] a message to display
-      # @param validators [Lambda] validation routine
+      # @param validator [Lambda] validation routine
       # @param widgets [Array] widgets to show
-      def base_popup(message, validators, *widgets)
+      def base_popup(message, validator, *widgets)
         log.debug "--- #{self.class}.#{__callee__} ---"
-        input_widgets = [:InputField, :TextEntry, :Password,
-                         :SelectionBox, :MinWidth, :MinHeight, :MinSize]
         Yast::UI.OpenDialog(
           VBox(
             Label(message),
@@ -202,24 +216,24 @@ module SapHA
           ui = Yast::UI.UserInput
           case ui
           when :ok
+            # create a hash {widget_id: fileld_value} for the input widgets
             parameters = {}
-            widgets.select { |w| input_widgets.include? w.value }.each do |w|
-              # if the actual widget is wrapped within a size widget
-              if w.value == :MinWidth || w.value == :MinHeight
-                w = w.params[1]
-              elsif w.value == :MinSize
-                w = w.params[2]
+            selected_widgets = widgets.select do |w|
+              (INPUT_WIDGETS | WRAPPING_WIDGETS.keys).include? w.value
+            end
+            selected_widgets.each do |w|
+              # if the actual widget is wrapped within a size widget, get the inner widget
+              if WRAPPING_WIDGETS.keys.include? w.value
+                w = w.params[WRAPPING_WIDGETS[w.value]]
               end
-              # TODO: check once more, just to be sure :)
-              # next unless input_widgets.include? w
               id = w.params.find do |parameter|
                 parameter.respond_to?(:value) && parameter.value == :id
               end.params[0]
               parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
             end
             log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
-            if validators && !@model.no_validators
-              ret = validators.call(parameters)
+            if validator && !@model.no_validators
+              ret = SemanticChecks.instance.check_popup(validator, parameters)
               unless ret.empty?
                 show_dialog_errors(ret)
                 next
@@ -273,18 +287,12 @@ module SapHA
 
       def show_dialog_errors(error_list, title = "Invalid input")
         log.error "--- #{self.class}.#{__callee__}: #{error_list} ---"
-        html_str = "<ul>\n"
-        html_str << error_list.map { |e| "<li>#{e}</li>" }.join("\n")
+        html_str = "<p>Configuration is invalid or incomplete and the Wizard
+          cannot proceed to the next step.</p><p>Please review the following warnings:</p>\n"
+        html_str << "<ul>\n"
+        html_str << error_list.uniq.map { |e| "<li>#{e}</li>" }.join("\n")
         html_str << "</ul>"
         Yast::Popup.LongText(title, RichText(html_str), 60, 17)
-      end
-
-      def dialog_cannot_continue(message=nil)
-        unless message
-          message = "<p>Configuration is invalid or incomplete and the Wizard
-          cannot proceed to the next step.</p><p>Please review the settings.</p>"
-        end
-        Yast::Popup.LongText("Invalid input", RichText(message), 40, 5)
       end
     end
   end

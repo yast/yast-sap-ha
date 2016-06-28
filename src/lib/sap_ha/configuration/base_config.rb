@@ -39,6 +39,7 @@ module SapHA
         @screen_name = "Base Component Configuration"
         @exception_type = BaseConfigException
         @nlog = SapHA::NodeLogger
+        # Exclude these members from marshalling with YAML
         @yaml_exclude = [:@yaml_exclude, :@nlog]
       end
 
@@ -85,6 +86,7 @@ module SapHA
 
       def import(hash)
         log.debug "--- #{self.class}.#{__callee__}: #{hash} ---"
+        return if hash.nil? || hash.empty?
         hash.each do |k, v|
           name = k.to_s.start_with?('@') ? k : "@#{k}".to_sym
           instance_variable_set(name, v)
@@ -103,7 +105,7 @@ module SapHA
       end
 
       # Validate model, raising an exception on error
-      def validate
+      def validate(_verbosity = :verbose)
         log.error "--- #{self.class}.#{__callee__} is not implemented yet ---"
         raise @exception_type, "Validation failed"
       end
