@@ -32,6 +32,7 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /TODO.md/
   conf.exclude_files << /doc/
   conf.exclude_files << /make_package.sh/
+  conf.exclude_files << /test/
 end
 
 desc "Run unit tests with coverage."
@@ -45,10 +46,14 @@ Packaging.configuration do |conf|
   conf.obs_project = "home:imanyugin:sap-ha"
   conf.package_name = "yast2-sap-ha"
   conf.obs_api = "https://api.suse.de/"
-  conf.obs_target = "SLE_12_SP1"
+  # conf.obs_target = "SLE_12_SP1"
+  conf.obs_target = "SLE_12_SP2"
 end
 
-# desc "Add a new entry to the .changes file"
-# task "vc" do
-#   system('/usr/lib/build/vc package/')
-# end
+namespace :test do
+  desc "Runs unit tests."
+  task "unit" do
+    # files = Dir["**/test/**/*_{spec,test}.rb"]
+    # sh "rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
+  end
+end

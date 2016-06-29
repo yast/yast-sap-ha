@@ -15,7 +15,7 @@
 #
 # ------------------------------------------------------------------------------
 #
-# Summary: SUSE High Availability Setup for SAP Products: Tests
+# Summary: SUSE High Availability Setup for SAP Products
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require_relative 'test_helper'

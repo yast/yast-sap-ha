@@ -187,12 +187,11 @@ module SapHA
         Yast::SuSEFirewall.Read
         Yast::SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
         Yast::SuSEFirewall.Write
-        # TODO: remove debug
-        # if role == :master
-        Yast::SuSEFirewall.ActivateConfiguration
-        # else
-        #   written
-        # end
+        if role == :master
+          Yast::SuSEFirewall.ActivateConfiguration
+        else
+          written
+        end
       end
 
       def start_cluster_services

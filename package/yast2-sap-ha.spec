@@ -26,15 +26,18 @@ Requires:       yast2
 Requires:       yast2-ruby-bindings
 # for opening URLs
 Requires:       xdg-utils
-# for handling SSH client
+# for handling the SSH client
 Requires:       expect
 Requires:       openssh
 Requires:       yast2-cluster
 Requires:       yast2-ntp-client
+Requires:       sap-installation-wizard
 Requires:       ha-cluster-bootstrap
 # for lsblk
 Requires:       util-linux
-# TODO: require SAPHanaSR
+# lsmod, modprobe
+Requires:       kmod-compat
+Requires:       SAPHanaSR
 
 BuildRequires:  yast2
 BuildRequires:  yast2-ruby-bindings
@@ -45,6 +48,8 @@ BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-cluster
+BuildRequires:  kmod-compat
+BuildRequires:  util-linux
 
 Group:          System/YaST
 License:        GPL-2.0

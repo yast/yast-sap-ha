@@ -135,7 +135,7 @@ module SapHA
 
       def handle_sysconfig
         handle = ->(sett, default) { (sett.nil? || sett.empty?) ? default : sett }
-        devices = @sysconfig[:device].split(";")
+        devices = handle.call(@sysconfig[:device], "").split(";")
         @devices = devices.map { |d| @proposals.find { |p| p[:name] == d } }.compact
         @sbd_options = handle.call(@sysconfig[:options], @sbd_options)
         @sbd_delayed_start = handle.call(@sysconfig[:delay_start], @sbd_delayed_start)

@@ -109,8 +109,8 @@ module SapHA
       # Get the list of all watchdog available in the system
       def list_watchdogs
         unless Dir.exist?(MODULES_PATH)
-          log.error "Could not find the modules source directory #{MODULES_PATH}"
-          raise "Could not find the modules source directory #{MODULES_PATH}"
+          log.error "Could not find the kernel modules source directory #{MODULES_PATH}"
+          return []
         end
         Dir.glob(MODULES_PATH + '/*.c').map { |path| File.basename(path, '.c') }
       end
