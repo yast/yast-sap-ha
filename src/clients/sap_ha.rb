@@ -21,6 +21,7 @@
 
 require 'yast'
 require 'sap_ha/helpers'
+require 'sap_ha/node_logger'
 require 'sap_ha/wizard/cluster_nodes_page'
 require 'sap_ha/wizard/comm_layer_page'
 require 'sap_ha/wizard/join_cluster_page'
@@ -305,7 +306,7 @@ module Yast
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
       if WFM.Args.include? 'noinst'
-        NodeLogger.import [
+        SapHA::NodeLogger.import [
           '[hana01] 2016-06-15 14:51:14 INFO: Starting setup process on node hana01',
           '[hana01] 2016-06-15 14:51:14 INFO: Applying Cluster Configuration',
           '[hana01] 2016-06-15 14:51:20 INFO: Wrote cluster settings',

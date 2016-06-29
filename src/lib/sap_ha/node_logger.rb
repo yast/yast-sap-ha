@@ -119,7 +119,20 @@ module SapHA
           line
         end
       end
-      "<html>\n<code>#{lines.join("<br>\n")}\n</code>\n</html>"
+      "<html>
+        <head>
+          <style>
+            code {
+              font-family: \"Nimbus Mono L\", \"Monospace\", monospace;
+            }
+          </style>
+        </head>
+        <body>
+          <code>
+            #{lines.join("<br>\n")}
+          </code>
+        </body>
+      </html>"
     end
 
     # Shorthands for logging

@@ -16,6 +16,7 @@
 #
 
 require "yast/rake"
+require "packaging"
 
 Yast::Tasks.configuration do |conf|
   conf.skip_license_check << /.*desktop$/
@@ -38,6 +39,13 @@ task "coverage" do
   files = Dir["**/test/**/*_{spec,test}.rb"]
   sh "export COVERAGE=1; rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
   sh "xdg-open coverage/index.html"
+end
+
+Packaging.configuration do |conf|
+  conf.obs_project = "home:imanyugin:sap-ha"
+  conf.package_name = "yast2-sap-ha"
+  conf.obs_api = "https://api.suse.de/"
+  conf.obs_target = "SLE_12_SP1"
 end
 
 # desc "Add a new entry to the .changes file"

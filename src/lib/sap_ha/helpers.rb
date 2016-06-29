@@ -48,9 +48,12 @@ module SapHA
           '/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb'
       else # production
         @data_path = '/usr/share/YaST2/data/sap_ha'
-        @var_path = '/var/lib/YaST/sap_ha'
+        @var_path = '/var/lib/YaST2/sap_ha'
         # /sbin/yast in SLES, /usr/sbin/yast in OpenSuse
-        @rpc_server_cmd = 'yast sap_ha_rpc'
+        # @rpc_server_cmd = 'yast sap_ha_rpc'
+        # TODO: fix it
+        @rpc_server_cmd = 'systemd-cat /usr/bin/ruby '\
+          '/usr/share/YaST2/lib/sap_ha/rpc_server.rb'
       end
     end
 

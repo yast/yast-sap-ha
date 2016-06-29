@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Wed Jun 29 11:50:46 UTC 2016 - imanyugin@suse.com
+
+- Update to version 0.8.0;
+- Added HANA Scale Up: Performance-optimized scenario;
+- Added a new Yast client sap_ha_rpc for the RPC server;
+- Enhanced the HANA configuration (backup settings, site names settings);
+- Split the Cluster wizard page into two;
+- Cluster configuration can generate and read corosync and csync2 auth keys;
+- Cluster ring address selection considers network addresses of the local node;
+- fate#319068;
+
+-------------------------------------------------------------------
 Tue Jun 14 14:43:04 UTC 2016 - imanyugin@suse.com
 
 - Update to version 0.6.6;

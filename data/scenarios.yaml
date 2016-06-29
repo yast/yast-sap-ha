@@ -14,23 +14,23 @@
         - cluster
         - hana
 
-    - name: "Scale Up: Cost-optimized"
-      description: |
-        <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
-        between two nodes, A and B, within the same cluster, while a development
-        or quality assurance system is running on the node B, and the production database is shrunk.
-      number_of_nodes: 2
-      fixed_number_of_nodes: true
-      config_sequence: *id001
+    # - name: "Scale Up: Cost-optimized"
+    #   description: |
+    #     <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
+    #     between two nodes, A and B, within the same cluster, while a development
+    #     or quality assurance system is running on the node B, and the production database is shrunk.
+    #   number_of_nodes: 2
+    #   fixed_number_of_nodes: true
+    #   config_sequence: *id001
 
-    - name: "Scale Up: Chained (multi-tier)"
-      number_of_nodes: 2
-      fixed_number_of_nodes: true
-      description: |
-        <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
-        three nodes: A, B and C, with synchronous replication between A and B and asynchronous
-        between B and C. Note that node C is not managed by the cluster.
-      config_sequence: *id001
+    # - name: "Scale Up: Chained (multi-tier)"
+    #   number_of_nodes: 2
+    #   fixed_number_of_nodes: true
+    #   description: |
+    #     <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
+    #     three nodes: A, B and C, with synchronous replication between A and B and asynchronous
+    #     between B and C. Note that node C is not managed by the cluster.
+    #   config_sequence: *id001
 
 - id: NW
   string_name: NetWeaver

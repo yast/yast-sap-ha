@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 
 Name:           yast2-sap-ha
-Version:        0.6.6
+Version:        0.8.0
 Release:        0
 BuildArch:      noarch
 
@@ -64,6 +64,7 @@ rake test:unit
 
 %install
 mkdir -p %{buildroot}%{yast_dir}/data/sap_ha/
+mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
 mkdir -p %{yast_scrconfdir}
 rake install DESTDIR="%{buildroot}"
 install -m 644 data/*[!.expect] %{buildroot}%{yast_dir}/data/sap_ha/
@@ -76,6 +77,7 @@ install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 %yast_clientdir
 %yast_libdir
 %{yast_dir}/data/sap_ha/
+%{yast_vardir}/sap_ha/
 %{yast_scrconfdir}/*.scr
 
 %changelog
