@@ -142,7 +142,7 @@ module SapHA
       # TODO: catch 'execution expired'
       node[:rpc] = XMLRPC::Client.new(node[:ip], "/RPC2", 8080)
       begin
-        node[:rpc].call('ping')
+        node[:rpc].call('sapha.ping')
       rescue StandardError => e
         log.error "Error connecting to the XML RPC server on node #{node}:"\
           "[#{e.class}] #{e.message}"

@@ -25,6 +25,7 @@ require 'socket'
 require_relative 'base_config'
 
 Yast.import 'NtpClient'
+Yast.import 'Progress'
 
 module SapHA
   module Configuration
@@ -40,7 +41,9 @@ module SapHA
 
       def read_configuration
         log.info "--- #{self.class}.#{__callee__} ---"
+        progress = Yast::Progress.set(false)
         Yast::NtpClient.Read
+        Yast::Progress.set(progress)
         @config = Yast::NtpClient.Export
         @ntpd_cron = Yast::NtpClient.ReadSynchronization
         @used_servers = Yast::NtpClient.GetUsedNtpServers
