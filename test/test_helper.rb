@@ -33,6 +33,10 @@ def build_service?
   Etc.getlogin == "abuild"
 end
 
+def user_root?
+  Process.uid == 0
+end
+
 # Prepare a valid HANA configuration
 # If no options are passed, then it creates a two node cluster with two rings
 # and unicast communication

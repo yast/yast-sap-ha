@@ -82,17 +82,20 @@ module SapHA
       end
 
       def description
-        dsc = "&nbsp; System ID: #{@system_id}, Instance: #{@instance}.<br>
-        &nbsp; Virtual IP: #{@virtual_ip}.<br>
-        &nbsp; Prefer takeover: #{@prefer_takeover}.<br>
-        &nbsp; Automatic registration: #{@auto_register}.<br>
-        &nbsp; Site 1: #{@site_name_1}, Site 2: #{@site_name_2}.<br>
-        &nbsp; Perform backup: #{@perform_backup}.
-        "
-        if @perform_backup
-          dsc += "<br>&nbsp; Backup user: #{@backup_user}, Backup file: #{@backup_file}."
+        prepare_description do |dsc|
+          dsc.parameter('System ID', @system_id)
+          dsc.parameter('Instance', @instance)
+          dsc.parameter('Virtual IP', @virtual_ip)
+          dsc.parameter('Prefer takeover', @prefer_takeover)
+          dsc.parameter('Automatic registration', @auto_register)
+          dsc.parameter('Site 1 name', @site_name_1)
+          dsc.parameter('Site 2 name', @site_name_2)
+          dsc.parameter('Perform backup', @perform_backup)
+          if @perform_backup
+            dsc.parameter('Backup user', @backup_user)
+            dsc.parameter('Backup file', @backup_file)
+          end
         end
-        dsc
       end
 
       # Validator for the popup

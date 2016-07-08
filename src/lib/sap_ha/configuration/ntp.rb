@@ -25,6 +25,7 @@ require 'socket'
 require_relative 'base_config'
 
 Yast.import 'NtpClient'
+Yast.import 'Progress'
 
 module SapHA
   module Configuration
@@ -40,7 +41,9 @@ module SapHA
 
       def read_configuration
         log.info "--- #{self.class}.#{__callee__} ---"
+        progress = Yast::Progress.set(false)
         Yast::NtpClient.Read
+        Yast::Progress.set(progress)
         @config = Yast::NtpClient.Export
         @ntpd_cron = Yast::NtpClient.ReadSynchronization
         @used_servers = Yast::NtpClient.GetUsedNtpServers
@@ -60,8 +63,10 @@ module SapHA
       end
 
       def description
-        s = @used_servers.join(', ')
-        "&nbsp;Synchronize with servers: #{s}.<br>&nbsp;Start at boot: #{start_at_boot?}."
+        prepare_description do |dsc|
+          dsc.parameter('Synchronize with servers', @used_servers.join(', '))
+          dsc.parameter('Start at boot', start_at_boot?)
+        end
       end
 
       def start_at_boot?
