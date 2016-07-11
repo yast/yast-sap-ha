@@ -63,8 +63,10 @@ module SapHA
       end
 
       def description
-        s = @used_servers.join(', ')
-        "&nbsp;Synchronize with servers: #{s}.<br>&nbsp;Start at boot: #{start_at_boot?}."
+        prepare_description do |dsc|
+          dsc.parameter('Synchronize with servers', @used_servers.join(', '))
+          dsc.parameter('Start at boot', start_at_boot?)
+        end
       end
 
       def start_at_boot?

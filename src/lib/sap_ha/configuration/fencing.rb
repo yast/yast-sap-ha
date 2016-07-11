@@ -64,9 +64,11 @@ module SapHA
       def description
         ds = @devices.map { |d| d[:name] }.join(', ')
         options = @sbd_options.empty? ? 'none' : @sbd_options
-        "&nbsp; Configured devices: #{ds}.<br>
-        &nbsp; Delayed start: #{@sbd_delayed_start}.<br>
-        &nbsp; SBD options: #{options}."
+        prepare_description do |dsc|
+          dsc.parameter('Configured devices', ds)
+          dsc.parameter('Delayed start', @sbd_delayed_start)
+          dsc.parameter('SBD options', options)
+        end
       end
 
       # Drop-down box items

@@ -29,7 +29,11 @@ describe SapHA::System::LocalClass do
     it 'returns the list of network interfaces on the local machine' do
       result = SapHA::System::Local.net_interfaces
       expect(result).not_to be_nil
-      expect(result).not_to be_empty unless build_service?
+      if user_root?
+        expect(result).not_to be_empty
+      else
+        expect(result).to be_empty
+      end
     end
   end
 

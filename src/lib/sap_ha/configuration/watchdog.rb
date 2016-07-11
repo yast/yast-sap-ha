@@ -55,11 +55,11 @@ module SapHA
       end
 
       def description
-        s = []
-        s << "&nbsp; Configured modules: #{@configured.join(', ')}." unless @configured.empty?
-        s << "&nbsp; Already loaded modules: #{@loaded.join(', ')}." unless @loaded.empty?
-        s << "&nbsp; Modules to install: #{@to_install.join(', ')}." unless @to_install.empty?
-        s.join('<br>')
+        prepare_description do |dsc|
+          dsc.parameter('Configured modules', @configured.join(', ')) unless @configured.empty?
+          dsc.parameter('Already loaded modules', @loaded.join(', ')) unless @loaded.empty?
+          dsc.parameter('Modules to install', @to_install.join(', ')) unless @to_install.empty?
+        end
       end
 
       def add_to_config(wdt_module)

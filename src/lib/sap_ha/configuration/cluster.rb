@@ -154,31 +154,29 @@ module SapHA
       end
 
       def description
-        tmp = ERB.new(
-          '&nbsp; Transport mode: <%= @transport_mode %>.<br>
-          &nbsp; Cluster name: <%= @cluster_name %>.<br>
-          &nbsp; Expected votes: <%= @expected_votes %>.<br>
-          &nbsp; Corosync secure authentication: <%= @enable_secauth %>.<br>
-          &nbsp; Enable csync2: <%= @enable_csync2 %>.<br>
-          &nbsp; Rings:<br>
-          <% @rings.each_with_index do |(k, ring), ix| -%>
-              &nbsp; <%= ring[:id] %>. <%= ring[:address] %>, port <%= ring[:port] %>
-              <% if multicast? -%>
-                <%= ring[:mcast] -%>
-              <% end -%>
-              <br>
-          <% end -%>
-          &nbsp; Nodes:<br>
-          <% @nodes.each_with_index do |(k, nd), ix| %>
-            <% ips = [nd[:ip_ring1],
-              nd[:ip_ring2], nd[:ip_ring3]][0...@number_of_rings].join(", ") %>
-            <%= "&nbsp; #{nd[:node_id]}. #{nd[:host_name]} (#{ips})." %>
-            <% if ix != (@nodes.length-1) %>
-              <%= "<br>" %>
-            <% end %>
-          <% end %>
-          ', 1, '-')
-        tmp.result(binding)
+        prepare_description do |dsc|
+          dsc.parameter('Transport mode',@transport_mode)
+          dsc.parameter('Cluster name', @cluster_name)
+          dsc.parameter('Expected votes', @expected_votes)
+          dsc.parameter('Corosync secure authentication', @enable_secauth)
+          dsc.parameter('Enable csync2', @enable_csync2)
+          dsc.list_begin('Rings')
+          @rings.each do |_, ring|
+            str = "ring " << dsc.iparam(ring[:address]) << " : " << dsc.iparam(ring[:port])
+            if multicast?
+              str << ", mcast " << dsc.iparam(ring[:multicast])
+            end
+            dsc.list_item(str)
+          end
+          dsc.list_end
+          dsc.list_begin('Nodes')
+          @nodes.each do |_, node|
+            str = node[:host_name] << ": "
+            str << dsc.iparam([node[:ip_ring1], node[:ip_ring2]][0...@number_of_rings].join(", "))
+            dsc.list_item(str)
+          end
+          dsc.list_end
+        end
       end
 
       def add_node(_values)

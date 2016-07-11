@@ -109,6 +109,58 @@ module SapHA
         log.error "--- #{self.class}.#{__callee__} is not implemented yet ---"
         raise @exception_type, "Validation failed"
       end
+
+      def prepare_description
+        d = Description.new
+        d.start
+        yield d
+        d.end
+      end
+    end
+
+    class Description
+      def initialize
+        @lines = []
+        @list_type = "ol"
+        @ncurses = Yast::UI.TextMode
+      end
+      
+      def start
+        @lines = []
+        @lines << "<table>" unless @ncurses
+      end
+
+      def end
+        @lines << "</table>" unless @ncurses
+        @lines.join("\n")
+      end
+
+      def parameter(name, value)
+        if @ncurses
+          @lines << "<b>#{name}</b>: #{value}" << "<br>"
+        else
+          @lines << "<tr>" << "<td>#{name}</td>" << "<td><code>#{value}</code></td>" << "</tr>"
+        end
+      end
+
+      # immediate parameter value: return the decorated value
+      def iparam(value)
+        "<code>#{value}</code>"
+      end
+      
+      def list_begin(name, opts = {})
+        @list_type = opts[:type] ? opts[:type] : @list_type
+        @lines << "<tr>\n<td  colspan=\"2\">" \
+          << "<span class=\"list_hdr\">#{name}</span>" << "<#{@list_type}>"
+      end
+
+      def list_item(str)
+        @lines << "<li>#{str}</li>"
+      end
+
+      def list_end
+        @lines << "</#{@list_type}>" << "</td></tr>"
+      end
     end
   end
 end
