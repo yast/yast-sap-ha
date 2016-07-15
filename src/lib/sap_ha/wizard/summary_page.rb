@@ -59,6 +59,9 @@ module SapHA
         Yast::Wizard.DisableBackButton
         Yast::Wizard.SetNextButton(:next, "&Finish")
         Yast::Wizard.EnableNextButton
+        SapHA::Helpers.write_var_file('installation_log.html', SapHA::NodeLogger.html, timestamp: true)
+        SapHA::Helpers.write_var_file('installation_log.txt', SapHA::NodeLogger.text, timestamp: true)
+        SapHA::Helpers.write_var_file('configuration.yml', @config.dump(false), timestamp: true)
       end
 
       def can_go_next?

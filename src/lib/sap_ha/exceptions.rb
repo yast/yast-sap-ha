@@ -86,5 +86,11 @@ module SapHA
 
     class ClusterConfigurationException < ModelValidationException
     end
+
+    class RPCCallException < BaseException
+    end
+
+    class RPCFatalException < BaseException
+    end
   end
 end

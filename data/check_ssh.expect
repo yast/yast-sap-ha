@@ -120,6 +120,7 @@ while {1} {
             exit 5
         }
         "yes/no" { 
+            sleep 1
             send "yes\r"
         }
         "Last login:" {
@@ -127,6 +128,7 @@ while {1} {
             exit 0
         }
         "Password: " {
+            sleep 1
             if {$password != ""} {
                 if {$password_sent == 0} {
                     send -- $password\r

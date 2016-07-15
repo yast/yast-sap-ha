@@ -24,6 +24,7 @@ require 'fileutils'
 require 'tmpdir'
 require 'sap_ha/helpers'
 require 'sap_ha/exceptions'
+require 'sap_ha/node_logger'
 require_relative 'shell_commands.rb'
 
 module SapHA
@@ -90,18 +91,41 @@ module SapHA
 
       # Copy own SSH identities to the specified host using the password
       def copy_keys_to(host, password)
+        result = true
         stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
           "copy-id", host, password)
         fortune_teller(binding)
         ssh_dir = File.join(Dir.home, '.ssh')
         @user_identities.each do |key|
-          exec_status_l('scp', key, "#{host}:#{key}")
+          out, stat = exec_outerr_status('scp', key, "#{host}:#{key}")
+          if stat.exitstatus == 0
+            log.info "Copied SSH key #{key} to host #{host}."
+          else
+            log.error "Could not copy SSH key #{key} to host #{host}: #{out}." 
+            result = false
+          end
         end
         @user_pubkeys.each do |key|
-          exec_status_l('scp', key, "#{host}:#{key}")
+          out, stat = exec_outerr_status('scp', key, "#{host}:#{key}")
+          if stat.exitstatus == 0
+            log.info "Copied SSH public key #{key} to host #{host}."
+          else
+            log.error "Could not copy public SSH key #{key} to host #{host}: #{out}."
+            result = false
+          end
         end
         ak = File.join(ssh_dir, 'authorized_keys')
-        exec_status_l('scp', ak, "#{host}:#{ak}")
+        out, stat = exec_outerr_status('scp', ak, "#{host}:#{ak}")
+        if stat.exitstatus == 0
+          log.info "Copied 'authorized_keys' to host #{host}."
+        else
+          log.error "Could not copy 'authorized_keys' to host #{host}: #{out}."
+          result = false
+        end
+        stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
+          "authorize", host, password)
+        NodeLogger.log_status(result, "Copied SSH keys to node #{host}",
+          "Could not copy SSH keys to node #{host}")
       end
 
       # Copy SSH keys from the host to the local machine

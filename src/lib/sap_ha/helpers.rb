@@ -99,7 +99,10 @@ module SapHA
     #   File.join(@yast_path, basename)
     # end
 
-    def write_var_file(basename, data)
+    def write_var_file(basename, data, options = {})
+      if options[:timestamp]
+        basename = timestamp_file(basename)
+      end
       file_path = var_file_path(basename)
       File.open(file_path, 'wb') do |fh|
         fh.write(data)
@@ -126,6 +129,12 @@ module SapHA
       system("xdg-open #{url}")
       sleep 5
       Yast::UI.NormalCursor
+    end
+
+    def timestamp_file(basename)
+      ext = File.extname(basename)
+      name = File.basename(basename, ext)
+      basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"
     end
 
     private

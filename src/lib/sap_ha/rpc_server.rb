@@ -27,6 +27,8 @@ require "sap_ha/configuration"
 require "sap_ha/helpers"
 require "sap_ha/system/shell_commands"
 require 'yaml'
+require 'logger'
+require 'socket'
 
 Yast.import 'SuSEFirewall'
 Yast.import 'Service'
@@ -35,30 +37,95 @@ module SapHA
   # RPC Server for inter-node communication
   #
   # Exposes the following functions in the sapha.* namespace:
-  #  - load_config(yaml_string) : recreates the marshalled config on the RPC Server's side
-  #  - config : returns the @config object
-  #  - config_{sub_config}.* : exposed methods of components' configurations
+  # - Non-polled calls (block and return the value)
+  #   + sapha.import_config(yaml_string) : recreates the marshalled config on the RPC Server's side
+  #   + sapha.config.start_setup() : notify the node
+  #   + sapha.config.end_setup() : notify the node
+  #   + sapha.config.collect_log() : get the log
+  #   + sapha.busy() : true if the node is busy with configuration
+  #   + sapha.shutdown() : shut down the RPC server
+  # - Polled calls:
+  #   + sapha.config_#{component}.apply(role)
+  #
+  # Polled calls return immediately, 
   class RPCServer
     include System::ShellCommands
 
-    def initialize
-      @fh = File.open('/tmp/rpc_serv', 'wb')
-      @server = XMLRPC::Server.new(8080, '0.0.0.0', 3, @fh)
-      open_port
-      install_handlers
+    LOG_FILE_PATH = '/tmp/rpc_serv'
+
+    def initialize(options = {})
+      init_logger
+      @logger.info "--- #{self.class}.#{__callee__} ---"
+      if options[:local]
+        @server = XMLRPC::Server.new(8080, '127.0.0.1', 50, @fh)
+      else
+        @server = XMLRPC::Server.new(8080, '0.0.0.0', 50, @fh)
+      end
+      open_port unless options[:local]
+      
+      install_handlers(options[:test])
+
+      # Mutex for 'busy'
+      @mutex = Mutex.new
+      
+      # If we are busy with configuration
+      @busy = false
+
+      # Worker thread
+      @thread = nil
     end
 
-    def install_handlers
-      # debug
-      # @server.add_introspection
+    def init_logger
+      begin
+        @fh = File.open(LOG_FILE_PATH, File::WRONLY | File::APPEND | File::CREAT | File::EXCL)
+      rescue Errno::EEXIST
+        @fh = File.open(LOG_FILE_PATH, File::WRONLY | File::APPEND)
+      end
+      @fh.flock(File::LOCK_EX)
+      @fh.sync = true
+      @fh.flock(File::LOCK_UN)
+      @logger = Logger.new('/tmp/rpc_serv')
+      @logger.level = Logger::INFO
+      @logger.formatter = proc do |severity, datetime, _progname, msg|
+        date = datetime.strftime("%Y-%m-%d %H:%M:%S")
+        "[#{Socket.gethostname}] #{date} #{severity.rjust(6)}: #{msg}\n"
+      end
+    end
+
+
+    # Install method handlers
+    def install_handlers(test_handlers = nil)
+      @logger.info "--- #{self.class}.#{__callee__}: installing handlers ---"
+      # Add system.listMethods if in test mode
+      @server.add_introspection if test_handlers
+
+      # Configuration import routine
       @server.add_handler('sapha.import_config') do |yaml_string|
+        @logger.info "RPC sapha.import_config ---"
         begin
           SapHA::Helpers.write_var_file('sapha_config.yaml', yaml_string)
           @config = YAML.load(yaml_string)
           @server.add_handler('sapha.config', @config)
+
+          # for every component, expose sapha.config_{component}.apply method
           @config.config_sequence.each do |component|
             obj = @config.instance_variable_get(component[:var_name])
-            @server.add_handler(component[:rpc_object], obj)
+            @server.add_handler(component[:rpc_method]) do |role|
+              @logger.info "RPC #{component[:rpc_method]} ---"
+              @mutex.synchronize { @busy = true }
+              @thread = Thread.new {
+                @logger.info "Thread #{component[:rpc_method]}(#{role}): started"
+                begin
+                  obj.apply(role)
+                rescue StandardError => e
+                  @logger.error "Error executing thread #{component[:rpc_method]}(#{role}): #{e.message}"
+                  @logger << e.backtrace
+                end
+                @logger.info "Thread #{component[:rpc_method]}(#{role}): finished"
+                @mutex.synchronize { @busy = false }
+              }
+              'wait'
+            end
           end
         rescue StandardError => e
           @fh.write("#{e.message}\n")
@@ -66,28 +133,65 @@ module SapHA
         true
       end
 
+      if test_handlers
+        @server.add_handler('sapha.test_apply') do |role|
+          @logger.info "RPC sapha.test_apply ---"
+          @thread = Thread.new {
+            @mutex.synchronize { @busy = true }
+            sleep 30
+            @mutex.synchronize { @busy = false }
+          }
+        'wait'
+        end
+      end
+
       @server.add_handler('sapha.ping') do
+        @logger.info "RPC sapha.ping ---"
         true
       end
 
       @server.add_handler('sapha.shutdown') do
+        @logger.info "RPC sapha.shutdown ---"
         shutdown
       end
+
+      @server.add_handler('sapha.busy') do
+        @mutex.synchronize do
+          @logger.info "RPC sapha.busy? = #{@busy} ---"
+          if @busy
+            @logger.info "Thread state = #{@thread.inspect}"
+          end
+          @busy
+        end
+      end
+
     end
 
     def start
+      @logger.info "--- #{self.class}.#{__callee__} ---"
       @server.serve
     end
 
     def shutdown
+      @logger.info "--- #{self.class}.#{__callee__} ---"
       Thread.new {
         sleep 3
+        # if we have any tasks still running, wait until they are finished
+        @thread.join if @thread
         @server.shutdown
       }
       true
     end
 
+    # force server shutdown
+    def immediate_shutdown
+      @logger.info "--- #{self.class}.#{__callee__} ---"
+      @server.shutdown
+    end
+
+    # open the RPC Server port by manipulating the iptables directly
     def open_port
+      @logger.info "--- #{self.class}.#{__callee__} ---"
       rule_no = get_rule_number
       return if rule_no
       rc, _out = exec_status_lo('/usr/sbin/iptables', '-I',
@@ -95,7 +199,9 @@ module SapHA
       rc.exitstatus == 0
     end
 
+    # close the RPC Server port by manipulating the iptables directly
     def close_port
+      @logger.info "--- #{self.class}.#{__callee__} ---"
       rule_no = get_rule_number
       puts "close_port: rule_no=#{rule_no} #{!!rule_no}"
       return unless rule_no
@@ -105,15 +211,11 @@ module SapHA
     end
 
     def get_rule_number
+      @logger.info "--- #{self.class}.#{__callee__} ---"
       out = pipeline(['/usr/sbin/iptables', '-L', 'INPUT', '-n', '-v', '--line-number'],
         ['/usr/bin/awk', '$11 == "tcp" && $12 == "dpt:8080" && $4 == "ACCEPT" { print $1 }'])
       return nil if out.empty?
       Integer(out.strip)
-    end
-
-    def write_log(str)
-      @fh.write(str)
-      @fh.flush
     end
   end
 end

@@ -186,7 +186,7 @@ module SapHA
         Yast::SuSEFirewall.ResetReadFlag
         Yast::SuSEFirewall.Read
         Yast::SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
-        Yast::SuSEFirewall.Write
+        written = Yast::SuSEFirewall.Write
         if role == :master
           Yast::SuSEFirewall.ActivateConfiguration
         else
@@ -207,6 +207,7 @@ module SapHA
 
       # Export to the Yast-Cluster module
       def yast_cluster_export(settings)
+        Yast::Cluster.Read
         Yast::Cluster.Import(settings)
         stat = Yast::Cluster.Write
         NodeLogger.log_status(stat, 'Wrote cluster settings', 'Could not write cluster settings')

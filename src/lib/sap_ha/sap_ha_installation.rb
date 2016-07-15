@@ -21,37 +21,41 @@
 require 'yast'
 require 'xmlrpc/client'
 require 'sap_ha/system/ssh'
+require 'sap_ha/exceptions'
+require 'sap_ha/system/connectivity'
 require 'sap_ha/node_logger'
 
 module SapHA
   # class that controls the cluster configuration
   class SAPHAInstallation
     include Yast::Logger
+    include SapHA::Exceptions
 
     def initialize(config, ui = nil)
       @config = config
       @ui = ui
-      prepare
       @yaml_config = nil
+      prepare
     end
 
     def run
       # perform local configuration first,
       # since it can change the state of the config
-      local_configuration
+      # TODO: debug remove
+      # local_configuration
       @yaml_config = @config.dump(true)
       next_node
       @other_nodes.each do |node|
         log.info "--- #{self.class}.#{__callee__}: configuring node #{node[:hostname]} ---"
-        break unless remote_configuration(node)
+        begin
+          remote_configuration(node)
+        rescue 
+        end
         next_node
         log.info "--- #{self.class}.#{__callee__}: finished configuring node #{node[:hostname]} ---"
       end
       @ui.unblock if @ui
-      # make sure that the RPC servers are shut down
-      @other_nodes.each do |node|
-        node[:rpc].call('sapha.shutdown') if node[:rpc]
-      end
+
       NodeLogger.summary
       :next
     end
@@ -66,36 +70,43 @@ module SapHA
       @ui.next_node if @ui
     end
 
+    def recoverable_error(title, message)
+
+    end
+
     def remote_configuration(node)
-      # Catch 'execution expired and start afresh'
-      connected = false
-      attempt = 0
-      while !connected && attempt < 5
-        connected = connect(node)
-        unless connected
-          NodeLogger.error "Could not connect to node #{node} (attempt #{attempt})"
-          sleep 3
-        end
-      end
-      unless connected
-        NodeLogger.fatal "Could not connect to node #{node}. Cluster setup is interrupted."
-        return false
-      end
+      # # Catch 'execution expired and start afresh'
+      # connected = false
+      # attempt = 0
+      # while !connected && attempt < 5
+      #   connected = connect(node)
+      #   unless connected
+      #     NodeLogger.error "Could not connect to node #{node} (attempt #{attempt})"
+      #     sleep 3
+      #   end
+      # end
+      # unless connected
+      #   NodeLogger.fatal "Could not connect to node #{node}. Cluster setup is interrupted."
+      #   return false
+      # end
 
       next_task
       # Export config
-      rpc = node[:rpc]
-      rpc.call('sapha.import_config', @yaml_config)
-      rpc.call('sapha.config.start_setup')
-      next_task
-      @config.config_sequence.each do |component|
-        log.info "--- #{self.class}.#{__callee__}: configuring component "\
-          "#{component[:screen_name]} on node #{node[:hostname]} ---"
-        rpc.call(component[:rpc_method], :slave)
+      SapHA::System::Connectivity.configure(node[:hostname]) do |rpc|
+        rpc.connect
+        rpc.polling_call('sapha.import_config', @yaml_config)
+        rpc.polling_call('sapha.config.start_setup')
         next_task
+        @config.config_sequence.each do |component|
+          log.info "--- #{self.class}.#{__callee__}: configuring component "\
+            "#{component[:screen_name]} on node #{node[:hostname]} ---"
+          rpc.polling_call(component[:rpc_method], :slave)
+          next_task
+        end
+        rpc.polling_call('sapha.config.end_setup')
+        NodeLogger.import rpc.polling_call('sapha.config.collect_log')
+        rpc.polling_call('sapha.shutdown')
       end
-      rpc.call('sapha.config.end_setup')
-      NodeLogger.import rpc.call('sapha.config.collect_log')
       true
     end
 
@@ -115,6 +126,8 @@ module SapHA
     def prepare
       # TODO: rename other_nodes_ext
       @other_nodes = @config.cluster.other_nodes_ext
+      SapHA::System::Connectivity.init_from_config(@config.cluster)
+      SapHA::System::Connectivity.run_rpc_servers
       calculate_gui if @ui
     end
 
@@ -128,27 +141,6 @@ module SapHA
         titles << "Configuring the remote node [#{n[:hostname]}]"
       end
       @ui.set(stages, titles, tasks)
-    end
-
-    def connect(node)
-      begin
-        SapHA::System::SSH.instance.run_rpc_server(node[:ip])
-      rescue SSHException => e
-        log.error e.message
-        return false
-      end
-      sleep 3
-      # TODO: catch 'Connection refused'
-      # TODO: catch 'execution expired'
-      node[:rpc] = XMLRPC::Client.new(node[:ip], "/RPC2", 8080)
-      begin
-        node[:rpc].call('sapha.ping')
-      rescue StandardError => e
-        log.error "Error connecting to the XML RPC server on node #{node}:"\
-          "[#{e.class}] #{e.message}"
-
-      end
-      true
     end
   end
 end

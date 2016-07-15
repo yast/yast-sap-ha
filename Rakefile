@@ -50,10 +50,10 @@ Packaging.configuration do |conf|
   conf.obs_target = "SLE_12_SP2"
 end
 
-namespace :test do
-  desc "Runs unit tests."
-  task "unit" do
-    files = Dir["**/test/**/*_{spec,test}.rb"]
-    sh "rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-  end
-end
+# namespace :test do
+#   desc "Runs unit tests."
+#   task "unit" do
+#     files = Dir["**/test/**/*_{spec,test}.rb"]
+#     sh "rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
+#   end
+# end

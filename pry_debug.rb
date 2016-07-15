@@ -32,7 +32,7 @@ def rpc(node)
   elsif node == :hana2
     "192.168.103.22"
   else
-    raise 'Wuuuut?'
+    ip = node
   end
   require "xmlrpc/client"
   XMLRPC::Client.new(ip, "/RPC2", 8080)
@@ -61,7 +61,15 @@ def read_config
   YAML.load(File.read('config.yml'))
 end
 
-c = prepare_hana_config(nil, notest: true)
+c = SapHA::HAConfiguration.new
+c = prepare_hana_config(c, notest: true)
+c.cluster.nodes[:node1][:ip_ring1] = '192.168.101.1'
+c.cluster.nodes[:node1][:ip_ring2] = '192.168.103.1'
+r = rpc :hana1
+y = c.dump(true)
+
+require_relative 'src/lib/sap_ha/system/connectivity'
+h = SapHA::System::Host.new('hana01', ['192.168.103.21'])
 
 binding.pry
 

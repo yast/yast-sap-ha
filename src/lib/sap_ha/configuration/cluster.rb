@@ -31,7 +31,6 @@ Yast.import 'UI'
 module SapHA
   module Configuration
     # Cluster members configuration
-    # TODO: think of merging this one and the CommLayer
     class Cluster < BaseConfig
       attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes, :keys
       attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2
@@ -171,8 +170,8 @@ module SapHA
           dsc.list_end
           dsc.list_begin('Nodes')
           @nodes.each do |_, node|
-            str = node[:host_name] << ": "
-            str << dsc.iparam([node[:ip_ring1], node[:ip_ring2]][0...@number_of_rings].join(", "))
+            str = "#{node[:host_name]}: " \
+              << dsc.iparam([node[:ip_ring1], node[:ip_ring2]][0...@number_of_rings].join(", "))
             dsc.list_item(str)
           end
           dsc.list_end
@@ -256,12 +255,15 @@ module SapHA
               nil, 'IP addresses in ring #2')
           end
           local_ips = SapHA::System::Local.ip_addresses
-          check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring1] }, local_ips,
-            'Could not find local node\'s IP address among the configured nodes',
-            'IP addresses for ring 1')
-          check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring2] }, local_ips,
-            'Could not find local node\'s IP address among the configured nodes',
-            'IP addresses for ring 2') if @number_of_rings == 2
+          # Local IPs can be empty if we're not running as root
+          unless local_ips.empty?
+            check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring1] }, local_ips,
+              'Could not find local node\'s IP address among the configured nodes',
+              'IP addresses for ring 1')
+            check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring2] }, local_ips,
+              'Could not find local node\'s IP address among the configured nodes',
+              'IP addresses for ring 2') if @number_of_rings == 2
+          end
         end
       end
 
@@ -292,11 +294,14 @@ module SapHA
           SapHA::System::Local.write_corosync_key(@keys[:corosync]) if @enable_secauth
           SapHA::System::Local.write_csync2_key(@keys[:csync2]) if @enable_csync2
         end
-        flag &= cluster_apply
-        status = SapHA::System::Local.start_cluster_services
+        status = cluster_apply
+        @nlog.log_status(status, 'Exported configuration for yast2-cluster',
+          'Could not export configuration for yast2-cluster')
         flag &= status
+        status = SapHA::System::Local.start_cluster_services
         @nlog.log_status(status, 'Enabled and started cluster-required systemd units',
           'Could not enable and start cluster-required systemd units')
+        flag &= status
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
         status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
         flag &= status
@@ -305,7 +310,7 @@ module SapHA
         flag
       end
 
-      private
+      # private
 
       def init_nodes
         (1..@number_of_nodes).each do |i|
@@ -341,9 +346,6 @@ module SapHA
       end
 
       def cluster_apply
-        log.error "@nodes=#{@nodes}"
-        log.error "@rings=#{@rings}"
-        return unless configured?
         cluster_export = generate_cluster_export
         SapHA::System::Local.yast_cluster_export(cluster_export)
       end
