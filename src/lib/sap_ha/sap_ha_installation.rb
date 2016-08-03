@@ -39,10 +39,8 @@ module SapHA
     end
 
     def run
-      # perform local configuration first,
-      # since it can change the state of the config
-      # TODO: debug remove
-      # local_configuration
+      # perform local configuration first, since it can change the state of the config
+      local_configuration
       @yaml_config = @config.dump(true)
       next_node
       @other_nodes.each do |node|

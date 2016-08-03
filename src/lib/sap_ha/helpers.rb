@@ -60,7 +60,7 @@ module SapHA
     # Render an ERB template by its name
     def render_template(basename, binding)
       if !@storage.key? basename
-        full_path = File.join(@data_path, basename)
+        full_path = data_file_path(basename)
         template = ERB.new(read_file(full_path), nil, '-')
         @storage[basename] = template
       end
@@ -108,6 +108,12 @@ module SapHA
         fh.write(data)
       end
       file_path
+    end
+
+    def get_configuration_files(product_id, scenario_name)
+      files = Dir.chdir(@var_path) { Dir.glob('configuration_*.yml') }
+      configs = files.map { |fn| YAML.load(read_file(var_file_path(fn))) }
+      configs.select { |c| c.product_id == product_id && c.scenario_name == scenario_name }
     end
 
     def write_file(path, data)

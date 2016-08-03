@@ -85,9 +85,9 @@ module SapHA
           log.info "--- #{self.class}.#{__callee__}: Remote node is busy. Retrying in #{delay} seconds. ---"
           sleep(delay)
           delay *= 2
-          return false if delay >= 300
+          # one hour should be enough for an empty HANA to start, right?
+          return false if delay >= 3_600
         end
-        # TODO: return the actual value?
         true
       end
 

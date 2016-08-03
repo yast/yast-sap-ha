@@ -180,12 +180,12 @@ module SapHA
       end
 
       def run_rpc_server(host)
-        stat = exec_status_l("ssh", "-f", "root@#{host}", SapHA::Helpers.rpc_server_cmd)
+        stat = exec_status_l("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", SapHA::Helpers.rpc_server_cmd)
         fortune_teller(binding)
       end
 
       def run_command(host, *cmd)
-        exec_status_l("ssh", "-f", "root@#{host}", *cmd)
+        exec_status_l("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
       end
       
       private

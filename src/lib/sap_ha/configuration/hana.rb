@@ -64,7 +64,7 @@ module SapHA
       def validate(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
           check.ipv4(@virtual_ip, 'Virtual IP')
-          check.integer_in_range(@instance, 0, 99, nil, 'Instance Number')
+          check.sap_instance_number(@instance, nil, 'Instance Number')
           check.sap_sid(@system_id, nil, 'System ID')
           check.identifier(@site_name_1, nil, 'Site name 1')
           check.identifier(@site_name_2, nil, 'Site name 2')
@@ -111,20 +111,21 @@ module SapHA
         return false if !configured?
         @nlog.info('Appying HANA Configuration')
         if role == :master
+          SapHA::System::Local.hana_hdb_start(@system_id)
           SapHA::System::Local.hana_make_backup(@backup_user,
             @backup_file, @instance) if @perform_backup
           SapHA::System::Local.hana_enable_primary(@system_id, @site_name_1)
-          # TODO
-          # SapHA::System::Local.configure_crm
           configure_crm
         else
-          # TODO: get the parameter from @CONFIG
+          SapHA::System::Local.hana_hdb_stop(@system_id)
+          # TODO: the host name should be obtained from @config.cluster
           SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_1, 'hana01', @instance)
         end
         true
       end
 
       def configure_crm
+        # TODO: move this to SapHA::System::Local.configure_crm
         crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
         file_path = Helpers.write_var_file('cluster.config', crm_conf)
         out, status = exec_outerr_status('crm', '--file', file_path)

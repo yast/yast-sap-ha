@@ -367,7 +367,7 @@ module Yast
           node2: {
             host_name:  "hana02",
             ip_ring1:   "192.168.101.22",
-            ip_ring2:   "192.168.103.23",
+            ip_ring2:   "192.168.103.22",
             ip_ring3:   "",
             node_id:    '2'
           }
@@ -391,9 +391,10 @@ module Yast
             "options"=>" iburst",
             "comment"=>"# key (6) for accessing server variables\n"}],
          "restricts"=>[]}
-      Yast.import 'NtpClient'
-      NtpClient.Import ntp_cfg
-      NtpClient.Write
+      # TODO: debug remove
+      # Yast.import 'NtpClient'
+      # NtpClient.Import ntp_cfg
+      # NtpClient.Write
       @config.ntp.read_configuration
     end
   end

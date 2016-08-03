@@ -69,8 +69,9 @@ module SapHA
       end
 
       # @return stdout_and_stderr, status
+      # TODO: change the signature!
       def su_exec_outerr_status(user_name, *params)
-        Open3.capture2e('su', '-l', user_name, params.join(' '))
+        Open3.capture2e('su', '-lc', params.join(' '), user_name)
       rescue SystemCallError => e
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
       end

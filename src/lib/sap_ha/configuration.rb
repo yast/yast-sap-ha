@@ -145,7 +145,10 @@ module SapHA
       return false if @config_sequence.empty?
       @config_sequence.map do |config|
         flag = config[:object].configured?
-        log.warn "Component #{config[:screen_name]} is not configured" unless flag
+        unless flag
+          log.warn "Component #{config[:screen_name]} is not configured:" unless flag
+          config[:object].validate(:verbose).each { |e| log.warn e}
+        end
         flag
       end.all?
     end

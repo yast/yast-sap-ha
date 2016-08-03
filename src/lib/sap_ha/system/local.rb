@@ -258,6 +258,48 @@ module SapHA
         )
       end
 
+      # Start HANA by issuing the `HDB start` command as `<sid>adm` user
+      # @param system_id [String] SAP SID of the HANA
+      def hana_hdb_start(system_id)
+        user_name = "#{system_id.downcase}adm"
+        command = ['HDB', 'start']
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Started HANA",
+          "Could not start HANA, will retry.",
+          out
+        )
+        unless status.exitstatus == 0
+          out, status = su_exec_outerr_status(user_name, *command)
+          NodeLogger.log_status(status.exitstatus == 0,
+            "Started HANA",
+            "Could not start HANA, bailing out.",
+            out
+          )
+        end
+      end
+
+      # Start HANA by issuing the `HDB start` command as `<sid>adm` user
+      # @param system_id [String] SAP SID of the HANA
+      def hana_hdb_stop(system_id)
+        user_name = "#{system_id.downcase}adm"
+        command = ['HDB', 'stop']
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Stopped HANA",
+          "Could not stop HANA, will retry.",
+          out
+        )
+        unless status.exitstatus == 0
+          out, status = su_exec_outerr_status(user_name, *command)
+          NodeLogger.log_status(status.exitstatus == 0,
+            "Stopped HANA",
+            "Could not stop HANA, bailing out.",
+            out
+          )
+        end
+      end
+
       # Enable System Replication on the primary HANA system
       # @param system_id [String] HANA System ID
       # @param site_name [String] HANA site name of the primary instance
@@ -280,6 +322,9 @@ module SapHA
       # @param mode [String] replication mode
       def hana_enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
         user_name = "#{system_id.downcase}adm"
+        # TODO: support SPS12
+        # SPS12 requires --replicationMode instead of --mode
+        # use HDB --version
         command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
                    "--remoteInstance=#{instance}", "--mode=#{mode}", "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
