@@ -171,18 +171,11 @@ describe SapHA::System::LocalClass do
   describe '#hana_make_backup' do
     context 'when the call to hdbsql succedes,' do
       it 'creates the backup' do
-        # username is 'system'
         good_exit = double('ExitStatus', exitstatus: 0)
-        expect(SapHA::System::Local).to receive(:exec_outerr_status)
-          .with(*['hdbsql', '-u', 'system', '-i', '10', "BACKUP DATA USING FILE ('backup')"])
+        expect(SapHA::System::Local).to receive(:su_exec_outerr_status)
+          .with('xxxadm', *['hdbsql', '-U', 'hanabackup', '"BACKUP DATA USING FILE (\'backup\')"'])
           .and_return(['', good_exit])
-        result = SapHA::System::Local.hana_make_backup('system', 'backup', '10')
-        expect(result).to eq true
-        # another username
-        expect(SapHA::System::Local).to receive(:exec_outerr_status)
-          .with(*['hdbsql', '-U', 'hanabackup', "BACKUP DATA USING FILE ('backup')"])
-          .and_return(['', good_exit])
-        result = SapHA::System::Local.hana_make_backup('hanabackup', 'backup', '10')
+        result = SapHA::System::Local.hana_make_backup('XXX', 'hanabackup', 'backup', '10')
         expect(result).to eq true
       end
     end
@@ -190,16 +183,10 @@ describe SapHA::System::LocalClass do
     context 'when the call to hdbsql fails,' do
       it 'does not create the backup' do
         bad_exit = double('ExitStatus', exitstatus: 1)
-        expect(SapHA::System::Local).to receive(:exec_outerr_status)
-          .with(*['hdbsql', '-u', 'system', '-i', '10', "BACKUP DATA USING FILE ('backup')"])
-          .and_return(['Some errror', bad_exit])
-        result = SapHA::System::Local.hana_make_backup('system', 'backup', '10')
-        expect(result).to eq false
-
-        expect(SapHA::System::Local).to receive(:exec_outerr_status)
-          .with(*['hdbsql', '-U', 'hanabackup', "BACKUP DATA USING FILE ('backup')"])
+        expect(SapHA::System::Local).to receive(:su_exec_outerr_status)
+          .with('xxxadm', *['hdbsql', '-U', 'hanabackup', '"BACKUP DATA USING FILE (\'backup\')"'])
           .and_return(['Some error', bad_exit])
-        result = SapHA::System::Local.hana_make_backup('hanabackup', 'backup', '10')
+        result = SapHA::System::Local.hana_make_backup('XXX', 'hanabackup', 'backup', '10')
         expect(result).to eq false
       end
     end

@@ -26,7 +26,7 @@ require 'xmlrpc/client'
 describe SapHA::RPCServer do
   describe "RPC configuration" do
     before(:all) do
-      @server = SapHA::RPCServer.new(local: true)
+      @server = SapHA::RPCServer.new(local: true, test:true)
       @server_thread = Thread.new do
         @server.start
         @server = nil

@@ -24,12 +24,15 @@ require 'sap_ha/configuration/base_config'
 require 'sap_ha/exceptions'
 
 class TestConfig < SapHA::Configuration::BaseConfig
+  def initialize
+    super(nil)
+  end
 end
 
 describe SapHA::Configuration::BaseConfig do
   describe '#new' do
     it 'raises an exception, preventing instantiation' do
-      expect { SapHA::Configuration::BaseConfig.new }
+      expect { SapHA::Configuration::BaseConfig.new(nil) }
         .to raise_error SapHA::Exceptions::BaseConfigException
       expect(TestConfig.new).not_to be_nil
     end

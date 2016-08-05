@@ -34,10 +34,10 @@ module SapHA
 
       def set_contents
         super
+        tmpl = Yast::UI.TextMode ? 'tmpl_config_overview_con.erb' : 'tmpl_config_overview_gui.erb'
         base_rich_text(
           "High-Availability Configuration Overview",
-          Yast::UI.TextMode ? Helpers.render_template('tmpl_config_overview_con.erb', binding) :
-          Helpers.render_template('tmpl_config_overview_gui.erb', binding),
+          Helpers.render_template(tmpl, binding),
           Helpers.load_help('setup_summary'),
           true,
           true

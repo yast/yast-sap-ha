@@ -113,6 +113,28 @@ module SapHA
         status
       end
 
+      # Append the information from the Cluster Nodes screen to the /etc/hosts
+      # @param hosts [Hash] hosts definition
+      def append_hosts_file(hosts)
+        out = nil
+        success = false
+        str = hosts.map do |_, h|
+          "#{h[:ip_ring1]} #{h[:ip_ring2]}\t#{h[:host_name]} \# added by yast2-sap-ha"
+        end.join("\n")
+        begin
+          File.open('/etc/hosts', 'a') { |fh| fh.puts(str) }
+          success = true
+        rescue StandardError => e
+          out = e.message
+        end
+        NodeLogger.log_status(
+          success,
+          "Wrote host information to the /etc/hosts file",
+          "Could not write host information to the /etc/hosts/file",
+          out
+        )
+      end
+
       def generate_csync2_key
         out, status = exec_outerr_status('/usr/sbin/csync2', '-k', CSYNC2_KEY_PATH)
         NodeLogger.log_status(status.exitstatus == 0,
@@ -202,11 +224,28 @@ module SapHA
         success &= systemd_unit(:start, :service, 'pacemaker')
         success &= systemd_unit(:enable, :service, 'hawk')
         success &= systemd_unit(:start, :service, 'hawk')
-        success
+        NodeLogger.log_status(
+          success,
+          'Enabled and started cluster-required systemd units',
+          'Could not enable and start cluster-required systemd units'
+        )
+      end
+
+      def cluster_maintenance(action = :on)
+        mm = action == :on ? 'true' : 'false'
+        cmd = ['crm', 'configure', 'property', "maintenance-mode=#{mm}"]
+        out, status = exec_outerr_status(*cmd)
+        NodeLogger.log_status(
+          status.exitstatus == 0,
+          "Cluster maintenance mode turned #{action}",
+          "Could not turn the maintenance mode #{action} for the cluster",
+          out
+        )
       end
 
       # Export to the Yast-Cluster module
       def yast_cluster_export(settings)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         Yast::Cluster.Read
         Yast::Cluster.Import(settings)
         stat = Yast::Cluster.Write
@@ -215,6 +254,7 @@ module SapHA
 
       # Add the SBD stonith resource to the cluster
       def add_stonith_resource
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         out, status = exec_outerr_status('crm', 'configure',
           'primitive', 'stonith-sbd', 'stonith:external/sbd')
         NodeLogger.log_status(status.exitstatus == 0,
@@ -227,6 +267,7 @@ module SapHA
       # Initialize the SBD devices
       # @param devices [Array[String]] devices paths
       def initialize_sbd(devices)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         flag = true
         devices.each do |device|
           log.warn "Initializing the SBD device on #{device[:name]}"
@@ -241,26 +282,27 @@ module SapHA
       end
 
       # Make initial HANA backup for the system replication
-      # @param user_name [String] HANA username to perform the backup on behalf of
+      # @param user_name [String] Secure user storage username to perform the backup on behalf of
       # @param file_name [String] HANA backup file
       # @param instance_number [String] HANA instance number
-      def hana_make_backup(user_name, file_name, instance_number)
-        command = ['hdbsql']
-        command << (user_name == 'system' ? '-u' : '-U')
-        command << user_name
-        command << '-i' << instance_number if user_name == 'system'
-        command << "BACKUP DATA USING FILE ('#{file_name}')"
-        out, status = exec_outerr_status(*command)
-        NodeLogger.log_status(status.exitstatus == 0,
-          "Created an initial HANA backup for user #{user_name} into file #{file_name}",
-          "Could not perform an initial HANA backup for user #{user_name} into file #{file_name}",
-          out
+      def hana_make_backup(system_id, secstore_user, file_name, _instance_number)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
+        user_name = "#{system_id.downcase}adm"
+        command = ['hdbsql', '-U', secstore_user, "\"BACKUP DATA USING FILE ('#{file_name}')\""]
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(
+          status.exitstatus == 0,
+          "Created an initial HANA backup for user #{secstore_user} into file #{file_name}",
+          "Could not perform an initial HANA backup for user #{secstore_user} into file #{file_name}",
+          out,
+          true
         )
       end
 
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
       # @param system_id [String] SAP SID of the HANA
       def hana_hdb_start(system_id)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'start']
         out, status = su_exec_outerr_status(user_name, *command)
@@ -282,6 +324,7 @@ module SapHA
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
       # @param system_id [String] SAP SID of the HANA
       def hana_hdb_stop(system_id)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'stop']
         out, status = su_exec_outerr_status(user_name, *command)
@@ -304,6 +347,7 @@ module SapHA
       # @param system_id [String] HANA System ID
       # @param site_name [String] HANA site name of the primary instance
       def hana_enable_primary(system_id, site_name)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
         command = ['hdbnsutil', '-sr_enable', "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
@@ -321,6 +365,7 @@ module SapHA
       # @param instance [String] instance number of the primary
       # @param mode [String] replication mode
       def hana_enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
         # TODO: support SPS12
         # SPS12 requires --replicationMode instead of --mode

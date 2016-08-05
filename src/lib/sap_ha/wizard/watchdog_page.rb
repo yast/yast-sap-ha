@@ -40,26 +40,15 @@ module SapHA
           base_layout_with_label(
             'Select the appropriate watchdog modules to load at system startup',
             VBox(
-              HBox(
-                HSpacing(20),
-                SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate),
-                  'Watchdogs to configure:', []),
-                HSpacing(20)),
+              SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate),
+                'Watchdogs to configure:', []),
               HBox(
                 PushButton(Id(:add_wd), 'Add'),
                 PushButton(Id(:remove_wd), 'Remove')
               ),
-              HBox(
-                HSpacing(20),
-                SelectionBox(Id(:configured_wd), Opt(:notify, :immediate),
-                  'Configured watchdogs:', []),
-                HSpacing(20)
-              ),
-              HBox(
-                HSpacing(20),
-                SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', []),
-                HSpacing(20)
-              )
+              SelectionBox(Id(:configured_wd), Opt(:notify, :immediate),
+                'Configured watchdogs:', []),
+              SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', [])
             )
           ),
           Helpers.load_help('watchdog'),

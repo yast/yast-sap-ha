@@ -40,12 +40,8 @@ module SapHA
           base_layout_with_label(
             'Choose the STONITH method',
             VBox(
+              ComboBox(Id(:stonith_method), Opt(:hstretch), 'STONITH method:', ['SBD', 'IPMI']),
               HBox(
-                Label('STONITH method:'),
-                ComboBox(Id(:stonith_method), '', ['SBD', 'IPMI'])
-              ),
-              HBox(
-                HSpacing(20),
                 MinHeight(5,
                   Table(
                     Id(:sbd_dev_list_table),
@@ -53,17 +49,16 @@ module SapHA
                     Header(_('#'), _('Mount point'), _('Type'), _('UUID')),
                     @model.fencing.table_items
                   )
-                ),
-                HSpacing(20)
+                )
               ),
               HBox(
                 PushButton(Id(:add_sbd_device), _('Add')),
                 PushButton(Id(:remove_sbd_device), _('Remove'))
               ),
               VSpacing(1),
-              InputField(Id(:sbd_options), 'SBD options:', ''),
+              InputField(Id(:sbd_options), Opt(:hstretch), 'SBD options:', ''),
               VSpacing(1),
-              ComboBox(Id(:sbd_delayed_start), 'Delay SBD start:', ['no', 'yes']),
+              CheckBox(Id(:sbd_delayed_start), Opt(:hstretch), 'Delay SBD start'),
               VSpacing(1),
               Label(_("Note that all data on the selected devices will be destroyed."))
             )

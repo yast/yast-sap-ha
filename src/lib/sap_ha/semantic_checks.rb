@@ -234,12 +234,24 @@ module SapHA
       report_error(flag, message, field_name, value)
     end
 
-
-    def sap_instance_number(value, message = '', field_name)
-      log.error "--- #{self.class}.#{__callee__} value=#{value}, message=#{message}, field_name=#{field_name} ---"
+    # Check if the provided value is a correct SAP Instance number
+    # @param value [String]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
+    def sap_instance_number(value, message, field_name)
       return report_error(false, 'The SAP Instance number must be a string of exactly two digits',
         field_name, value) unless value.is_a?(::String) && value.length == 2
-      integer_in_range(value, 0, 99, nil, field_name)
+      integer_in_range(value, 0, 99, message, field_name)
+    end
+
+    # Check if the provided value is a non-empty string
+    # @param value [String]
+    # @param message [String] custom error message
+    # @param field_name [String] name of the related field in the form
+    def non_empty_string(value, message, field_name, hide_value = false)
+      flag = value.is_a?(::String) && !value.empty?
+      shown_value = hide_value ? '' : value
+      report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
     end
 
     # Start a transactional check

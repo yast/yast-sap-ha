@@ -32,7 +32,8 @@ module SapHA
       include SapHA::Exceptions
       attr_reader :screen_name
 
-      def initialize
+      def initialize(global_config)
+        @global_config = global_config
         log.debug "--- #{self.class}.#{__callee__} ---"
         raise BaseConfigException,
           "Cannot directly instantiate a BaseConfig" if self.class == BaseConfig

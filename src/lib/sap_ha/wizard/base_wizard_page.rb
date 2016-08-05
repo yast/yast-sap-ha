@@ -253,7 +253,7 @@ module SapHA
       # @param label [String] combo's label
       # @param true_ [Boolean] 'true' option is selected
       def base_true_false_combo(id_, label = '', true_ = true)
-        ComboBox(Id(id_), label,
+        ComboBox(Id(id_), Opt(:hstretch), label,
           [
             Item(Id(:true), 'true', true_),
             Item(Id(:false), 'false', !true_)

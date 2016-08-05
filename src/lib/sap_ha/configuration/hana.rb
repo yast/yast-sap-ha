@@ -42,11 +42,11 @@ module SapHA
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
 
-      def initialize
+      def initialize(global_config)
         super
         @screen_name = "HANA Configuration"
-        @system_id = 'HA1' # TODO
-        @instance = '10'
+        @system_id = 'NDB'
+        @instance = '00'
         @virtual_ip = ''
         @prefer_takeover = true
         @auto_register = false
@@ -68,15 +68,15 @@ module SapHA
           check.sap_sid(@system_id, nil, 'System ID')
           check.identifier(@site_name_1, nil, 'Site name 1')
           check.identifier(@site_name_2, nil, 'Site name 2')
-          check.identifier(@backup_user, nil, 'Backup user')
-          check.identifier(@backup_file, nil, 'Backup file name')
+          check.element_in_set(@prefer_takeover, [true, false],
+            nil, 'Prefer site takeover')
+          check.element_in_set(@auto_register, [true, false],
+            nil, 'Automatic registration')
           check.element_in_set(@perform_backup, [true, false],
             nil, 'Perform backup')
           if @perform_backup
-            check.element_in_set(@prefer_takeover, [true, false],
-              nil, 'Prefer site takeover')
-            check.element_in_set(@auto_register, [true, false],
-              nil, 'Automatic registration')
+            check.identifier(@backup_user, nil, 'Backup user')
+            check.identifier(@backup_file, nil, 'Backup file name')
           end
         end
       end
@@ -100,9 +100,6 @@ module SapHA
 
       # Validator for the popup
       def hana_backup_validator(check, hash)
-        check.element_in_set(hash[:perform_backup], [true, false],
-          nil, 'Perform backup')
-        return if hash[:perform_backup] == false
         check.identifier(hash[:backup_user], nil, 'Backup user')
         check.identifier(hash[:backup_file], nil, 'Backup file name')
       end
@@ -112,14 +109,15 @@ module SapHA
         @nlog.info('Appying HANA Configuration')
         if role == :master
           SapHA::System::Local.hana_hdb_start(@system_id)
-          SapHA::System::Local.hana_make_backup(@backup_user,
-            @backup_file, @instance) if @perform_backup
+          SapHA::System::Local.hana_make_backup(@system_id, @backup_user, @backup_file,
+            @instance) if @perform_backup
           SapHA::System::Local.hana_enable_primary(@system_id, @site_name_1)
           configure_crm
         else
           SapHA::System::Local.hana_hdb_stop(@system_id)
-          # TODO: the host name should be obtained from @config.cluster
-          SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_1, 'hana01', @instance)
+          master_host = @global_config.cluster.other_nodes_ext.first[:hostname]
+          SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_2,
+            master_host, @instance)
         end
         true
       end

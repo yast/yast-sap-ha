@@ -32,7 +32,8 @@ module SapHA
     # Cluster members configuration
     class NTP < BaseConfig
       attr_reader :used_servers
-      def initialize
+      
+      def initialize(global_config)
         super
         @screen_name = "NTP Configuration"
         log.info "--- #{self.class}.#{__callee__} ---"

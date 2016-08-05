@@ -32,7 +32,7 @@ module SapHA
 
       include Yast::UIShortcuts
 
-      def initialize
+      def initialize(global_config)
         super
         @screen_name = "Watchdog Setup"
         @loaded = System::Watchdog.loaded_watchdogs

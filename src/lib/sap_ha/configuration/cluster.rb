@@ -33,7 +33,7 @@ module SapHA
     # Cluster members configuration
     class Cluster < BaseConfig
       attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes, :keys
-      attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2
+      attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2, :append_hosts
 
       include Yast::UIShortcuts
       include SapHA::Exceptions
@@ -55,8 +55,8 @@ module SapHA
         '/etc/csync2/key_hagroup'
       ].freeze
 
-      def initialize
-        super()
+      def initialize(global_config)
+        super
         @screen_name = "Cluster Configuration"
         @fixed_number_of_nodes = false
         @number_of_nodes = 2
@@ -71,6 +71,7 @@ module SapHA
         @enable_secauth = false
         @enable_csync2 = true
         @keys = {}
+        @append_hosts = true
         init_rings
         init_nodes
       end
@@ -154,7 +155,7 @@ module SapHA
 
       def description
         prepare_description do |dsc|
-          dsc.parameter('Transport mode',@transport_mode)
+          dsc.parameter('Transport mode', @transport_mode)
           dsc.parameter('Cluster name', @cluster_name)
           dsc.parameter('Expected votes', @expected_votes)
           dsc.parameter('Corosync secure authentication', @enable_secauth)
@@ -175,6 +176,7 @@ module SapHA
             dsc.list_item(str)
           end
           dsc.list_end
+          dsc.parameter('Append /etc/hosts', @append_hosts)
         end
       end
 
@@ -216,8 +218,8 @@ module SapHA
         end.compact
       end
 
-      def validate
-        validate_comm_layer.concat(validate_nodes)
+      def validate(verbosity = :verbose)
+        validate_comm_layer(verbosity).concat(validate_nodes(verbosity))
       end
 
       def validate_comm_layer(verbosity = :verbose)
@@ -287,6 +289,7 @@ module SapHA
       def apply(role)
         @nlog.info('Applying Cluster Configuration')
         flag = true
+        SapHA::System::Local.append_hosts_file(@nodes)
         if role == :master
           @keys[:corosync] = generate_corosync_key if @enable_secauth
           @keys[:csync2] = generate_csync2_key if @enable_csync2
@@ -298,10 +301,8 @@ module SapHA
         @nlog.log_status(status, 'Exported configuration for yast2-cluster',
           'Could not export configuration for yast2-cluster')
         flag &= status
-        status = SapHA::System::Local.start_cluster_services
-        @nlog.log_status(status, 'Enabled and started cluster-required systemd units',
-          'Could not enable and start cluster-required systemd units')
-        flag &= status
+        flag &= SapHA::System::Local.start_cluster_services
+        flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
         status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
         flag &= status
@@ -318,7 +319,6 @@ module SapHA
             host_name: "node#{i}",
             ip_ring1:  '',
             ip_ring2:  '',
-            ip_ring3:  '',
             node_id:   i.to_s
           }
         end

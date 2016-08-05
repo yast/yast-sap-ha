@@ -45,23 +45,23 @@ module SapHA
             VBox(
               VBox(
                 HBox(
-                  ComboBox(Id(:transport_mode), Opt(:notify), 'Transport mode:',
+                  ComboBox(Id(:transport_mode), Opt(:notify, :hstretch), 'Transport mode:',
                     ['Unicast', 'Multicast']),
                   HSpacing(3),
-                  ComboBox(Id(:number_of_rings), Opt(:notify), 'Number of rings:', ['1', '2'])
+                  ComboBox(Id(:number_of_rings), Opt(:notify, :hstretch), 'Number of rings:', ['1', '2'])
                 ),
-                InputField(Id(:cluster_name), _('Cluster name:'), ''),
+                InputField(Id(:cluster_name), Opt(:hstretch), _('Cluster name:'), ''),
                 VBox(
                   HBox(
-                    HSpacing(20),
-                    MinHeight(4, ReplacePoint(Id(:rp_table), Empty())),
-                    HSpacing(20)
+                    # HSpacing(20),
+                    MinHeight(4, ReplacePoint(Id(:rp_table), Empty()))
+                    # HSpacing(20)
                   ),
                   PushButton(Id(:edit_ring), _('Edit selected'))
                 )
               ),
-              CheckBox(Id(:enable_secauth), 'Enable corosync secure authentication', false),
-              CheckBox(Id(:enable_csync2), 'Enable csync2', false)
+              CheckBox(Id(:enable_secauth), Opt(:hstretch), 'Enable corosync secure authentication', false),
+              CheckBox(Id(:enable_csync2), Opt(:hstretch), 'Enable csync2', false)
             # PushButton(Id(:join_cluster), 'Join existing cluster'),
             )
           ),
@@ -98,7 +98,7 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__} ---"
         Table(
           Id(:ring_definition_table),
-          Opt(:keepSorting, :notify, :immediate),
+          Opt(:keepSorting, :notify, :immediate, :hstretch),
           multicast? ?
             Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address'))
             : Header(_('Ring'), _('Address'), _('Port')),

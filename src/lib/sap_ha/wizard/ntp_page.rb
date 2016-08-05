@@ -40,17 +40,12 @@ module SapHA
           base_layout_with_label(
             'Configure the Network Time Protocol settings',
             VBox(
-                Label('Used servers:'),
-                HBox(
-                  HSpacing(20),
-                  SelectionBox(Id(:ntp_servers), '', []),
-                  HSpacing(20)
-                ),
-                VSpacing(),
-                HBox(Label('Starts at boot:'),
-                  Label(Id(:ntp_enabled), '')),
-                VSpacing(),
-                PushButton(Id(:ntp_configure), 'Reconfigure')
+              SelectionBox(Id(:ntp_servers), 'Used servers:', []),
+              PushButton(Id(:ntp_configure), 'Reconfigure'),
+              HBox(
+                Label('Starts at boot:'),
+                Label(Id(:ntp_enabled), '')
+              )
             )
           ),
           Helpers.load_help('ntp'),

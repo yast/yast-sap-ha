@@ -42,16 +42,19 @@ module SapHA
             _('Define the cluster nodes configuration'),
             VBox(
               HBox(
-                HSpacing(20),
-                MinHeight(4, nodes_table),
-                HSpacing(20)
+                # HSpacing(20),
+                MinHeight(4, nodes_table)
+                # HSpacing(20)
               ),
               HBox(
                 PushButton(Id(:add_node), _('Add node')),
                 PushButton(Id(:edit_node), _('Edit selected')),
                 PushButton(Id(:delete_node), _('Delete node'))
               ),
-              InputField(Id(:expected_votes), _('Expected votes:'), '')
+              HBox(
+                InputField(Id(:expected_votes), Opt(:hstretch), _('Expected votes:'), ''),
+                CheckBox(Id(:append_hosts), Opt(:stretch, :notify), _('Append to /etc/hosts'))
+              )
             )
           ),
           Helpers.load_help('cluster'),
@@ -84,6 +87,7 @@ module SapHA
         end
         set_value(:node_definition_table, @my_model.nodes_table, :Items)
         set_value(:expected_votes, @my_model.expected_votes.to_s)
+        set_value(:append_hosts, @my_model.append_hosts)
       end
 
       def nodes_table
@@ -113,6 +117,8 @@ module SapHA
           edit_node
         when :node_definition_table
           edit_node if event['EventReason'] == 'Activated'
+        when :append_hosts
+          @my_model.append_hosts = value(:append_hosts)
         else
           super
         end

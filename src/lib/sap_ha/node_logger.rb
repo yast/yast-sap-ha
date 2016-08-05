@@ -173,9 +173,10 @@ module SapHA
     # @param [String] msg_if_true
     # @param [String] msg_if_false
     # @param [String] stdout
-    def log_status(status, msg_if_true, msg_if_false, stdout = nil)
+    def log_status(status, msg_if_true, msg_if_false, stdout = nil, log_output_on_success = false)
       if status
         @logger.info(msg_if_true)
+        output(stdout) if log_output_on_success
       else
         @logger.error(msg_if_false)
         output(stdout) if stdout

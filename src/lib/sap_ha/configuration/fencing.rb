@@ -31,7 +31,7 @@ module SapHA
       attr_accessor :sbd_options, :sbd_delayed_start
       include Yast::UIShortcuts
 
-      def initialize
+      def initialize(global_config)
         super
         @screen_name = "Fencing Mechanism"
         @devices = []

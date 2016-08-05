@@ -26,6 +26,7 @@ require 'yaml'
 require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
 require 'sap_ha/configuration/cluster'
+require 'sap_ha/configuration/cluster_finalizer'
 require 'sap_ha/configuration/fencing'
 require 'sap_ha/configuration/watchdog'
 require 'sap_ha/configuration/hana'
@@ -48,7 +49,8 @@ module SapHA
       :fencing,
       :watchdog,
       :hana,
-      :ntp
+      :ntp,
+      :cluster_finalizer
 
     include Yast::Logger
     include Yast::I18n
@@ -65,11 +67,12 @@ module SapHA
       @scenario = nil
       @scenario_summary = nil
       @yaml_configuration = load_scenarios
-      @cluster = Configuration::Cluster.new
-      @fencing = Configuration::Fencing.new
-      @watchdog = Configuration::Watchdog.new
-      @hana = Configuration::HANA.new
-      @ntp = Configuration::NTP.new
+      @cluster = Configuration::Cluster.new(self)
+      @cluster_finalizer = Configuration::ClusterFinalizer.new(self)
+      @fencing = Configuration::Fencing.new(self)
+      @watchdog = Configuration::Watchdog.new(self)
+      @hana = Configuration::HANA.new(self)
+      @ntp = Configuration::NTP.new(self)
       @config_sequence = []
     end
 

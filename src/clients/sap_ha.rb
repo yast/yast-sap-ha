@@ -335,66 +335,68 @@ module Yast
     def set_test_values
       @config.cluster.import(
         number_of_rings: 2,
-        transport_mode: :unicast,
-        cluster_name: 'hana_sysrep',
-        expected_votes: 2,
-        rings: {
+        transport_mode:  :unicast,
+        cluster_name:    'hana_sysrep',
+        expected_votes:  2,
+        rings:           {
           ring1: {
-            address:  '192.168.101.0',
-            port:     '5405',
-            id:       1,
-            mcast:    ''
+            address: '192.168.101.0',
+            port:    '5405',
+            id:      1,
+            mcast:   ''
           },
           ring2: {
-            address:  '192.168.103.0',
-            port:     '5405',
-            id:       2,
-            mcast:    ''
+            address: '192.168.103.0',
+            port:    '5405',
+            id:      2,
+            mcast:   ''
           }
         }
       )
       @config.cluster.import(
         number_of_rings: 2,
         number_of_nodes: 2,
-        nodes: {
+        nodes:           {
           node1: {
-            host_name:  "hana01",
-            ip_ring1:   "192.168.101.21",
-            ip_ring2:   "192.168.103.21",
-            ip_ring3:   "",
-            node_id:    '1'
+            host_name: "hana01",
+            ip_ring1:  "192.168.101.21",
+            ip_ring2:  "192.168.103.21",
+            node_id:   '1'
           },
           node2: {
-            host_name:  "hana02",
-            ip_ring1:   "192.168.101.22",
-            ip_ring2:   "192.168.103.22",
-            ip_ring3:   "",
-            node_id:    '2'
+            host_name: "hana02",
+            ip_ring1:  "192.168.101.22",
+            ip_ring2:  "192.168.103.22",
+            node_id:   '2'
           }
         }
       )
-      @config.fencing.import(devices: [{name: '/dev/vdb', type: 'disk', uuid: ''}])
+      @config.fencing.import(devices: [{ name: '/dev/vdb', type: 'disk', uuid: '' }])
       @config.watchdog.import(to_install: ['softdog'])
       @config.hana.import(
-        system_id: 'XXX',
-        instance:  '05',
-        virtual_ip: '192.168.101.100'
+        system_id:   'XXX',
+        instance:    '00',
+        virtual_ip:  '192.168.101.100',
+        backup_user: 'xxxadm'
       )
-      ntp_cfg = {"synchronize_time"=>false,
-         "sync_interval"=>5,
-         "start_at_boot"=>true,
-         "start_in_chroot"=>false,
-         "ntp_policy"=>"auto",
-         "peers"=>
-          [{"type"=>"server",
-            "address"=>"ntp.local",
-            "options"=>" iburst",
-            "comment"=>"# key (6) for accessing server variables\n"}],
-         "restricts"=>[]}
-      # TODO: debug remove
-      # Yast.import 'NtpClient'
-      # NtpClient.Import ntp_cfg
-      # NtpClient.Write
+      ntp_cfg = {
+        "synchronize_time" => false,
+        "sync_interval"    => 5,
+        "start_at_boot"    => true,
+        "start_in_chroot"  => false,
+        "ntp_policy"       => "auto",
+        "restricts"        => [],
+        "peers"            => [
+          { "type"    => "server",
+            "address" => "ntp.local",
+            "options" => " iburst",
+            "comment" => "# key (6) for accessing server variables\n"
+          }
+        ]
+      }
+      Yast.import 'NtpClient'
+      NtpClient.Import ntp_cfg
+      NtpClient.Write
       @config.ntp.read_configuration
     end
   end
