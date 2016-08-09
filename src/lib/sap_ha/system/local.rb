@@ -379,6 +379,22 @@ module SapHA
           out
         )
       end
+
+      # List the keys out of the HANA secure user store
+      # @param system_id [String] HANA System ID
+      def hana_check_secure_store(system_id)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
+        regex = /^KEY (\w+)$/
+        user_name = "#{system_id.downcase}adm"
+        command = ['hdbuserstore', 'list']
+        out, status = su_exec_outerr_status(user_name, *command)
+        unless status.exitstatus == 0
+          log.error "Could not get the list of keys in the HANA secure user store"\
+            " (status=#{status.exitstatus}): #{out}"
+          return []
+        end
+        out.scan(regex).flatten
+      end
     end
 
     Local = LocalClass.instance

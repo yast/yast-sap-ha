@@ -114,7 +114,7 @@ module SapHA
           "Initial HANA Backup Settings",
           @my_model.method(:hana_backup_validator),
           InputField(Id(:backup_file), 'Backup file name:', @my_model.backup_file),
-          InputField(Id(:backup_user), 'Secure store user:', @my_model.backup_user)
+          InputField(Id(:backup_user), 'Secure store key:', @my_model.backup_user)
         )
       end
     end

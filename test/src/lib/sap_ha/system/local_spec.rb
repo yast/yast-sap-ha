@@ -244,5 +244,40 @@ describe SapHA::System::LocalClass do
     end
   end
 
+  describe '#hana_check_secure_store' do
+    context 'when the storage is empty' do
+      it 'returns an empty array' do
+        good_exit = double('ExitStatus', exitstatus: 0)
+        expect(SapHA::System::Local).to receive(:su_exec_outerr_status)
+          .with(*['xxxadm', 'hdbuserstore', 'list'])
+          .and_return ["DATA FILE       : /usr/sap/XXX/home/.hdb/hana01/SSFS_HDB.DAT\n\n", good_exit]
+        result = SapHA::System::Local.hana_check_secure_store('XXX')
+        expect(result).to eq []
+      end
+    end
+
+    context 'when the storage is not empty' do
+      it 'returns the list of the keys' do
+        good_exit = double('ExitStatus', exitstatus: 0)
+        expect(SapHA::System::Local).to receive(:su_exec_outerr_status)
+          .with(*['xxxadm', 'hdbuserstore', 'list'])
+          .and_return ["DATA FILE       : /usr/sap/XXX/home/.hdb/hana01/SSFS_HDB.DAT\nKEY FILE        : /usr/sap/XXX/home/.hdb/hana01/SSFS_HDB.KEY\n\nKEY FILE\n  ENV : localhost:909023\n  USER: uname\nKEY KEY1\n  ENV : locahost:30150\n  USER: uname\nKEY KEY10\n  ENV : locahost:30150\n  USER: uname\nKEY KEY2\n  ENV : locahost:30150\n  USER: uname\n",
+            good_exit]
+        result = SapHA::System::Local.hana_check_secure_store('XXX')
+        expect(result).to match_array ['KEY1', 'KEY2', 'KEY10', 'FILE']
+      end
+    end
+
+    context 'when the call to hdbuserstore fails' do
+      it 'returns an empty array' do
+        bad_exit = double('ExitStatus', exitstatus: 1)
+        expect(SapHA::System::Local).to receive(:su_exec_outerr_status)
+          .with(*['xxxadm', 'hdbuserstore', 'list'])
+          .and_return ["An error occured", bad_exit]
+        result = SapHA::System::Local.hana_check_secure_store('XXX')
+        expect(result).to eq []
+      end
+    end
+  end
 
 end

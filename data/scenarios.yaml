@@ -13,6 +13,39 @@
         - fencing
         - cluster
         - hana
+      screen_sequence:
+        - prerequisites
+        - communication_layer
+        - cluster_nodes
+        - ntp
+        - fencing
+        - watchdog
+        - hana
+        - config_overview
+        - installation
+        - summary
+      prerequisites_notice: |
+        <p>Before proceeding with the installation, please make sure of the following:<p>
+        <ul>
+            <li>
+                You have two machines with SAP HANA installed using the "SAP Product Installer".
+                Note that the machine you run the wizard on becomes the primary node in the cluster.
+            </li>
+            <li>
+                You have configured the firewall (using the SAP HANA Firewall module in the 
+                Administrator Settings), enabling the <code>HANA_HIGH_AVAILABILITY</code> and 
+                <code>HANA_SYSTEM_REPLICATION</code>
+                services on <i>all</i> the interfaces that you are going to use.
+            </li>
+            <li>
+                You have created one of the following:
+            </li>
+            <ul type="square">
+                <li>either a key in the HANA Secure User Store (using the 
+                  <code>hdbuserstore</code> utility) on the primary HANA node, or</li>
+                <li>an initial HANA backup on the primary HANA node.</li>
+            </ul>
+        </ul>
 
     # - name: "Scale Up: Cost-optimized"
     #   description: |

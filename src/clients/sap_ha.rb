@@ -69,8 +69,14 @@ module Yast
         "scenario_selection"    => {
           abort:             :abort,
           cancel:            :abort,
-          next:              "configure_comm_layer",
+          next:              "prereqs_notice",
           unknown:           "product_not_supported",
+          summary:           "config_overview"
+        },
+        "prereqs_notice"        => {
+          abort:             :abort,
+          cancel:            :abort,
+          next:              "configure_comm_layer",
           summary:           "config_overview"
         },
         "config_overview"       => {
@@ -156,6 +162,8 @@ module Yast
         'product_check'         => -> { product_check },
         'scenario_selection'    => -> { scenario_selection },
         'product_not_supported' => -> { product_not_supported },
+        # 'prereqs_notice'        => [-> () { show_prerequisites }, true],
+        'prereqs_notice'        => -> { show_prerequisites },
         'configure_cluster'     => -> { configure_cluster },
         'configure_comm_layer'  => -> { configure_comm_layer },
         'join_cluster'          => -> { join_existing_cluster },
@@ -186,8 +194,9 @@ module Yast
     def product_check
       log.debug "--- called #{self.class}.#{__callee__} ---"
       # TODO: here we need to know what product we are installing
-      # SAPProducts.Read
-      # SAPProducts.Installed [{productID: 'HANA'...}...]
+      # Yast.import 'SAPProduct'
+      # SAPProduct.Read
+      # SAPProduct.installedProducts [{productID: 'HANA'...}...]
       begin
         @config.set_product_id "HANA"
       rescue ProductNotFoundException => e
@@ -204,8 +213,8 @@ module Yast
       help = @config.scenarios_help
       selection = SapHA::Wizard::ListSelection.new.run(
         "Scenario selection for #{@config.product_name}",
-        "An #{@config.product_name} installation was detected. Select one of the high-avaliability "\
-        "scenarios from the list below:",
+        "An #{@config.product_name} installation was detected."\
+        "Select one of the high-avaliability scenarios from the list below:",
         scenarios,
         help,
         false,
@@ -241,13 +250,27 @@ module Yast
       :abort
     end
 
+    def show_prerequisites
+      log.error "--- called #{self.class}.#{__callee__} ---"
+      notice = @config.scenario['prerequisites_notice']
+      return :next unless notice
+      SapHA::Wizard::RichText.new.run(
+        'Prerequisites',
+        notice,
+        '',
+        true,
+        true
+      )
+    end
+
     def scenarios_not_found
       log.debug "--- called #{self.class}.#{__callee__} ---"
       log.error("No HA scenarios found for product #{@product_name}")
       SapHA::Wizard::RichText.new.run(
         'Scenarios not found',
         "There were no HA scenarios found for the product #{@product_name}",
-        "The product you are installing is not supported by this module.<br>You can set up a cluster manually using the Cluster YaST module.",
+        "The product you are installing is not supported by this module.<br>
+        You can set up a cluster manually using the Cluster YaST module.",
         false,
         false
       )
@@ -300,7 +323,15 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       return :next if WFM.Args.include? 'noinst'
       ui = SapHA::Wizard::GUIInstallationPage.new
-      SapHA::SAPHAInstallation.new(@config, ui).run
+      begin
+        SapHA::SAPHAInstallation.new(@config, ui).run
+      rescue StandardError => e
+        log.error "An error occured during the installation"
+        log.error e.message
+        log.error e.backtrace
+        # Let Yast handle the exception
+        raise e
+      end
     end
 
     def show_summary
@@ -394,9 +425,11 @@ module Yast
           }
         ]
       }
-      Yast.import 'NtpClient'
-      NtpClient.Import ntp_cfg
-      NtpClient.Write
+      unless WFM.Args.include? 'nontp'
+        Yast.import 'NtpClient'
+        NtpClient.Import ntp_cfg
+        NtpClient.Write
+      end
       @config.ntp.read_configuration
     end
   end

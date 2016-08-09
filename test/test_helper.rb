@@ -19,6 +19,8 @@
 # Summary: SUSE High Availability Setup for SAP Products
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
+require 'etc'
+
 # Set the paths
 ENV['Y2DIR'] = File.expand_path('../../src', __FILE__)
 

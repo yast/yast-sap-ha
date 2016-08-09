@@ -101,6 +101,7 @@ module SapHA
           # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
           # it should redefine the main_loop
           when :abort, :back, :cancel, :join_cluster
+            update_model
             return input
           when :next, :summary
             update_model

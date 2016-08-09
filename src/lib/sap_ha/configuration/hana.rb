@@ -75,8 +75,11 @@ module SapHA
           check.element_in_set(@perform_backup, [true, false],
             nil, 'Perform backup')
           if @perform_backup
-            check.identifier(@backup_user, nil, 'Backup user')
             check.identifier(@backup_file, nil, 'Backup file name')
+            check.identifier(@backup_user, nil, 'Secure store key')
+            keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
+            check.element_in_set(@backup_user.downcase, keys,
+              "There is no such HANA user store key detected", 'Secure store key')
           end
         end
       end
@@ -92,7 +95,7 @@ module SapHA
           dsc.parameter('Site 2 name', @site_name_2)
           dsc.parameter('Perform backup', @perform_backup)
           if @perform_backup
-            dsc.parameter('Backup user', @backup_user)
+            dsc.parameter('Secure store key', @backup_user)
             dsc.parameter('Backup file', @backup_file)
           end
         end
@@ -100,8 +103,11 @@ module SapHA
 
       # Validator for the popup
       def hana_backup_validator(check, hash)
-        check.identifier(hash[:backup_user], nil, 'Backup user')
         check.identifier(hash[:backup_file], nil, 'Backup file name')
+        check.identifier(hash[:backup_user], nil, 'Secure store key')
+        keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
+        check.element_in_set(hash[:backup_user].downcase, keys,
+          "There is no such HANA user store key detected", 'Secure store key')
       end
 
       def apply(role)

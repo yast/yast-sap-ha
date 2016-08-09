@@ -34,7 +34,7 @@ describe SapHA::HelpersClass do
   end
 
   describe '#render_template' do
-    it 'renders the GUI template for two-ring cluster' do
+    it 'renders the GUI template for two-ring cluster and unicast' do
       @config = prepare_hana_config
       expect(@config.can_install?).to eq true
       begin
@@ -45,9 +45,33 @@ describe SapHA::HelpersClass do
       expect(result).not_to be_nil
     end
 
-    it 'renders the GUI template for single-ring cluster' do
+    it 'renders the GUI template for two-ring cluster and multicast' do
+      @config = prepare_hana_config(nil, transport_mode: :multicast)
+      expect(@config.can_install?).to eq true
+      expect(@config.cluster.transport_mode).to eq(:multicast)
+      begin
+        result = SapHA::Helpers.render_template('tmpl_config_overview_gui.erb', binding)
+      rescue SapHA::Exceptions::TemplateRenderException => e
+        raise SapHA::Exceptions::TemplateRenderException, e.renderer_message
+      end
+      expect(result).not_to be_nil
+    end
+
+    it 'renders the GUI template for single-ring cluster and unicast' do
       @config = prepare_hana_config(nil, number_of_rings: 1)
       expect(@config.can_install?).to eq true
+      begin
+        result = SapHA::Helpers.render_template('tmpl_config_overview_gui.erb', binding)
+      rescue SapHA::Exceptions::TemplateRenderException => e
+        raise SapHA::Exceptions::TemplateRenderException, e.renderer_message
+      end
+      expect(result).not_to be_nil
+    end
+
+    it 'renders the GUI template for single-ring cluster and multicast' do
+      @config = prepare_hana_config(nil, number_of_rings: 1, transport_mode: :multicast)
+      expect(@config.can_install?).to eq true
+      expect(@config.cluster.transport_mode).to eq(:multicast)
       begin
         result = SapHA::Helpers.render_template('tmpl_config_overview_gui.erb', binding)
       rescue SapHA::Exceptions::TemplateRenderException => e
@@ -81,9 +105,9 @@ describe SapHA::HelpersClass do
 
   describe '#load_help' do
     it 'loads the required help file' do
-      %w(cluster fencing hana join_cluster ntp product_not_found setup_summary watchdog).each do |hn|
+      %w(comm_layer cluster_nodes fencing hana join_cluster ntp product_not_found setup_summary watchdog).each do |hn|
         result = SapHA::Helpers.load_help(hn)
-        expect(result).not_to be_nil
+        expect(result).not_to be_empty
       end
       expect{ SapHA::Helpers.load_help('__unknown__') }.to raise_error(RuntimeError)
     end

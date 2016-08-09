@@ -65,7 +65,7 @@ module SapHA
             # PushButton(Id(:join_cluster), 'Join existing cluster'),
             )
           ),
-          Helpers.load_help('cluster'), true, true
+          Helpers.load_help('comm_layer'), true, true
         )
       end
 
@@ -113,15 +113,19 @@ module SapHA
       def handle_user_input(input, event)
         case input
         when :edit_ring
+          update_model
           edit_ring
         when :ring_definition_table
+          update_model
           edit_ring if event['EventReason'] == 'Activated'
         when :number_of_rings
+          update_model
           number = Integer(value(:number_of_rings))
           @my_model.number_of_rings = number
           @recreate_table = true
           refresh_view
         when :transport_mode
+          update_model
           @my_model.transport_mode = value(:transport_mode).downcase.to_sym
           @recreate_table = true
           refresh_view

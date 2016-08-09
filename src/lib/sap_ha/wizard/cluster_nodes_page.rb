@@ -52,12 +52,12 @@ module SapHA
                 PushButton(Id(:delete_node), _('Delete node'))
               ),
               HBox(
-                InputField(Id(:expected_votes), Opt(:hstretch), _('Expected votes:'), ''),
-                CheckBox(Id(:append_hosts), Opt(:stretch, :notify), _('Append to /etc/hosts'))
+                HWeight(50, InputField(Id(:expected_votes), Opt(:hstretch), _('Expected votes:'), '')),
+                HWeight(50, CheckBox(Id(:append_hosts), Opt(:stretch, :notify), _('Append to /etc/hosts')))
               )
             )
           ),
-          Helpers.load_help('cluster'),
+          Helpers.load_help('cluster_nodes'),
           true,
           true
         )
@@ -84,6 +84,7 @@ module SapHA
         if @my_model.fixed_number_of_nodes
           set_value(:add_node, false, :Enabled)
           set_value(:delete_node, false, :Enabled)
+          set_value(:expected_votes, false, :Enabled)
         end
         set_value(:node_definition_table, @my_model.nodes_table, :Items)
         set_value(:expected_votes, @my_model.expected_votes.to_s)
@@ -101,6 +102,7 @@ module SapHA
 
       def update_model
         @my_model.expected_votes = value(:expected_votes)
+        @my_model.append_hosts = value(:append_hosts)
       end
 
       def nodes_table_header
@@ -114,8 +116,10 @@ module SapHA
       def handle_user_input(input, event)
         case input
         when :edit_node
+          update_model
           edit_node
         when :node_definition_table
+          update_model
           edit_node if event['EventReason'] == 'Activated'
         when :append_hosts
           @my_model.append_hosts = value(:append_hosts)

@@ -90,8 +90,10 @@ module SapHA
       def handle_user_input(input, event)
         case input
         when :add_sbd_device
+          update_model
           sbd_dev_configuration
         when :remove_sbd_device
+          update_model
           item_id = value(:sbd_dev_list_table, :CurrentItem)
           @my_model.remove_device_by_id(item_id)
           refresh_view

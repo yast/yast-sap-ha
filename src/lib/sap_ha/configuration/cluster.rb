@@ -164,7 +164,7 @@ module SapHA
           @rings.each do |_, ring|
             str = "ring " << dsc.iparam(ring[:address]) << " : " << dsc.iparam(ring[:port])
             if multicast?
-              str << ", mcast " << dsc.iparam(ring[:multicast])
+              str << ", mcast " << dsc.iparam(ring[:mcast])
             end
             dsc.list_item(str)
           end
@@ -238,6 +238,8 @@ module SapHA
           @rings.each do |_, ring|
             ring_validator(check, ring)
           end
+          check.unique(@rings.map { |_, r| r[:address] },
+            'IP addresses of the rings are not unique')
         end
       end
 
