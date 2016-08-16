@@ -1,0 +1,30 @@
+<html>
+    <h2>Communication Layer</h2>
+    <p>This step configures the cluster's communication layer.</p>
+    <p>
+        <b>Transport mode</b> defines the transport mode of the corosync messaging layer.
+        Unicast (default) is preferred in most of the configurations.
+    </p>
+    <p>
+        <b>Number of rings</b>. This parameter allows you to set more than one communication ring
+        for redundancy.
+    </p>
+    <p>
+        For every ring a binding address and a port should be specified.
+        If you use Multicast transport mode, one multicast address has to be 
+        provided per each ring.
+    </p>
+    <p><b>Cluster name</b> is the internal name of the cluster.</p>
+
+    <p>This dialog allows you to control the number of nodes in the cluster and their respective IP addresses.<br/>
+    Please make sure that the provided IP addresses correspond to the network addresses of the rings.</p>
+    
+    <p><i>Note:</i> the number of nodes for HANA scale-up clusters is fixed and cannot be changed.</p>
+
+    <p><b>Enable Corosync Secure Authentication</b>:
+    require the HMAC/SHA1 authentication for cluster messages authentication.
+    This option reduces total throughput of the cluster messaging level and consumes extra CPU cycles for encryption.
+    </p>
+
+    <p><b>Enable csync2</b>: enable the <code>csync2</code> service that synchronizes cluster-related configuration files between nodes.</p>
+</html>

@@ -76,16 +76,18 @@ module Yast
         expected_votes:  2,
         rings:           {
           ring1: {
-            address: '192.168.101.0',
-            port:    '5405',
-            id:      1,
-            mcast:   ''
+            address:         '192.168.101.0/24',
+            port:            '5405',
+            id:              1,
+            mcast:           '',
+            address_no_mask: '192.168.101.0'
           },
           ring2: {
-            address: '192.168.103.0',
-            port:    '5405',
-            id:      2,
-            mcast:   ''
+            address:         '192.168.103.0/24',
+            port:            '5405',
+            id:              2,
+            mcast:           '',
+            address_no_mask: '192.168.103.0'
           }
         }
       )

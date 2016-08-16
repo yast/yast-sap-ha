@@ -64,37 +64,26 @@ module SapHA
       report_error(flag, msg, field_name, value)
     end
 
-    # Check if the IP belongs to the specified network
+    # Check if the IP belongs to the specified network given along with a CIDR netmask
     # @param ip [String] IP address
     # @param network [String] IP address
     # @param field_name [String] name of the field in the form
-    def ipv4_in_network(ip, network, field_name = '')
-      flag = (network.split('.') - ip.split('.')).all? { |e| e == '0' }
+    def ipv4_in_network_cidr(ip, network, field_name = '')
+      flag = IPAddr.new(network) === ip
       msg = "IP address has to belong to the network #{network}."
       report_error(flag, msg, field_name, ip)
-    end
-
-    # Check if the IP belongs to one of the specified networks
-    # @param ip [String] IP address
-    # @param networks [Array[String]] network IP addresses
-    # @param field_name [String] name of the field in the form
-    def ipv4_in_networks(ip, networks, field_name = '')
-      ip_in_net = ->(net) { (net.split('.') - ip.split('.')).all? { |e| e == '0' } }
-      flag = networks.map { |net| ip_in_net.call(net) }.any?
-      msg = "IP address has to belong to one of the networks [#{networks.join(", ")}]."
-      report_error(flag, msg, field_name, ip)
-    end
+    end    
 
     # Check if the provided IPs belong to the network
     # @param ips [Array[String]]
     # @param net [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def ipsv4_in_network(ips, network, message = '', field_name = '')
+    def ipsv4_in_network_cidr(ips, network, message = '', field_name = '')
       message = "IP addresses have to belong to the network #{network}" \
         if message.nil? || message.empty?
-      ip_in_net = ->(ip) { (network.split('.') - ip.split('.')).all? { |e| e == '0' } }
-      flag = ips.map { |ip| ip_in_net.call(ip) }.any?
+      net = IPAddr.new(network)
+      flag = ips.map { |ip| net === ip }.all?
       report_error(flag, message, field_name, '')
     end
 

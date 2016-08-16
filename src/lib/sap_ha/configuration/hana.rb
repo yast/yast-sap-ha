@@ -79,7 +79,7 @@ module SapHA
             check.identifier(@backup_user, nil, 'Secure store key')
             keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
             check.element_in_set(@backup_user.downcase, keys,
-              "There is no such HANA user store key detected", 'Secure store key')
+              "There is no such HANA user store key detected.", 'Secure store key')
           end
         end
       end
@@ -107,7 +107,7 @@ module SapHA
         check.identifier(hash[:backup_user], nil, 'Secure store key')
         keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
         check.element_in_set(hash[:backup_user].downcase, keys,
-          "There is no such HANA user store key detected", 'Secure store key')
+          "There is no such HANA user store key detected.", 'Secure store key')
       end
 
       def apply(role)

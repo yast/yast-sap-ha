@@ -119,14 +119,24 @@ describe SapHA::SemanticChecks do
       end
       expect(flag).to eq true
     end
-    # TODO: port
+  end
 
-    describe '#unique' do
-      it "reports uniqueness in silent mode" do
-        subject.silent = true
-        expect(subject.unique(['100', '100', '100'])).to eq false
-        expect(subject.not_unique(['100', '100', '100'])).to eq true
-      end
+  describe '#unique' do
+    it "reports uniqueness in silent mode" do
+      subject.silent = true
+      expect(subject.unique(['100', '100', '100'])).to eq false
+      expect(subject.not_unique(['100', '100', '100'])).to eq true
+    end
+  end
+
+  describe '#ipv4_in_network_cidr' do
+    it 'reports if the given IPv4 belongs to the network' do
+      subject.silent = true
+      expect(subject.ipv4_in_network_cidr('192.168.100.1', '192.168.100.0/24')).to eq true
+      expect(subject.ipv4_in_network_cidr('192.168.100.254', '192.168.100.0/24')).to eq true
+      expect(subject.ipv4_in_network_cidr('192.168.100.1', '192.168.100.0/28')).to eq true
+      expect(subject.ipv4_in_network_cidr('192.168.100.14', '192.168.100.0/28')).to eq true
+      expect(subject.ipv4_in_network_cidr('192.168.100.16', '192.168.100.0/28')).to eq false
     end
   end
 end

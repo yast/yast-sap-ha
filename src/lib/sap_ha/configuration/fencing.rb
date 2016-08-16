@@ -118,7 +118,7 @@ module SapHA
         Yast::SCR.Write(Yast::Path.new('.sysconfig.sbd.SBD_OPTS'), @sbd_options)
         commit = Yast::SCR.Write(Yast::Path.new('.sysconfig.sbd'), nil)
         if commit
-          @nlog.info('Written SBD system configuration')
+          @nlog.info('Wrote SBD system configuration')
         else
           @nlog.warn('Could not write the SBD system configuration')
         end

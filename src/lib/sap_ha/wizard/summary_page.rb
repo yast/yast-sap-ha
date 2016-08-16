@@ -59,8 +59,10 @@ module SapHA
         Yast::Wizard.DisableBackButton
         Yast::Wizard.SetNextButton(:next, "&Finish")
         Yast::Wizard.EnableNextButton
-        SapHA::Helpers.write_var_file('installation_log.html', SapHA::NodeLogger.html, timestamp: true)
-        SapHA::Helpers.write_var_file('installation_log.txt', SapHA::NodeLogger.text, timestamp: true)
+        SapHA::Helpers.write_var_file('installation_log.html', SapHA::NodeLogger.html,
+          timestamp: true)
+        SapHA::Helpers.write_var_file('installation_log.txt', SapHA::NodeLogger.text,
+          timestamp: true)
         SapHA::Helpers.write_var_file('configuration.yml', @config.dump(false), timestamp: true)
       end
 
@@ -81,20 +83,18 @@ module SapHA
                 end
           success = SapHA::Helpers.write_file(file_name, log)
           if success
-            show_dialog_errors(["Log was written to <code>#{file_name}</code>"], 'Success')
+            show_message("Log was written to <code>#{file_name}</code>", 'Success')
           else
-            show_dialog_errors(["Could not write log file <code>#{file_name}</code>"], 'Error')
+            show_message("Could not write log file <code>#{file_name}</code>", 'Error')
           end
         when :save_config
           file_name = Yast::UI.AskForSaveFileName("/tmp", "*.yml", "Save configuration file as...")
           return unless file_name
           success = SapHA::Helpers.write_file(file_name, @config.dump)
           if success
-            show_dialog_errors(["Configuration was written to <code>#{file_name}</code>"],
-              'Success')
+            show_message("Configuration was written to <code>#{file_name}</code>", 'Success')
           else
-            show_dialog_errors(["Could not write configuration file <code>#{file_name}</code>"],
-              'Error')
+            show_message("Could not write configuration file <code>#{file_name}</code>", 'Error')
           end
         when :open_hawk
           SapHA::Helpers.open_url('https://localhost:7630/')

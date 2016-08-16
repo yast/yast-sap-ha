@@ -67,6 +67,17 @@ module SapHA
         end
       end
 
+      # Get a list of network addresses along with the CIDR mask
+      def network_addresses_cidr
+        interfaces = Socket.getifaddrs.select do |iface|
+          iface.addr.ipv4? && !iface.addr.ipv4_loopback?
+        end
+        interfaces.map do |iface|
+          IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s + '/' +
+            IPAddr.new(iface.netmask.ip_address).to_i.to_s(2).count('1').to_s
+        end
+      end
+
       def hostname
         Socket.gethostname
       end
@@ -282,6 +293,7 @@ module SapHA
       end
 
       # Make initial HANA backup for the system replication
+      # @param system_id [String] SAP SID of the HANA instance
       # @param user_name [String] Secure user storage username to perform the backup on behalf of
       # @param file_name [String] HANA backup file
       # @param instance_number [String] HANA instance number
@@ -300,7 +312,7 @@ module SapHA
       end
 
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
-      # @param system_id [String] SAP SID of the HANA
+      # @param system_id [String] SAP SID of the HANA instance
       def hana_hdb_start(system_id)
         log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
@@ -322,7 +334,7 @@ module SapHA
       end
 
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
-      # @param system_id [String] SAP SID of the HANA
+      # @param system_id [String] SAP SID of the HANA instance
       def hana_hdb_stop(system_id)
         log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
@@ -395,6 +407,26 @@ module SapHA
         end
         out.scan(regex).flatten
       end
+    end
+
+    def hana_change_global_ini(system_id, options = {})
+      require 'cfa/augeas_parser'
+      require 'cfa/base_model'
+      # Copy the hook script
+      
+      
+      global_ini_path = "/hana/shared/#{system_id.upcase}/global/hdb/custom/config/global.ini"
+      parser = CFA::AugeasParser.new('puppet.lns')
+      bm = CFA::BaseModel.new(parser, global_ini_path)
+      bm.load
+      
+      # Set the 
+      bm.generic_set 'ha_dr_provider_srTakeover/provider', 'srTakeover'
+      bm.generic_set 'ha_dr_provider_srTakeover/path', '/hana/shared/srHook'
+      bm.generic_set 'ha_dr_provider_srTakeover/execution_order', '1'
+      bm.generic_set 'memorymanager/global_allocation_limit', '20G'
+      bm.generic_set 'system_replication/preload_column_tables', 'false'
+      bm.save
     end
 
     Local = LocalClass.instance

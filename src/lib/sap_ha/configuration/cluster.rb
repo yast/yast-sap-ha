@@ -126,9 +126,9 @@ module SapHA
       def update_ring(ring_id, values)
         @rings[ring_id][:port] = values[:port]
         if values[:address] != @rings[ring_id][:address]
-          index = values[:address].index('.0') || values[:address].length
-          @nodes.each { |_, n| n["ip_#{ring_id}".to_sym] = values[:address][0..index] }
+          @nodes.each { |_, n| n["ip_#{ring_id}".to_sym] = values[:address] }
           @rings[ring_id][:address] = values[:address]
+          @rings[ring_id][:address_no_mask] = ip_split_mask(values[:address])
         end
         @rings[ring_id][:mcast] = values[:mcast] if multicast?
       end
@@ -206,7 +206,7 @@ module SapHA
       end
 
       def ring_addresses
-        SapHA::System::Local.network_addresses
+        SapHA::System::Local.network_addresses_cidr
       end
 
       # TODO: rename and document
@@ -250,13 +250,13 @@ module SapHA
             'Expected votes')
           check.unique(@nodes.map { |_, v| v[:ip_ring1] },
             'IP addresses in ring #1 are not unique')
-          check.ipsv4_in_network(@nodes.map { |_, v| v[:ip_ring1] }, @rings[:ring1][:address], nil,
-            'IP addresses in ring #1')
+          check.ipsv4_in_network_cidr(@nodes.map { |_, v| v[:ip_ring1] },
+            @rings[:ring1][:address], nil, 'IP addresses in ring #1')
           if @number_of_rings == 2
             check.unique(@nodes.map { |_, v| v[:ip_ring2] },
               'IP addresses in ring #2 are not unique')
-            check.ipsv4_in_network(@nodes.map { |_, v| v[:ip_ring2] }, @rings[:ring2][:address],
-              nil, 'IP addresses in ring #2')
+            check.ipsv4_in_network_cidr(@nodes.map { |_, v| v[:ip_ring2] },
+              @rings[:ring2][:address], nil, 'IP addresses in ring #2')
           end
           local_ips = SapHA::System::Local.ip_addresses
           # Local IPs can be empty if we're not running as root
@@ -273,10 +273,10 @@ module SapHA
 
       def node_validator(check, node)
         check.ipv4(node[:ip_ring1], 'IP Ring 1')
-        check.ipv4_in_network(node[:ip_ring1], @rings[:ring1][:address], 'IP Ring 1')
+        check.ipv4_in_network_cidr(node[:ip_ring1], @rings[:ring1][:address], 'IP Ring 1')
         if @number_of_rings == 2
           check.ipv4(node[:ip_ring2], 'IP Ring 2')
-          check.ipv4_in_network(node[:ip_ring2], @rings[:ring2][:address], 'IP Ring 2')
+          check.ipv4_in_network_cidr(node[:ip_ring2], @rings[:ring2][:address], 'IP Ring 2')
         end
         check.hostname(node[:host_name], 'Hostname')
         # check.nonneg_integer(node[:node_id], 'Node ID')
@@ -291,7 +291,7 @@ module SapHA
       def apply(role)
         @nlog.info('Applying Cluster Configuration')
         flag = true
-        SapHA::System::Local.append_hosts_file(@nodes)
+        SapHA::System::Local.append_hosts_file(@nodes) if @append_hosts
         if role == :master
           @keys[:corosync] = generate_corosync_key if @enable_secauth
           @keys[:csync2] = generate_csync2_key if @enable_csync2
@@ -313,7 +313,7 @@ module SapHA
         flag
       end
 
-      # private
+      private
 
       def init_nodes
         (1..@number_of_nodes).each do |i|
@@ -324,6 +324,10 @@ module SapHA
             node_id:   i.to_s
           }
         end
+      end
+
+      def ip_split_mask(addr)
+        addr.split('/').first
       end
 
       def init_rings
@@ -358,7 +362,7 @@ module SapHA
         cluster_configuration = {
           "secauth"        => @enable_secauth,
           "transport"      => (multicast? ? 'udp' : "udpu"),
-          "bindnetaddr1"   => @rings[:ring1][:address],
+          "bindnetaddr1"   => @rings[:ring1][:address_no_mask],
           "memberaddr"     => memberaddr,
           "mcastaddr1"     => @rings[:ring1][:mcast],
           "mcastport1"     => @rings[:ring1][:port],
@@ -372,7 +376,7 @@ module SapHA
           "csync2_include" => CSYNC2_INCLUDED_FILES.dup
         }
         if cluster_configuration["enable2"]
-          cluster_configuration["bindnetaddr2"] = @rings[:ring2][:address]
+          cluster_configuration["bindnetaddr2"] = @rings[:ring2][:address_no_mask]
           cluster_configuration["mcastaddr2"] = @rings[:ring2][:mcast]
           cluster_configuration["mcastport2"] = @rings[:ring2][:port]
         end

@@ -161,16 +161,19 @@ module SapHA
             begin
               SapHA::System::SSH.instance.check_ssh_password(ip, password)
             rescue SSHAuthException => e
-              Yast::Popup.Error(e.message)
+              # Yast::Popup.Error(e.message)
+              show_message(e.message, 'Error')
               return false
             rescue SSHException => e
-              Yast::Popup.Error(e.message)
+              # Yast::Popup.Error(e.message)
+              show_message(e.message, 'Error')
               return false
             else
               SapHA::System::SSH.instance.copy_keys_to(ip, password)
             end
           rescue SSHException => e
-            Yast::Popup.Error(e.message)
+            # Yast::Popup.Error(e.message)
+            show_message(e.message, 'Error')
             return false
           end
           true

@@ -1,0 +1,15 @@
+<html>
+    <h2>Cluster Nodes</h2>
+    <p>This step lists the cluster's members.</p>
+
+    <p>This dialog allows you to control the number of nodes in the cluster and their respective IP addresses.<br/>
+    Please make sure that the provided IP addresses correspond to the network addresses of the rings.</p>
+    
+    <p><i>Note:</i> the number of nodes for HANA scale-up clusters is fixed and cannot be changed.</p>
+
+    <p><b>Expected votes</b> is the parameter defining the quorum of the cluster.</p>
+
+    <h3>On passwordless SSH</h3>
+    <p>When the "Next" button is clicked, the Wizard will check if it can connect to the remote node(s) via SSH protocol without a password.
+    If it fails to do so, it will require the root password for the remote node, connect to it and propagate its own SSH keys (both private and public) to the slave node(s).</p>
+</html>

@@ -97,10 +97,12 @@ module SapHA
       def handle_user_input(input, event)
         case input
         when :configure_backup
+          update_model
           values = hana_backup_popup
           @my_model.import(values)
           refresh_view
         when :create_backup
+          update_model
           @my_model.perform_backup = value(:create_backup)
           refresh_view
         else

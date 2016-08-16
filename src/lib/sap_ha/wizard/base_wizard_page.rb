@@ -295,6 +295,10 @@ module SapHA
         html_str << "</ul>"
         Yast::Popup.LongText(title, RichText(html_str), 60, 17)
       end
+
+      def show_message(message, title)
+        Yast::Popup.LongText(title, RichText(message), 55, 10)
+      end
     end
   end
 end
