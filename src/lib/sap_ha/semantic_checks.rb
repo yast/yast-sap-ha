@@ -44,7 +44,7 @@ module SapHA
       @transaction = false
       @errors = []
       @checks_passed = true
-      @silent = false
+      @silent = true
     end
 
     # Check if the string is a valid IPv4 address
@@ -53,6 +53,15 @@ module SapHA
     def ipv4(value, field_name = '')
       flag = Yast::IP.Check4(value)
       report_error(flag, Yast::IP.Valid4, field_name, value)
+    end
+
+    # Check if the string is a valid IPv4 netmask
+    # @param value [String] network mask
+    # @param field_name [String] name of the field in the form
+    def ipv4_netmask(value, field_name = '')
+      flag = Yast::Netmask.Check4(value)
+      report_error(flag, 'A valid network mask consists of 4 octets separated by dots.',
+        field_name, value)
     end
 
     # Check if the string is a valid IPv4 multicast address
@@ -69,10 +78,10 @@ module SapHA
     # @param network [String] IP address
     # @param field_name [String] name of the field in the form
     def ipv4_in_network_cidr(ip, network, field_name = '')
-      flag = IPAddr.new(network) === ip
+      flag = IPAddr.new(network).include?(ip)
       msg = "IP address has to belong to the network #{network}."
       report_error(flag, msg, field_name, ip)
-    end    
+    end
 
     # Check if the provided IPs belong to the network
     # @param ips [Array[String]]
@@ -83,7 +92,7 @@ module SapHA
       message = "IP addresses have to belong to the network #{network}" \
         if message.nil? || message.empty?
       net = IPAddr.new(network)
-      flag = ips.map { |ip| net === ip }.all?
+      flag = ips.map { |ip| net.include?(ip) }.all?
       report_error(flag, message, field_name, '')
     end
 
@@ -290,8 +299,6 @@ module SapHA
       end
     end
 
-    private
-
     def report_error(flag, message, field_name, value)
       if @transaction
         @checks_passed &&= flag
@@ -302,6 +309,8 @@ module SapHA
       return error_string(field_name, message, value) unless flag
       nil
     end
+
+    private
 
     def error_string(field_name, explanation, value = nil)
       field_name = field_name.strip

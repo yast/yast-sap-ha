@@ -44,7 +44,10 @@ module SapHA
                 InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', ''),
                 InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')
               ),
-              InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
+              HBox(
+                InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
+                InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', '')
+              ),
               HBox(
                 base_true_false_combo(:site_takover, 'Prefer site takeover:'),
                 base_true_false_combo(:auto_reg, 'Automatic registration')
@@ -74,6 +77,7 @@ module SapHA
         @my_model.site_name_1 = value(:site_name_1).upcase
         @my_model.site_name_2 = value(:site_name_2).upcase
         @my_model.perform_backup = value(:create_backup)
+        @my_model.virtual_ip_mask = value(:hana_vip_mask)
       end
 
       def can_go_next?
@@ -92,6 +96,7 @@ module SapHA
         set_value(:site_name_2, @my_model.site_name_2)
         set_value(:create_backup, @my_model.perform_backup)
         set_value(:configure_backup, @my_model.perform_backup, :Enabled)
+        set_value(:hana_vip_mask, @my_model.virtual_ip_mask)
       end
 
       def handle_user_input(input, event)

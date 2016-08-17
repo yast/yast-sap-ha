@@ -74,7 +74,7 @@ module SapHA
       end
 
       def apply(role)
-        return false if !configured?
+        return false unless configured?
         @nlog.info('Appying Watchdog Configuration')
         stat = true
         @to_install.each do |module_name|

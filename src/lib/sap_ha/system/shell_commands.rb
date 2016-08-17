@@ -34,28 +34,20 @@ module SapHA
         end
       end
 
-      def exec_stdout(command)
-        Open3.popen3(command) do |_, stdout, _, _|
-          stdout
-        end
-      end
-
+      # Execute command and return its status
       # @return [Process::Status]
-      def exec_status(command)
-        Open3.popen3(command) { |_, _, _, wait_thr| wait_thr.value }
+      def exec_status(*command)
+        Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
       end
 
-      def exec_status_l(*params)
-        Open3.popen3(*params) { |_, _, _, wait_thr| wait_thr.value }
+      # Execute command and return its status and output (stdout)
+      # @return [[Process::Status, String]]
+      def exec_output_status(*command)
+        Open3.capture2(*command)
       end
 
-      def exec_status_lo(*params)
-        # TODO: replace with Open3.capture2(params)
-        # puts "exec_status: #{params}"
-        Open3.popen3(*params) { |_, out, _, wait_thr| [wait_thr.value, out.read] }
-      end
-
-      # @return stdout_and_stderr, status
+      # Execute command and return ist output (both stdout and stderr) and status
+      # @return [[String, string]] stdout_and_stderr, status
       def exec_outerr_status(*params)
         Open3.capture2e(*params)
       rescue SystemCallError => e
@@ -63,41 +55,22 @@ module SapHA
       end
 
       # Pipe the commands and return the common status
+      # @return [Boolean] success
       def pipe(*commands)
         stats = Open3.pipeline(*commands)
         stats.all? { |s| s.exitstatus == 0 }
       end
 
-      # @return stdout_and_stderr, status
-      # TODO: change the signature!
+      # Execute command as user _user_name_ and return ist output (both stdout and stderr) and status
+      # @return [[String, String]] [stdout_and_stderr, status]
       def su_exec_outerr_status(user_name, *params)
         Open3.capture2e('su', '-lc', params.join(' '), user_name)
       rescue SystemCallError => e
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
       end
 
-      def exec_status_to(command, timeout = 5)
-        Open3.popen3(command) do |_, _, _, wait_thr|
-          begin
-            Timeout.timeout(timeout) { return wait_thr.value }
-          rescue Timeout::Error
-            Process.kill("KILL", wait_thr.pid)
-          end
-        end
-        -1
-      end
-
       def pipeline(cmd1, cmd2)
         Open3.pipeline_r(cmd1, cmd2, {err: "/dev/null"}) { |out, wait_thr| out.read }
-      end
-
-      def exec_status_stderr(command)
-        Open3.popen3(command) { |_, _, stderr, wait_thr| [wait_thr.value, stderr.read] }
-      end
-
-      def exec_stderr(_command)
-        # TODO
-        raise 'not implemented'
       end
     end
   end

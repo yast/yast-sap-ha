@@ -41,7 +41,8 @@ module SapHA
       :scenario,
       :product_name,
       :product,
-      :scenario_summary
+      :scenario_summary,
+      :timestamp
     attr_accessor :role,
       :debug,
       :no_validators,
@@ -57,6 +58,7 @@ module SapHA
     include SapHA::Exceptions
 
     def initialize(role = :master)
+      @timestamp = Time.now
       @role = role
       @debug = false
       @no_validators = false
@@ -96,7 +98,7 @@ module SapHA
         "Setting scenario name before setting the Product ID" if @product.nil?
       @scenario_name = value
       @scenario = @product['scenarios'].find { |s| s['name'] == @scenario_name }
-      if !@scenario
+      unless @scenario
         log.error("Scenario name '#{@scenario_name}' not found in the scenario list")
         raise ScenarioNotFoundException
       end
@@ -165,8 +167,8 @@ module SapHA
 
     # Dump this object to a YAML representation
     # @param [Boolean] slave
-    def dump(slave = false)
-      return unless can_install?
+    def dump(slave = false, force = false)
+      return unless can_install? || force
       # TODO: the proposals are also kept in this way of duplicating...
       old_role = @role
       @role = :slave if slave
@@ -177,6 +179,7 @@ module SapHA
 
     # Below are the methods for logging the setup process
     def start_setup
+      @timestamp = Time.now
       NodeLogger.info(
         "Starting setup process on node #{SapHA::NodeLogger.node_name}")
       true

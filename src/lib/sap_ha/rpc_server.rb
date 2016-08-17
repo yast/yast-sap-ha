@@ -194,8 +194,8 @@ module SapHA
       @logger.info "--- #{self.class}.#{__callee__} ---"
       rule_no = get_rule_number
       return if rule_no
-      rc, _out = exec_status_lo('/usr/sbin/iptables', '-I',
-        'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
+      _out, rc  = exec_output_status('/usr/sbin/iptables', '-I',
+                                     'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
       rc.exitstatus == 0
     end
 
@@ -205,7 +205,7 @@ module SapHA
       rule_no = get_rule_number
       puts "close_port: rule_no=#{rule_no} #{!!rule_no}"
       return unless rule_no
-      rc, out = exec_status_lo('/usr/sbin/iptables', '-D', 'INPUT', rule_no.to_s)
+      out, rc = exec_output_status('/usr/sbin/iptables', '-D', 'INPUT', rule_no.to_s)
       puts "close_port: rc=#{rc}, out=#{out}"
       rc.exitstatus == 0
     end

@@ -34,6 +34,8 @@ module SapHA
 
     attr_reader :rpc_server_cmd
 
+    FILE_DATE_TIME_FORMAT = '%Y%m%d_%H%M%S'.freeze
+
     def initialize
       @storage = {}
       if ENV['Y2DIR'] # tests/local run
@@ -59,8 +61,8 @@ module SapHA
 
     # Render an ERB template by its name
     def render_template(basename, binding)
+      full_path = data_file_path(basename)
       if !@storage.key? basename
-        full_path = data_file_path(basename)
         template = ERB.new(read_file(full_path), nil, '-')
         @storage[basename] = template
       end
@@ -99,10 +101,10 @@ module SapHA
     #   File.join(@yast_path, basename)
     # end
 
+    # Write a file to /var/lib/YaST2/sap_ha
+    # Use it for logs and intermediate configuration files
     def write_var_file(basename, data, options = {})
-      if options[:timestamp]
-        basename = timestamp_file(basename)
-      end
+      basename = timestamp_file(basename, options[:timestamp])
       file_path = var_file_path(basename)
       File.open(file_path, 'wb') do |fh|
         fh.write(data)
@@ -110,10 +112,18 @@ module SapHA
       file_path
     end
 
-    def get_configuration_files(product_id, scenario_name)
+    # Get configuration files from the previous runs
+    # Pass parameters for filtering or pass
+    # @param product_id [String]
+    # @param scenario_name [String]
+    def get_configuration_files(product_id = nil, scenario_name = nil)
       files = Dir.chdir(@var_path) { Dir.glob('configuration_*.yml') }
       configs = files.map { |fn| YAML.load(read_file(var_file_path(fn))) }
-      configs.select { |c| c.product_id == product_id && c.scenario_name == scenario_name }
+      selected = configs.select do |c|
+        (product_id.nil? || c.product_id == product_id) &&
+          (scenario_name.nil? || c.scenario_name == scenario_name)
+      end
+      selected.map { |c| ["#{c.product_name} Installation [#{c.timestamp.utc}]", c] }
     end
 
     def write_file(path, data)
@@ -137,7 +147,8 @@ module SapHA
       Yast::UI.NormalCursor
     end
 
-    def timestamp_file(basename)
+    def timestamp_file(basename, timestamp = nil)
+      return basename if timestamp.nil?
       ext = File.extname(basename)
       name = File.basename(basename, ext)
       basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"

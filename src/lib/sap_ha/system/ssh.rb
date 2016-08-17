@@ -53,22 +53,22 @@ module SapHA
       # Check if we can initiate an SSH connection to the host without a password
       def check_ssh(host)
         log.info "--- #{self.class}.#{__callee__} --- "
-        stat = exec_status_l("/usr/bin/expect", "-f", @script_path, "check", host)
-        fortune_teller(binding)
+        stat = exec_status("/usr/bin/expect", "-f", @script_path, "check", host)
+        check_status(stat, host)
       end
 
       # Check if we can initiate an SSH connection to the host using the specified password
       def check_ssh_password(host, password)
         log.info "--- #{self.class}.#{__callee__} --- "
-        stat = exec_status_l("/usr/bin/expect", "-f", @script_path, "check", host, password)
-        fortune_teller(binding)
+        stat = exec_status("/usr/bin/expect", "-f", @script_path, "check", host, password)
+        check_status(stat, host)
       end
 
       # Copy SSH keys from the host
       def copy_keys_from_(host, password, path)
-        stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
-          "copy", host, password, path.to_s)
-        fortune_teller(binding)
+        stat = exec_status("/usr/bin/expect", "-f", @script_path,
+                           "copy", host, password, path.to_s)
+        check_status(stat, host)
       end
 
       def check_user_identities
@@ -81,7 +81,7 @@ module SapHA
           ::FileUtils.rm @user_identities
           ::FileUtils.rm @user_pubkeys
         end
-        rc = exec_status_l("/usr/bin/ssh-keygen", "-f", File.join(@ssh_user_dir, "id_rsa"), "-P", "")
+        rc = exec_status("/usr/bin/ssh-keygen", "-f", File.join(@ssh_user_dir, "id_rsa"), "-P", "")
         unless rc.exitstatus == 0
           log.error "Calling ssh-keygen failed: exit code #{rc}"
           raise SSHException, "Could not create user identities"
@@ -92,16 +92,16 @@ module SapHA
       # Copy own SSH identities to the specified host using the password
       def copy_keys_to(host, password)
         result = true
-        stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
-          "copy-id", host, password)
-        fortune_teller(binding)
+        stat = exec_status("/usr/bin/expect", "-f", @script_path,
+                           "copy-id", host, password)
+        check_status(stat, host)
         ssh_dir = File.join(Dir.home, '.ssh')
         @user_identities.each do |key|
           out, stat = exec_outerr_status('scp', key, "#{host}:#{key}")
           if stat.exitstatus == 0
             log.info "Copied SSH key #{key} to host #{host}."
           else
-            log.error "Could not copy SSH key #{key} to host #{host}: #{out}." 
+            log.error "Could not copy SSH key #{key} to host #{host}: #{out}."
             result = false
           end
         end
@@ -122,8 +122,8 @@ module SapHA
           log.error "Could not copy 'authorized_keys' to host #{host}: #{out}."
           result = false
         end
-        stat = exec_status_l("/usr/bin/expect", "-f", @script_path,
-          "authorize", host, password)
+        stat = exec_status("/usr/bin/expect", "-f", @script_path,
+                           "authorize", host, password)
         NodeLogger.log_status(result, "Copied SSH keys to node #{host}",
           "Could not copy SSH keys to node #{host}")
       end
@@ -173,19 +173,19 @@ module SapHA
         log.info "Copied #{keys_copied} keys."
         ::FileUtils.rm_rf tmpdir
         # make sure the target host has its own keys in authorized_keys
-        if exec_status_l("/usr/bin/expect", "-f",
-          @script_path, "authorize", host, password).exitstatus != 0
+        if exec_status("/usr/bin/expect", "-f",
+                       @script_path, "authorize", host, password).exitstatus != 0
           log.error "Executing ha-cluster-init ssh_remote on host #{host} failed"
         end
       end
 
       def run_rpc_server(host)
-        stat = exec_status_l("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", SapHA::Helpers.rpc_server_cmd)
-        fortune_teller(binding)
+        stat = exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", SapHA::Helpers.rpc_server_cmd)
+        check_status(stat, host)
       end
 
       def run_command(host, *cmd)
-        exec_status_l("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
+        exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
       end
       
       private
@@ -196,7 +196,7 @@ module SapHA
 
       def authorize_key(path)
         auth_keys_path = File.join(@ssh_user_dir, 'authorized_keys')
-        if exec_status_l("grep", "-q", "-s", path, auth_keys_path.to_s).exitstatus != 0
+        if exec_status("grep", "-q", "-s", path, auth_keys_path.to_s).exitstatus != 0
           log.info "Adding key #{path} to #{auth_keys_path}"
           key = File.read(path)
           File.open(auth_keys_path, mode: 'a') do |fh|
@@ -207,9 +207,8 @@ module SapHA
         true
       end
 
-      def fortune_teller(binding)
-        stat = binding.local_variable_get('stat')
-        host = binding.local_variable_get('host')
+      # Check the status and react accordingly
+      def check_status(stat, host)
         case stat.exitstatus
         when 0
           return true
@@ -233,7 +232,6 @@ module SapHA
           log.error "Could not connect to #{host}: check_ssh returned rc=#{stat.exitstatus}"
           raise SSHException, "Could not connect to #{host} (rc=#{stat.exitstatus})."
         end
-        true
       end
     end
   end

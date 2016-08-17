@@ -55,7 +55,7 @@ module Yast
         set_test_values
         ui = SapHA::Wizard::GUIInstallationPage.new(@config)
         external_interrupt(ui)
-        ui.run()
+        ui.run
       ensure
         Wizard.CloseDialog
       end

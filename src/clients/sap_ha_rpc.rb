@@ -37,7 +37,6 @@ module Yast
       # when .shutdown is called
       @server.close_port
       Yast::SuSEFirewall.ActivateConfiguration
-      # TODO: what if we demonize the process, by returning 0 at a successful server start?
     end
   end
 

@@ -127,7 +127,7 @@ module SapHA
 
       def apply(role)
         @nlog.info('Appying Fencing Configuration')
-        return false if !configured?
+        return false unless configured?
         flag = write_sysconfig
         flag &= SapHA::System::Local.initialize_sbd(@devices) if role == :master
         flag

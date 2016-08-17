@@ -94,7 +94,7 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__} ---"
         loop do
           log.debug "--- #{self.class}.#{__callee__} ---"
-          event = Yast::Wizard.WaitForEvent()
+          event = Yast::Wizard.WaitForEvent
           log.error "--- #{self.class}.#{__callee__}: event=#{event} ---"
           input = event["ID"]
           case input

@@ -33,7 +33,7 @@ module SapHA
 
       def run(title, message, list_contents, help, allow_back, allow_next)
         base_list_selection(title, message, list_contents, help, allow_back, allow_next)
-        Yast::UI.UserInput()
+        Yast::UI.UserInput
       end
     end
   end

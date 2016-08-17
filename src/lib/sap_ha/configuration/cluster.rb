@@ -24,6 +24,7 @@ require 'erb'
 require 'socket'
 require_relative 'base_config'
 require 'sap_ha/system/local'
+require 'sap_ha/system/network'
 require 'sap_ha/exceptions'
 
 Yast.import 'UI'
@@ -126,7 +127,8 @@ module SapHA
       def update_ring(ring_id, values)
         @rings[ring_id][:port] = values[:port]
         if values[:address] != @rings[ring_id][:address]
-          @nodes.each { |_, n| n["ip_#{ring_id}".to_sym] = values[:address] }
+          adr = IPAddr.new(values[:address]).succ
+          @nodes.each { |_, n| n["ip_#{ring_id}".to_sym] = adr.to_s; adr = adr.succ }
           @rings[ring_id][:address] = values[:address]
           @rings[ring_id][:address_no_mask] = ip_split_mask(values[:address])
         end
@@ -200,13 +202,13 @@ module SapHA
 
       # return IPs of the first ring for nodes other than current node
       def other_nodes
-        ips = @nodes.map { |_, n| n[:ip_ring1] } - SapHA::System::Local.ip_addresses
+        ips = @nodes.map { |_, n| n[:ip_ring1] } - SapHA::System::Network.ip_addresses
         raise ClusterMembersConfException, "Empty IPs detected" if ips.any?(&:empty?)
         ips
       end
 
       def ring_addresses
-        SapHA::System::Local.network_addresses_cidr
+        SapHA::System::Network.network_addresses_cidr
       end
 
       # TODO: rename and document
@@ -258,7 +260,7 @@ module SapHA
             check.ipsv4_in_network_cidr(@nodes.map { |_, v| v[:ip_ring2] },
               @rings[:ring2][:address], nil, 'IP addresses in ring #2')
           end
-          local_ips = SapHA::System::Local.ip_addresses
+          local_ips = SapHA::System::Network.ip_addresses
           # Local IPs can be empty if we're not running as root
           unless local_ips.empty?
             check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring1] }, local_ips,

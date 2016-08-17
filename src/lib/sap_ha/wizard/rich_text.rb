@@ -33,7 +33,7 @@ module SapHA
 
       def run(title, contents, help, allow_back, allow_next)
         base_rich_text(title, contents, help, allow_back, allow_next)
-        Yast::UI.UserInput()
+        Yast::UI.UserInput
       end
     end
   end

@@ -1,8 +1,8 @@
 # TODO: remove this completely
-configure property \
-    stonith-enabled="true" \
-    stonith-action="reboot" \
-    stonith-timeout="150s"
+#configure property \
+#    stonith-enabled="true" \
+#    stonith-action="reboot" \
+#    stonith-timeout="150s"
 
 configure rsc_default \
     resource-stickiness="1000" \
@@ -13,7 +13,7 @@ configure op_defaults \
 
 configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
     params \
-    ip="<%= @virtual_ip %>" \
+    ip="<%= @virtual_ip %>" cidr_netmask="<%= @virtual_ip_mask %>" \
     op start timeout="20" op stop timeout="20" \
     op monitor interval="10" timeout="20"
 

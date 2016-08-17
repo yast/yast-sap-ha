@@ -22,6 +22,7 @@
 require 'yast'
 require 'sap_ha/system/shell_commands'
 require 'sap_ha/system/local'
+require 'sap_ha/system/network'
 require_relative 'base_config'
 
 module SapHA
@@ -31,6 +32,7 @@ module SapHA
       attr_accessor :system_id,
         :instance,
         :virtual_ip,
+        :virtual_ip_mask,
         :prefer_takeover,
         :auto_register,
         :site_name_1,
@@ -48,6 +50,7 @@ module SapHA
         @system_id = 'NDB'
         @instance = '00'
         @virtual_ip = ''
+        @virtual_ip_mask = '24'
         @prefer_takeover = true
         @auto_register = false
         @site_name_1 = 'WALLDORF'
@@ -64,6 +67,9 @@ module SapHA
       def validate(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
           check.ipv4(@virtual_ip, 'Virtual IP')
+          check.nonneg_integer(@virtual_ip_mask, 'Virtual IP mask')
+          check.integer_in_range(@virtual_ip_mask, 1, 32, 'CIDR mask has to be between 1 and 32.',
+            'Virtual IP mask')
           check.sap_instance_number(@instance, nil, 'Instance Number')
           check.sap_sid(@system_id, nil, 'System ID')
           check.identifier(@site_name_1, nil, 'Site name 1')
@@ -88,7 +94,7 @@ module SapHA
         prepare_description do |dsc|
           dsc.parameter('System ID', @system_id)
           dsc.parameter('Instance', @instance)
-          dsc.parameter('Virtual IP', @virtual_ip)
+          dsc.parameter('Virtual IP', @virtual_ip + '/' + @virtual_ip_mask)
           dsc.parameter('Prefer takeover', @prefer_takeover)
           dsc.parameter('Automatic registration', @auto_register)
           dsc.parameter('Site 1 name', @site_name_1)
@@ -111,7 +117,7 @@ module SapHA
       end
 
       def apply(role)
-        return false if !configured?
+        return false unless configured?
         @nlog.info('Appying HANA Configuration')
         if role == :master
           SapHA::System::Local.hana_hdb_start(@system_id)

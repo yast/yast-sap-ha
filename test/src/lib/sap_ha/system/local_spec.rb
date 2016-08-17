@@ -25,42 +25,6 @@ require 'sap_ha/system/shell_commands'
 
 describe SapHA::System::LocalClass do
 
-  describe '#net_interfaces' do
-    it 'returns the list of network interfaces on the local machine' do
-      result = SapHA::System::Local.net_interfaces
-      expect(result).not_to be_nil
-      if user_root?
-        expect(result).not_to be_empty
-      else
-        expect(result).to be_empty
-      end
-    end
-  end
-
-  describe '#ip_addresses' do
-    it 'returns the list of IP addresses of the local machine' do
-      result = SapHA::System::Local.ip_addresses
-      expect(result).not_to be_nil
-      expect(result).not_to be_empty unless build_service?
-    end
-  end
-
-  describe '#network_addresses' do
-    it 'returns the list of IP addresses of the networks' do
-      result = SapHA::System::Local.network_addresses
-      expect(result).not_to be_nil
-      expect(result).not_to be_empty unless build_service?
-    end
-  end
-
-  describe '#hostname' do
-    it 'returns the host name of the machine' do
-      result = SapHA::System::Local.hostname
-      expect(result).not_to be_nil
-      expect(result).not_to be_empty
-    end
-  end
-
   describe '#block_devices' do
     it 'lists all block devices on this machine' do
       result = SapHA::System::Local.block_devices

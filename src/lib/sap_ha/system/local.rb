@@ -25,7 +25,6 @@ require 'sap_ha/exceptions'
 require 'sap_ha/node_logger'
 require_relative 'shell_commands'
 
-Yast.import 'NetworkInterfaces'
 Yast.import 'SystemdService'
 Yast.import 'SystemdSocket'
 Yast.import 'SuSEFirewallServices'
@@ -43,44 +42,6 @@ module SapHA
 
       COROSYNC_KEY_PATH = '/etc/corosync/authkey'.freeze
       CSYNC2_KEY_PATH = '/etc/csync2/key_hagroup'.freeze
-
-      def net_interfaces
-        Yast::NetworkInterfaces.Read
-        Yast::NetworkInterfaces.List("")
-      end
-
-      # Get local machine's IPv4 addresses excluding the loopback iface
-      def ip_addresses
-        interfaces = Socket.getifaddrs.select do |iface|
-          iface.addr.ipv4? && !iface.addr.ipv4_loopback?
-        end
-        interfaces.map { |iface| iface.addr.ip_address }
-      end
-
-      # Get a list of network addresses on the local node's interface
-      def network_addresses
-        interfaces = Socket.getifaddrs.select do |iface|
-          iface.addr.ipv4? && !iface.addr.ipv4_loopback?
-        end
-        interfaces.map do |iface|
-          IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s
-        end
-      end
-
-      # Get a list of network addresses along with the CIDR mask
-      def network_addresses_cidr
-        interfaces = Socket.getifaddrs.select do |iface|
-          iface.addr.ipv4? && !iface.addr.ipv4_loopback?
-        end
-        interfaces.map do |iface|
-          IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s + '/' +
-            IPAddr.new(iface.netmask.ip_address).to_i.to_s(2).count('1').to_s
-        end
-      end
-
-      def hostname
-        Socket.gethostname
-      end
 
       def block_devices
         out, status = exec_outerr_status('lsblk', '-pnio', 'KNAME,TYPE,LABEL,UUID')
@@ -193,7 +154,7 @@ module SapHA
       def write_corosync_key(data)
         if data.nil?
           NodeLogger.warn "Attempted to write the corosync secure authentication key, "\
-            "but the key data is empty"
+            "but the key data is empty. Key is not written."
           return false
         end
         status = pipe(['echo', data], ['uudecode', '-o', COROSYNC_KEY_PATH])
@@ -282,7 +243,7 @@ module SapHA
         flag = true
         devices.each do |device|
           log.warn "Initializing the SBD device on #{device[:name]}"
-          status = exec_status_l('sbd', '-d', device[:name], 'create')
+          status = exec_status('sbd', '-d', device[:name], 'create')
           log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
           flag &= NodeLogger.log_status(status.exitstatus == 0,
             "Successfully initialized the SBD device #{device[:name]}",

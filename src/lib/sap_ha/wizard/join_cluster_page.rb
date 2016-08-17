@@ -22,6 +22,7 @@
 require 'sap_ha/wizard/base_wizard_page'
 require 'sap_ha/system/ssh'
 require 'sap_ha/system/local'
+require 'sap_ha/system/network'
 
 module SapHA
   module Wizard
@@ -36,7 +37,7 @@ module SapHA
             VBox(
               InputField(Id(:ip_address), 'IP Address', ''),
               ComboBox(Id(:interface), 'Local Network Interface',
-                SapHA::System::Local.net_interfaces),
+                SapHA::System::Network.interfaces),
               PushButton(Id(:join), 'Join Cluster')
             )
           ),
