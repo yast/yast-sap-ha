@@ -27,6 +27,8 @@ module SapHA
   # Log info messages, warnings and errors into memory
   class NodeLoggerClass
     include Singleton
+    extend Forwardable
+    def_delegators :@logger, :info, :warn, :error, :debug, :unknown, :fatal
 
     attr_reader :node_name
 
@@ -50,12 +52,12 @@ module SapHA
       str.split("\n").each { |line| @logger.unknown(line.strip) }
     end
 
-    # Proxy calls to the logger class if they are not found in NodeLogger
-    # @param [Symbol] method
-    # @param [Array] args
-    def method_missing(method, *args)
-      @logger.send(method, *args)
-    end
+    # # Proxy calls to the logger class if they are not found in NodeLogger
+    # # @param [Symbol] method
+    # # @param [Array] args
+    # def method_missing(method, *args)
+    #   @logger.send(method, *args)
+    # end
 
     # Use debug mode
     def set_debug
@@ -119,20 +121,8 @@ module SapHA
           line
         end
       end
-      "<html>
-        <head>
-          <style>
-            code {
-              font-family: \"Nimbus Mono L\", \"Monospace\", monospace;
-            }
-          </style>
-        </head>
-        <body>
-          <code>
-            #{lines.join("<br>\n")}
-          </code>
-        </body>
-      </html>"
+      "<html> <head> <style> code { font-family: \"Nimbus Mono L\", \"Monospace\", monospace; }
+       </style> </head> <body> <code> #{lines.join("<br>\n")} </code> </body> </html>"
     end
 
     # Shorthands for logging
