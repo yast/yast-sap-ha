@@ -22,6 +22,7 @@
 require 'yast'
 require 'socket'
 require 'sap_ha/exceptions'
+require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
 require_relative 'shell_commands'
 
@@ -279,19 +280,36 @@ module SapHA
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'start']
         out, status = su_exec_outerr_status(user_name, *command)
-        NodeLogger.log_status(status.exitstatus == 0,
+        s = NodeLogger.log_status(status.exitstatus == 0,
           "Started HANA",
           "Could not start HANA, will retry.",
           out
         )
+        return true if s
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Started HANA",
+          "Could not start HANA, bailing out.",
+          out
+        )
+      end
+
+      # Get the HANA version as a string
+      # @param system_id [String] SAP SID of the HANA instance
+      # @return [String, nil] version string or nil on failure
+      def hana_version(system_id)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
+        user_name = "#{system_id.downcase}adm"
+        command = ['HDB', 'version']
+        out, status = su_exec_outerr_status(user_name, *command)
         unless status.exitstatus == 0
-          out, status = su_exec_outerr_status(user_name, *command)
-          NodeLogger.log_status(status.exitstatus == 0,
-            "Started HANA",
-            "Could not start HANA, bailing out.",
-            out
-          )
+          NodeLogger.error("Could not retrieve HANA version, assuming legacy version")
+          NodeLogger.output(out)
+          return nil
         end
+        match = /version:\s+(\d+.\d+.\d+)/.match(out)
+        return nil if match.nil?
+        match.captures.first
       end
 
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
@@ -301,19 +319,18 @@ module SapHA
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'stop']
         out, status = su_exec_outerr_status(user_name, *command)
-        NodeLogger.log_status(status.exitstatus == 0,
+        s = NodeLogger.log_status(status.exitstatus == 0,
           "Stopped HANA",
           "Could not stop HANA, will retry.",
           out
         )
-        unless status.exitstatus == 0
-          out, status = su_exec_outerr_status(user_name, *command)
-          NodeLogger.log_status(status.exitstatus == 0,
-            "Stopped HANA",
-            "Could not stop HANA, bailing out.",
-            out
-          )
-        end
+        return true if s
+        out, status = su_exec_outerr_status(user_name, *command)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Stopped HANA",
+          "Could not stop HANA, bailing out.",
+          out
+        )
       end
 
       # Enable System Replication on the primary HANA system
@@ -340,11 +357,16 @@ module SapHA
       def hana_enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
         log.debug "--- called #{self.class}.#{__callee__} ---"
         user_name = "#{system_id.downcase}adm"
-        # TODO: support SPS12
-        # SPS12 requires --replicationMode instead of --mode
-        # use HDB --version
+        version = hana_version(system_id)
+        # Select an appropriate command-line switch for replication mode
+        # Assume legacy `mode` by default (pre-SPS12)
+        mode_string = if !version.nil? && SapHA::Helpers.version_comparison('1.00.120', version)
+                        "--replicationMode=#{mode}"
+                      else
+                        "--mode=#{mode}"
+                      end
         command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
-                   "--remoteInstance=#{instance}", "--mode=#{mode}", "--name=#{site_name}"]
+                   "--remoteInstance=#{instance}", mode_string, "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
           "Enabled HANA System Replication on the secondary host #{site_name}",
@@ -374,14 +396,14 @@ module SapHA
       require 'cfa/augeas_parser'
       require 'cfa/base_model'
       # Copy the hook script
-      
-      
+
+
       global_ini_path = "/hana/shared/#{system_id.upcase}/global/hdb/custom/config/global.ini"
       parser = CFA::AugeasParser.new('puppet.lns')
       bm = CFA::BaseModel.new(parser, global_ini_path)
       bm.load
-      
-      # Set the 
+
+      # Set the
       bm.generic_set 'ha_dr_provider_srTakeover/provider', 'srTakeover'
       bm.generic_set 'ha_dr_provider_srTakeover/path', '/hana/shared/srHook'
       bm.generic_set 'ha_dr_provider_srTakeover/execution_order', '1'

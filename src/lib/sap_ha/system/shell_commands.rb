@@ -21,11 +21,14 @@
 
 require 'open3'
 require 'timeout'
+require 'yast'
 
 module SapHA
   module System
     # Shell commands proxy mix-in
     module ShellCommands
+      
+      include Yast::Logger
 
       class FakeProcessStatus
         attr_reader :exitstatus
@@ -37,18 +40,21 @@ module SapHA
       # Execute command and return its status
       # @return [Process::Status]
       def exec_status(*command)
+        log.info "Executing command #{command}"
         Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
       end
 
       # Execute command and return its status and output (stdout)
       # @return [[Process::Status, String]]
       def exec_output_status(*command)
+        log.info "Executing command #{command}"
         Open3.capture2(*command)
       end
 
       # Execute command and return ist output (both stdout and stderr) and status
       # @return [[String, string]] stdout_and_stderr, status
       def exec_outerr_status(*params)
+        log.info "Executing command #{params}"
         Open3.capture2e(*params)
       rescue SystemCallError => e
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
@@ -57,6 +63,7 @@ module SapHA
       # Pipe the commands and return the common status
       # @return [Boolean] success
       def pipe(*commands)
+        log.info "Executing commands #{commands}"
         stats = Open3.pipeline(*commands)
         stats.all? { |s| s.exitstatus == 0 }
       end
@@ -64,6 +71,7 @@ module SapHA
       # Execute command as user _user_name_ and return ist output (both stdout and stderr) and status
       # @return [[String, String]] [stdout_and_stderr, status]
       def su_exec_outerr_status(user_name, *params)
+        log.info "Executing #{params} as user #{user_name}"
         Open3.capture2e('su', '-lc', params.join(' '), user_name)
       rescue SystemCallError => e
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]

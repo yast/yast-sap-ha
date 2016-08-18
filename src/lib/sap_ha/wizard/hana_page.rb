@@ -45,6 +45,12 @@ module SapHA
                 InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')
               ),
               HBox(
+                HWeight(50, ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
+                  'Replication mode:', @my_model.class::HANA_REPLICATION_MODES)
+                ),
+                HWeight(50, HSpacing())
+              ),
+              HBox(
                 InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
                 InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', '')
               ),
@@ -57,7 +63,8 @@ module SapHA
                 InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')
               ),
               HBox(
-                HWeight(50, CheckBox(Id(:create_backup), Opt(:hstretch, :notify), 'Create initial backup')),
+                HWeight(50, CheckBox(Id(:create_backup), Opt(:hstretch, :notify),
+                  'Create initial backup')),
                 HWeight(50, PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...'))
               )
             )
@@ -71,6 +78,7 @@ module SapHA
       def update_model
         @my_model.system_id = value(:hana_sid).upcase
         @my_model.instance = value(:hana_inst)
+        @my_model.replication_mode = value(:hana_replication_mode)
         @my_model.virtual_ip = value(:hana_vip)
         @my_model.prefer_takeover = value(:site_takover) == :true
         @my_model.auto_register = value(:auto_reg) == :true
@@ -89,6 +97,7 @@ module SapHA
         super
         set_value(:hana_sid, @my_model.system_id)
         set_value(:hana_inst, @my_model.instance)
+        set_value(:hana_replication_mode, @my_model.replication_mode)
         set_value(:hana_vip, @my_model.virtual_ip)
         set_value(:site_takover, @my_model.prefer_takeover.to_s.to_sym)
         set_value(:auto_reg, @my_model.auto_register.to_s.to_sym)
@@ -108,7 +117,9 @@ module SapHA
           refresh_view
         when :create_backup
           update_model
-          @my_model.perform_backup = value(:create_backup)
+          refresh_view
+        when :hana_replication_mode
+          update_model
           refresh_view
         else
           super

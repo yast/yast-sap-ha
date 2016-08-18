@@ -39,7 +39,10 @@ module SapHA
         :site_name_2,
         :backup_file,
         :backup_user,
-        :perform_backup
+        :perform_backup,
+        :replication_mode
+
+      HANA_REPLICATION_MODES = ['sync', 'syncmem', 'async'].freeze
 
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
@@ -51,6 +54,7 @@ module SapHA
         @instance = '00'
         @virtual_ip = ''
         @virtual_ip_mask = '24'
+        @replication_mode = HANA_REPLICATION_MODES.first
         @prefer_takeover = true
         @auto_register = false
         @site_name_1 = 'WALLDORF'
@@ -72,6 +76,10 @@ module SapHA
             'Virtual IP mask')
           check.sap_instance_number(@instance, nil, 'Instance Number')
           check.sap_sid(@system_id, nil, 'System ID')
+          check.element_in_set(@replication_mode, HANA_REPLICATION_MODES,
+            "Value should be one of the following: #{HANA_REPLICATION_MODES.join(',')}.",
+            'Replication mode'
+          )
           check.identifier(@site_name_1, nil, 'Site name 1')
           check.identifier(@site_name_2, nil, 'Site name 2')
           check.element_in_set(@prefer_takeover, [true, false],
@@ -94,6 +102,7 @@ module SapHA
         prepare_description do |dsc|
           dsc.parameter('System ID', @system_id)
           dsc.parameter('Instance', @instance)
+          dsc.parameter('Replication mode', @replication_mode)
           dsc.parameter('Virtual IP', @virtual_ip + '/' + @virtual_ip_mask)
           dsc.parameter('Prefer takeover', @prefer_takeover)
           dsc.parameter('Automatic registration', @auto_register)
@@ -129,7 +138,7 @@ module SapHA
           SapHA::System::Local.hana_hdb_stop(@system_id)
           master_host = @global_config.cluster.other_nodes_ext.first[:hostname]
           SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_2,
-            master_host, @instance)
+            master_host, @instance, @replication_mode)
         end
         true
       end

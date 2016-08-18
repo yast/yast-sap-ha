@@ -154,6 +154,10 @@ module SapHA
       basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"
     end
 
+    def version_comparison(version_target, version_current, cmp = '~>')
+      Gem::Dependency.new('', cmp + version_target).match?('', version_current)
+    end
+
     private
 
     # Read file's contents
