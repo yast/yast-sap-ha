@@ -1,7 +1,12 @@
 <h2>Watchdog Configuration</h2>
 <p>A watchdog device is required to be loaded in order for the SBD to work correctly.</p>
 <p>If your hardware or virtualization platform does not offer a watchdog, make sure that you at least configure the software watchdog, "softdog", module.</p>
-<p><b>Watchdogs to Configure</b> is a list of watchdog modules to be configured to load at the system boot (by listing them in the <code>/etc/modules-load.d/yast.conf</code>).</p>
-<p><b>Configured Watchdogs</b> shows a list of watchdog modules to be configured to load at the system boot.</p>
-<p><b>Loaded watchdogs</b> shows a list of already loaded kernel modules.</p>
+<dl>
+<dt>Watchdogs to Configure</dt>
+    <dd>is a list of watchdog modules to be configured to load at the system boot (by listing them in <code>/etc/modules-load.d/yast.conf</code>).</dd>
+<dt>Configured Watchdogs</dt>
+    <dd>shows a list of watchdog already added to <code>/etc/modules-load.d/yast.conf</code>).</dd>
+<dt>Loaded watchdogs</dt>
+    <dd>shows a list of already loaded kernel modules.</dd>
+</dl>
 <p>During the configuration phase all the modules listed in the <b>Watchdogs to Configure</b> will be added to the configuration file <b>and</b> probed immediately.</p>

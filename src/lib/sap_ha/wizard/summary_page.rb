@@ -25,7 +25,7 @@ require 'sap_ha/node_logger'
 
 module SapHA
   module Wizard
-    # Setup summary page
+    # Setup summary page: display installation log
     class SetupSummaryPage < BaseWizardPage
       attr_accessor :model
 
@@ -35,12 +35,13 @@ module SapHA
 
       def set_contents
         super
+        contents = Yast::UI.TextMode ? SapHA::NodeLogger.text : SapHA::NodeLogger.html
         Yast::Wizard.SetContents(
           "High-Availability Setup Summary",
           VBox(
             HBox(
               HSpacing(3),
-              RichText(SapHA::NodeLogger.html),
+              RichText(contents),
               HSpacing(3)
             ),
             HBox(
@@ -59,6 +60,7 @@ module SapHA
         Yast::Wizard.DisableBackButton
         Yast::Wizard.SetNextButton(:next, "&Finish")
         Yast::Wizard.EnableNextButton
+        set_value(:open_hawk, false, :Enabled) if Yast::UI.TextMode
         SapHA::Helpers.write_var_file('installation_log.html', SapHA::NodeLogger.html,
           timestamp: true)
         SapHA::Helpers.write_var_file('installation_log.txt', SapHA::NodeLogger.text,

@@ -50,7 +50,7 @@ module SapHA
                   HSpacing(3),
                   ComboBox(Id(:number_of_rings), Opt(:notify, :hstretch), 'Number of rings:', ['1', '2'])
                 ),
-                InputField(Id(:cluster_name), Opt(:hstretch), _('Cluster name:'), ''),
+                InputField(Id(:cluster_name), Opt(:hstretch), _('C&luster name:'), ''),
                 VBox(
                   HBox(
                     # HSpacing(20),
@@ -60,8 +60,8 @@ module SapHA
                   PushButton(Id(:edit_ring), _('Edit selected'))
                 )
               ),
-              CheckBox(Id(:enable_secauth), Opt(:hstretch), 'Enable corosync secure authentication', false),
-              CheckBox(Id(:enable_csync2), Opt(:hstretch), 'Enable csync2', false)
+              CheckBox(Id(:enable_secauth), Opt(:hstretch), 'Enable &corosync secure authentication', false),
+              CheckBox(Id(:enable_csync2), Opt(:hstretch), 'Enable c&sync2', false)
             # PushButton(Id(:join_cluster), 'Join existing cluster'),
             )
           ),
@@ -151,7 +151,8 @@ module SapHA
         base_popup(
           "Configuration for ring #{ring[:id]}",
           @my_model.method(:ring_validator),
-          MinWidth(15, ComboBox(Id(:address), 'IP address:', [ring[:address]] | @my_model.ring_addresses)),
+          MinWidth(15, ComboBox(Id(:address), 'IP address:',
+            [ring[:address]] | @my_model.ring_addresses)),
           MinWidth(5, InputField(Id(:port), 'Port number:', ring[:port].to_s)),
           multicast? ?
             MinWidth(15, InputField(Id(:mcast), 'Multicast address', ring[:mcast]))

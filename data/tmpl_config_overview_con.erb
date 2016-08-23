@@ -17,7 +17,7 @@ To change individual settings, select the name of the step.</p>
 
 <h3>Configuration steps</h3>
 
-<p><a href="config_cluster">Communication Layer:</a><br>
+<p><a href="comm_layer"> Communication Layer:</a><br>
 <a href="config_cluster">Nodes:</a></p>
   <% if !@config.cluster.configured? %>
   <%= '<p>Not configured</p>' %>
@@ -26,36 +26,36 @@ To change individual settings, select the name of the step.</p>
   <%= "<p>#{@config.cluster.description}</p>" %>
   <% end %>
 
-<p><a href="ntp">NTP Client:</a></p>
+<p><b><a href="ntp">NTP Client:</a></b>
   <% if !@config.ntp.configured? %>
-  <%= '<p>Not configured</p>' %>
+  <%= 'Not configured</p>' %>
   <% else %>
-  <%= '<p>Configured</p>' %>
+  <%= 'Configured</p>' %>
   <%= "<p>#{@config.ntp.description}</p>" %>
   <% end %>
 
-<p><a href="fencing">Fencing (STONITH):</a></p>
+<p><a href="fencing">Fencing (STONITH):</a>
   <% if !@config.fencing.configured? %>
-  <%= '<p>Not configured</p>' %>
+  <%= 'Not configured</p>' %>
   <% else %>
-  <%= '<p>Configured</p>' %>
+  <%= 'Configured</p>' %>
   <%= "<p>#{@config.fencing.description}</p>" %>
   <% end %>
 
-<p><a href="watchdog">Watchdog:</a></p>
+<p><a href="watchdog">Watchdog:</a>
   <% if !@config.watchdog.configured? %>
-  <%= '<p>Not configured</p>' %>
+  <%= 'Not configured</p>' %>
   <% else %>
-  <%= '<p>Configured</p>' %>
+  <%= 'Configured</p>' %>
   <%= "<p>#{@config.watchdog.description}</p>" %>
   <% end %>
 
 <% if @config.product_id == 'HANA' %>
-  <p><a href="hana">HANA configuration:</a></p>
+  <p><a href="hana">HANA configuration:</a>
   <% if !@config.hana.configured? %>
-  <%= '<p>Not configured</p>' %>
+  <%= 'Not configured</p>' %>
   <% else %>
-  <%= '<p>Configured</p>' %>
+  <%= 'Configured</p>' %>
   <%= "<p>#{@config.hana.description}</p>" %>
   <% end %>
 <% end %>

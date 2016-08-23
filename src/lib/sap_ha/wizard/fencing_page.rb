@@ -46,7 +46,7 @@ module SapHA
                   Table(
                     Id(:sbd_dev_list_table),
                     Opt(:keepSorting, :immediate),
-                    Header(_('#'), _('Mount point'), _('Type'), _('UUID')),
+                    Header(_('#'), _('Device path')),
                     @model.fencing.table_items
                   )
                 )
@@ -94,8 +94,7 @@ module SapHA
           sbd_dev_configuration
         when :remove_sbd_device
           update_model
-          item_id = value(:sbd_dev_list_table, :CurrentItem)
-          @my_model.remove_device_by_id(item_id)
+          @my_model.remove_device_by_id(value(:sbd_dev_list_table, :CurrentItem))
           refresh_view
         else
           super
@@ -108,25 +107,19 @@ module SapHA
         Yast::UI.OpenDialog(
           VBox(
             Label(Opt(:boldFont), 'SBD Device Configuration'),
-            Left(
-              HBox(
-                Label(Opt(:boldFont), 'Device:'),
-                ComboBox(Id(:sbd_combo), Opt(:notify), '', items))),
-            VBox(
-              Left(HBox(Label(Opt(:boldFont), 'Name:'), Label(Id(:sbd_name), ''))),
-              Left(HBox(Label(Opt(:boldFont), 'Type:'), Label(Id(:sbd_type), ''))),
-              Left(HBox(Label(Opt(:boldFont), 'UUID:'), MinWidth(44, Label(Id(:sbd_uuid), ''))))
-            ),
+            ComboBox(Id(:sbd_combo), Opt(:notify, :hstretch), 'Type:', items),
+            MinSize(55, 11, 
+              SelectionBox(Id(:sbd_ids), Opt(:notify, :immediate), 'Identifiers:', [])),
+            TextEntry(Id(:dev_path), Opt(:hstretch), 'Device path:', ''),
             Yast::Wizard.CancelOKButtonBox
-          )
+          ) 
         )
         handle_combo
         loop do
           ui = Yast::UI.UserInput
           case ui
           when :ok
-            v = value(:sbd_combo)
-            @my_model.add_device(v)
+            @my_model.add_device(value(:dev_path))
             Yast::UI.CloseDialog
             refresh_view
             break
@@ -135,6 +128,8 @@ module SapHA
             break
           when :sbd_combo
             handle_combo
+          when :sbd_ids
+            handle_id
           end
         end
       end
@@ -142,12 +137,18 @@ module SapHA
       private
 
       def handle_combo
-        v = value(:sbd_combo)
-        item = @my_model.proposals.find { |e| e[:name] == v }
-        set_value(:sbd_name, item[:name])
-        set_value(:sbd_type, item[:type])
-        set_value(:sbd_uuid, item[:uuid] || "N/A")
-        Yast::UI.RecalcLayout
+        dev_type = value(:sbd_combo)
+        dev_ids = @my_model.list_items(dev_type)
+        set_value(:sbd_ids, dev_ids, :Items)
+        handle_id
+        # Yast::UI.RecalcLayout
+      end
+
+      def handle_id
+        dev_type = value(:sbd_combo)
+        dev_id = value(:sbd_ids)
+        path = @my_model.proposals[dev_type][dev_id]
+        set_value(:dev_path, path)
       end
     end
   end

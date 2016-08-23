@@ -146,7 +146,12 @@ module SapHA
 
       # immediate parameter value: return the decorated value
       def iparam(value)
-        "<code>#{value}</code>"
+        if @ncurses
+          # avoid using <code> in ncurses mode, as it is almost unreadable
+          value.to_s
+        else
+          "<code>#{value}</code>"
+        end
       end
       
       def list_begin(name, opts = {})

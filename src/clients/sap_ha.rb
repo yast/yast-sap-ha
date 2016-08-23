@@ -328,7 +328,7 @@ module Yast
       rescue StandardError => e
         log.error "An error occured during the installation"
         log.error e.message
-        log.error e.backtrace
+        log.error e.backtrace.to_s
         # Let Yast handle the exception
         raise e
       end
@@ -404,7 +404,7 @@ module Yast
           }
         }
       )
-      @config.fencing.import(devices: [{ name: '/dev/vdb', type: 'disk', uuid: '' }])
+      @config.fencing.import(devices: ['/dev/vdb'])
       @config.watchdog.import(to_install: ['softdog'])
       @config.hana.import(
         system_id:   'XXX',

@@ -75,12 +75,12 @@ def _make_basic_ha_config(config, product_id, scenario_name, options = {})
     nodes:                 { node1: { host_name: "hana01", ip_ring1: "192.168.101.21",
                                      ip_ring2: "192.168.103.21", node_id: '1' },
                              node2: { host_name: "hana02", ip_ring1: "192.168.101.22",
-                                     ip_ring2: "192.168.103.23", node_id: '2' } }
+                                     ip_ring2: "192.168.103.22", node_id: '2' } }
   )
   # let the model reduce the number of rings, if necessary
   config.cluster.number_of_rings = options.fetch(:number_of_rings, 2)
   config.fencing.import(
-    devices: [{ name: '/dev/vdb', type: 'disk', uuid: '' }]
+    devices: ['/dev/vdb']
   )
   config.watchdog.import(to_install: ['softdog'])
   config.hana.import(

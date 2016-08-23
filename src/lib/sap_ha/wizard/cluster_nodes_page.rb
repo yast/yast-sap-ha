@@ -142,10 +142,10 @@ module SapHA
         base_popup(
           "Configuration for node #{values[:node_id]}",
           @my_model.method(:node_validator),
-          InputField(Id(:host_name), 'Host name:', values[:host_name] || ""),
-          InputField(Id(:ip_ring1), 'IP in ring #1:', values[:ip_ring1] || ""),
-          @my_model.number_of_rings == 2 ? InputField(Id(:ip_ring2),
-            'IP in ring #2:', values[:ip_ring2] || "") : Empty(),
+          MinWidth(15, InputField(Id(:host_name), 'Host name:', values[:host_name] || "")),
+          MinWidth(15, InputField(Id(:ip_ring1), 'IP in ring #1:', values[:ip_ring1] || "")),
+          @my_model.number_of_rings == 2 ? MinWidth(15, InputField(Id(:ip_ring2),
+            'IP in ring #2:', values[:ip_ring2] || "")) : Empty(),
           # InputField(Id(:node_id), 'Node ID:', values[:node_id] || "")
         )
       end

@@ -44,16 +44,36 @@ module SapHA
       COROSYNC_KEY_PATH = '/etc/corosync/authkey'.freeze
       CSYNC2_KEY_PATH = '/etc/csync2/key_hagroup'.freeze
 
+      
+      # Try listing by
+      # def block_devices_by_node
+      #   out, status = exec_outerr_status('lsblk', '-pnio', 'KNAME,TYPE,UUID')
+      #   if status.exitstatus != 0
+      #     log.error "Failed calling lsblk: #{out}"
+      #     return []
+      #   end
+      #   devices = out.split("\n").map do |s|
+      #     Hash[[:name, :type, :uuid, :alias].zip(s.split)]
+      #   end
+      #   devices.select { |d| d[:type] == "part" || d[:type] == "disk" || d[:type] == "lvm" }
+      # end
+
+      # List all block devices on the system
       def block_devices
-        out, status = exec_outerr_status('lsblk', '-pnio', 'KNAME,TYPE,LABEL,UUID')
+        devices = {}
+        Dir.glob('/dev/disk/by-*').map do |p|
+          dev_map = Dir.glob(File.join(p, '*')).map { |e| [File.basename(e), e] }.to_h
+          devices[File.basename(p)] = dev_map
+        end
+        # if there are no udev-generated IDs, fall-back to /dev/*
+        out, status = exec_outerr_status('lsblk', '-nlp', '-oName', '-e11')
         if status.exitstatus != 0
           log.error "Failed calling lsblk: #{out}"
-          return []
+        else
+          dev_map = out.split("\n").map { |e| [File.basename(e), e] }.to_h
+          devices['by-device'] = dev_map
         end
-        devices = out.split("\n").map do |s|
-          Hash[[:name, :type, :uuid].zip(s.split)]
-        end
-        devices.select { |d| d[:type] == "part" || d[:type] == "disk" || d[:type] == "lvm" }
+        devices
       end
 
       # Change the systemd's unit state
@@ -243,12 +263,12 @@ module SapHA
         log.debug "--- called #{self.class}.#{__callee__} ---"
         flag = true
         devices.each do |device|
-          log.warn "Initializing the SBD device on #{device[:name]}"
-          status = exec_status('sbd', '-d', device[:name], 'create')
-          log.warn "SBD initialization on #{device[:name]} returned #{status.exitstatus}"
+          log.warn "Initializing the SBD device on #{device}"
+          status = exec_status('sbd', '-d', device, 'create')
+          log.warn "SBD initialization on #{device} returned #{status.exitstatus}"
           flag &= NodeLogger.log_status(status.exitstatus == 0,
-            "Successfully initialized the SBD device #{device[:name]}",
-            "Could not initialize the SBD device #{device[:name]}"
+            "Successfully initialized the SBD device #{device}",
+            "Could not initialize the SBD device #{device}"
           )
         end
         flag

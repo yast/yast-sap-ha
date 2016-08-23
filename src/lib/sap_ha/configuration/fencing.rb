@@ -62,7 +62,7 @@ module SapHA
       end
 
       def description
-        ds = @devices.map { |d| d[:name] }.join(', ')
+        ds = @devices.join(', ')
         options = @sbd_options.empty? ? 'none' : @sbd_options
         prepare_description do |dsc|
           dsc.parameter('Configured devices', ds)
@@ -73,27 +73,32 @@ module SapHA
 
       # Drop-down box items
       def combo_items
-        @proposals.map { |e| e[:name] }
+        @proposals.keys.sort
+      end
+
+      def list_items(key)
+        @proposals[key].keys.sort
       end
 
       def table_items
-        @devices.each_with_index.map { |e, i| Item(Id(i), i.to_s, e[:name], e[:type], e[:uuid]) }
+        @devices.each_with_index.map { |e, i| Item(Id(i), (i+1).to_s, e) }
       end
 
       def add_device(dev_path)
-        return if @devices.find { |e| e[:name] == dev_path }
-        @devices << @proposals.find { |e| e[:name] == dev_path }.dup
+        # dev_path = @proposals[dev_type][dev_id]
+        return if @devices.index(dev_path)
+        @devices << dev_path
       end
 
       def remove_device(dev_path)
-        @devices.delete_if { |e| e[:name] == dev_path }
+        @devices.delete_if { |e| e == dev_path }
       end
 
       def remove_device_by_id(dev_id)
         dev = @devices.each_with_index.find { |_, ix| ix == dev_id }
         return if dev.nil? || dev.empty?
         log.error "--- called #{self.class}.#{__callee__} dev=#{dev} ---"
-        remove_device(dev[0][:name])
+        remove_device(dev[0])
       end
 
       def read_sysconfig
@@ -109,7 +114,7 @@ module SapHA
       end
 
       def write_sysconfig
-        devices = @devices.map { |e| e[:name] }.join(';')
+        devices = @devices.join(';')
         Yast::SCR.Write(Yast::Path.new('.sysconfig.sbd.SBD_DEVICE'), devices)
         Yast::SCR.Write(Yast::Path.new('.sysconfig.sbd.SBD_PACEMAKER'), "yes")
         Yast::SCR.Write(Yast::Path.new('.sysconfig.sbd.SBD_STARTMODE'), "always")
@@ -137,8 +142,7 @@ module SapHA
 
       def handle_sysconfig
         handle = ->(sett, default) { (sett.nil? || sett.empty?) ? default : sett }
-        devices = handle.call(@sysconfig[:device], "").split(";")
-        @devices = devices.map { |d| @proposals.find { |p| p[:name] == d } }.compact
+        @devices = handle.call(@sysconfig[:device], "").split(";")
         @sbd_options = handle.call(@sysconfig[:options], @sbd_options)
         @sbd_delayed_start = handle.call(@sysconfig[:delay_start], @sbd_delayed_start)
         true

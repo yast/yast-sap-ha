@@ -89,8 +89,8 @@ module SapHA
           check.element_in_set(@perform_backup, [true, false],
             nil, 'Perform backup')
           if @perform_backup
-            check.identifier(@backup_file, nil, 'Backup file name')
-            check.identifier(@backup_user, nil, 'Secure store key')
+            check.identifier(@backup_file, nil, 'Backup settings/Backup file name')
+            check.identifier(@backup_user, nil, 'Backup settings/Secure store key')
             keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
             check.element_in_set(@backup_user.downcase, keys,
               "There is no such HANA user store key detected.", 'Secure store key')

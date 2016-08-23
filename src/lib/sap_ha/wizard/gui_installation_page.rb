@@ -35,6 +35,7 @@ module SapHA
       include Yast::UIShortcuts
 
       def set(nodes, titles, tasks)
+        @task_no = 0
         @tasks = tasks
         Yast::Progress.New(
           'SAP High-Availability Setup',
@@ -48,14 +49,16 @@ module SapHA
       end
 
       def next_node
+        log.info "GUIInstallationPage: NEXT NODE"
         @task_no = 0
-        Yast::Progress.NextStageStep(0)
+        Yast::Progress.NextStage
       end
 
       def next_task
-        @task_no += 1
+        log.info "GUIInstallationPage: NEXT TASK"
         Yast::Progress.SubprogressValue(@task_no)
         Yast::Progress.SubprogressTitle(@tasks[@task_no])
+        @task_no += 1
       end
 
       def unblock

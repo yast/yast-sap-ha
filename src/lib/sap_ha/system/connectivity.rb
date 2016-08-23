@@ -80,13 +80,14 @@ module SapHA
         retval = call(method_name, *args)
         return retval unless retval == "wait"
         # go into polling mode
-        delay = 1
+        slept = 0
+        delay = 5
         while call("sapha.busy")
           log.info "--- #{self.class}.#{__callee__}: Remote node is busy. Retrying in #{delay} seconds. ---"
           sleep(delay)
-          delay *= 2
+          slept += delay
           # one hour should be enough for an empty HANA to start, right?
-          return false if delay >= 3_600
+          return false if slept >= 3_600
         end
         true
       end
@@ -104,7 +105,7 @@ module SapHA
             time_out *= 2
             log.info "Retry \##{error_count} in #{time_out} seconds: "\
               "calling #{method_name}(#{args.join(', ')}) on node #{self[:host_name]}."
-            sleep time_out
+            sleep(time_out)
             return true
           else
             log.error "Tried #{error_count} times. Bailing out"

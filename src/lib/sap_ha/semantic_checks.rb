@@ -78,7 +78,11 @@ module SapHA
     # @param network [String] IP address
     # @param field_name [String] name of the field in the form
     def ipv4_in_network_cidr(ip, network, field_name = '')
-      flag = IPAddr.new(network).include?(ip)
+      begin
+        flag = IPAddr.new(network).include?(ip)
+      rescue StandardError
+        flag = false
+      end
       msg = "IP address has to belong to the network #{network}."
       report_error(flag, msg, field_name, ip)
     end
@@ -91,7 +95,11 @@ module SapHA
     def ipsv4_in_network_cidr(ips, network, message = '', field_name = '')
       message = "IP addresses have to belong to the network #{network}" \
         if message.nil? || message.empty?
-      net = IPAddr.new(network)
+      begin
+        net = IPAddr.new(network)
+      rescue IPAddr::InvalidAddressError
+        return
+      end
       flag = ips.map { |ip| net.include?(ip) }.all?
       report_error(flag, message, field_name, '')
     end
@@ -250,6 +258,18 @@ module SapHA
       flag = value.is_a?(::String) && !value.empty?
       shown_value = hide_value ? '' : value
       report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
+    end
+
+    # Check if string is a block device
+    # @param value [String] device path
+    def block_device(value, field_name)
+      msg = "The provided path does not point to a block device."
+      begin
+        flag = File::Stat.new(value).blockdev?
+      rescue StandardErrror
+        flag = false
+      end
+      report_error(flag, msg, field_name, value)
     end
 
     # Start a transactional check

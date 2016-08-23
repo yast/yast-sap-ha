@@ -269,7 +269,7 @@ module SapHA
         Yast::UI.OpenDialog(
           VBox(
             Label(message),
-            Password(Id(:password), 'Password:', ''),
+            MinWidth(15, Password(Id(:password), 'Password:', '')),
             Yast::Wizard.CancelOKButtonBox
           )
         )
