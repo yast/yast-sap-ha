@@ -119,7 +119,15 @@ module SapHA
           ui = Yast::UI.UserInput
           case ui
           when :ok
-            @my_model.add_device(value(:dev_path))
+            dev_path = value(:dev_path)
+            ret = SapHA::SemanticChecks.instance.check_popup(
+              @my_model.method(:popup_validator), dev_path
+            )
+            unless ret.empty?
+              show_dialog_errors(ret)
+              next
+            end
+            @my_model.add_device(dev_path)
             Yast::UI.CloseDialog
             refresh_view
             break

@@ -81,7 +81,11 @@ module SapHA
       end
 
       def table_items
-        @devices.each_with_index.map { |e, i| Item(Id(i), (i+1).to_s, e) }
+        @devices.each_with_index.map { |e, i| Item(Id(i), (i + 1).to_s, e) }
+      end
+
+      def popup_validator(check, dev_path)
+        check.block_device(dev_path, 'Device path')
       end
 
       def add_device(dev_path)

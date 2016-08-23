@@ -60,6 +60,13 @@ module SapHA
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
       end
 
+      def exec_outerr_status_stdin(*params, stdin_data)
+        log.info "Executing command #{params}"
+        Open3.capture2e(*params, stdin_data: stdin_data)
+      rescue SystemCallError => e
+        return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
+      end
+
       # Pipe the commands and return the common status
       # @return [Boolean] success
       def pipe(*commands)

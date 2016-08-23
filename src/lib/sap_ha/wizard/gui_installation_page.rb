@@ -49,16 +49,20 @@ module SapHA
       end
 
       def next_node
-        log.info "GUIInstallationPage: NEXT NODE"
+        # wrap in enabling/disabling Progress so that other modules won't influence
+        # our progress bar
+        Yast::Progress.set(true)
         @task_no = 0
         Yast::Progress.NextStage
+        Yast::Progress.set(false)
       end
 
       def next_task
-        log.info "GUIInstallationPage: NEXT TASK"
+        Yast::Progress.set(true)
         Yast::Progress.SubprogressValue(@task_no)
         Yast::Progress.SubprogressTitle(@tasks[@task_no])
         @task_no += 1
+        Yast::Progress.set(false)
       end
 
       def unblock

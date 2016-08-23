@@ -266,9 +266,10 @@ module SapHA
       msg = "The provided path does not point to a block device."
       begin
         flag = File::Stat.new(value).blockdev?
-      rescue StandardErrror
+      rescue StandardError
         flag = false
       end
+      log.error "BLK: #{value}.blockdev? = #{flag}"
       report_error(flag, msg, field_name, value)
     end
 

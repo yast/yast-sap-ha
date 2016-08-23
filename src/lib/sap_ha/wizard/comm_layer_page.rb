@@ -48,20 +48,18 @@ module SapHA
                   ComboBox(Id(:transport_mode), Opt(:notify, :hstretch), 'Transport mode:',
                     ['Unicast', 'Multicast']),
                   HSpacing(3),
-                  ComboBox(Id(:number_of_rings), Opt(:notify, :hstretch), 'Number of rings:', ['1', '2'])
+                  ComboBox(Id(:number_of_rings), Opt(:notify, :hstretch),
+                    'Number of rings:', ['1', '2'])
                 ),
                 InputField(Id(:cluster_name), Opt(:hstretch), _('C&luster name:'), ''),
                 VBox(
-                  HBox(
-                    # HSpacing(20),
-                    MinHeight(4, ReplacePoint(Id(:rp_table), Empty()))
-                    # HSpacing(20)
-                  ),
+                  MinHeight(4, ReplacePoint(Id(:rp_table), Empty())),
                   PushButton(Id(:edit_ring), _('Edit selected'))
                 )
               ),
-              CheckBox(Id(:enable_secauth), Opt(:hstretch), 'Enable &corosync secure authentication', false),
-              CheckBox(Id(:enable_csync2), Opt(:hstretch), 'Enable c&sync2', false)
+              CheckBox(Id(:enable_csync2), Opt(:hstretch), 'Enable c&sync2', false),
+              CheckBox(Id(:enable_secauth), Opt(:hstretch),
+                'Enable &corosync secure authentication', false)
             # PushButton(Id(:join_cluster), 'Join existing cluster'),
             )
           ),

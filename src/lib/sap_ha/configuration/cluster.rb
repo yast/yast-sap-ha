@@ -70,7 +70,7 @@ module SapHA
         @exception_type = ClusterConfigurationException
         @cluster_name = 'hacluster'
         @enable_secauth = false
-        @enable_csync2 = true
+        @enable_csync2 = false
         @keys = {}
         @append_hosts = true
         init_rings
@@ -356,6 +356,7 @@ module SapHA
       def cluster_apply
         cluster_export = generate_cluster_export
         SapHA::System::Local.yast_cluster_export(cluster_export)
+        SapHA::System::Local.change_password('hacluster', 'linux')
       end
 
       def generate_cluster_export

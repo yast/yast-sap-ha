@@ -209,6 +209,15 @@ module SapHA
         end
       end
 
+      def change_password(user_name, password)
+        cmd_string = "#{user_name}:#{password}"
+        out, status = exec_outerr_status_stdin('chpasswd', cmd_string)
+        NodeLogger.log_status(status.exitstatus == 0,
+          "Changed password for user #{user_name}",
+          "Could not change password for user #{user_name}",
+          out)
+      end
+
       def start_cluster_services
         success = true
         success &= systemd_unit(:enable, :service, 'sbd')
