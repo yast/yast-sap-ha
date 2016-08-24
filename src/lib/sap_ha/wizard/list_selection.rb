@@ -33,7 +33,13 @@ module SapHA
 
       def run(title, message, list_contents, help, allow_back, allow_next)
         base_list_selection(title, message, list_contents, help, allow_back, allow_next)
-        Yast::UI.UserInput
+        ret = Yast::UI.WaitForEvent
+        log.info "--- called #{self.class}.#{__callee__} ret=#{ret}---"
+        # Allow for double-clicking the item in the list
+        while ret['ID'] == :selection_box
+          return :next if ret['EventReason'] == 'Activated'
+          ret = Yast::UI.WaitForEvent
+        end
       end
     end
   end

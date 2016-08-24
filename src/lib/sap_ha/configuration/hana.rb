@@ -40,7 +40,8 @@ module SapHA
         :backup_file,
         :backup_user,
         :perform_backup,
-        :replication_mode
+        :replication_mode,
+        :extended
 
       HANA_REPLICATION_MODES = ['sync', 'syncmem', 'async'].freeze
 
@@ -62,6 +63,14 @@ module SapHA
         @backup_user = 'system'
         @backup_file = 'backup'
         @perform_backup = true
+        # Extended configuration for the Cost-Optimized scenario
+        @additional_instance = false
+        @np_system_id = 'QAS'
+        @np_instance = '10'
+      end
+
+      def extended=(val)
+        return unless val
       end
 
       def configured?
@@ -96,11 +105,17 @@ module SapHA
             check.element_in_set(@backup_user.downcase, keys,
               "There is no such HANA user store key detected.", 'Secure store key')
           end
+          if @additional_instance
+            check.sap_instance_number(@np_instance, nil, 'Non-Productive Instance Number')
+            check.sap_sid(@np_system_id, nil, 'Non-Productive System ID')
+          end
+          .
         end
       end
 
       def description
         prepare_description do |dsc|
+          dsc.header('Primary instance') if @additional_instance
           dsc.parameter('System ID', @system_id)
           dsc.parameter('Instance', @instance)
           dsc.parameter('Replication mode', @replication_mode)
@@ -113,6 +128,11 @@ module SapHA
           if @perform_backup
             dsc.parameter('Secure store key', @backup_user)
             dsc.parameter('Backup file', @backup_file)
+          end
+          if @additional_instance
+            dsc.header('Non-productive instance')
+            dsc.parameter('System ID', @np_system_id)
+            dsc.parameter('Instance', @np_instance)
           end
         end
       end

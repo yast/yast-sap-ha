@@ -145,7 +145,7 @@ module SapHA
           title,
           base_layout_with_label(
             message,
-            SelectionBox(Id(:selection_box), Opt(:vstretch), '', list_contents)
+            SelectionBox(Id(:selection_box), Opt(:vstretch, :notify), '', list_contents)
           ),
           help,
           allow_back,

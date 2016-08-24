@@ -184,7 +184,7 @@ module Yast
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
-        ret = Sequencer.Run(@aliases, @sequence)
+        Sequencer.Run(@aliases, @sequence)
       ensure
         Wizard.CloseDialog
       end
