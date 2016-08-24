@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Wed Aug 24 12:44:14 UTC 2016 - imanyugin@suse.com
+
+- Update to version 0.9.0;
+- Change SBD device addressing to udev-generated paths;
+- Allow users to use arbitrary netmasks for corosync rings (bsc#992393);
+- Put the cluster into maintenance mode prior to configuration (bsc#992358);
+- Show scenario prerequisites on the first screen (bsc#992379);
+- HANA Configuration: Add the replicationMode parameter;
+- Allow user to create an initial HANA backup, provided the secure store key is present;
+
+-------------------------------------------------------------------
 Fri Jul  8 10:58:02 UTC 2016 - imanyugin@suse.com
 
 - Fix the bug when reading NTP configuration crashed the module; a workaround for bsc#987064

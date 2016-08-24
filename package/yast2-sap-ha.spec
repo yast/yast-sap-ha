@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 
 Name:           yast2-sap-ha
-Version:        0.8.2
+Version:        0.9.0
 Release:        0
 BuildArch:      noarch
 
