@@ -88,7 +88,8 @@ module SapHA
             nil, 'Automatic registration')
           check.element_in_set(@perform_backup, [true, false],
             nil, 'Perform backup')
-          if @perform_backup
+          # Backup settings should be only validated on the master node
+          if @perform_backup && @global_config.role == :master
             check.identifier(@backup_file, nil, 'Backup settings/Backup file name')
             check.identifier(@backup_user, nil, 'Backup settings/Secure store key')
             keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
