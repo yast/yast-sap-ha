@@ -31,6 +31,8 @@ module SapHA
     class HANA < BaseConfig
       attr_accessor :system_id,
         :instance,
+        :np_system_id,
+        :np_instance,
         :virtual_ip,
         :virtual_ip_mask,
         :prefer_takeover,
@@ -41,7 +43,10 @@ module SapHA
         :backup_user,
         :perform_backup,
         :replication_mode,
-        :extended
+        :additional_instance,
+        :hook_script,
+        :hook_script_parameters,
+        :production_constraints
 
       HANA_REPLICATION_MODES = ['sync', 'syncmem', 'async'].freeze
 
@@ -63,14 +68,35 @@ module SapHA
         @backup_user = 'system'
         @backup_file = 'backup'
         @perform_backup = true
-        # Extended configuration for the Cost-Optimized scenario
+        # Extended configuration for Cost-Optimized scenario
         @additional_instance = false
         @np_system_id = 'QAS'
         @np_instance = '10'
+        @hook_script_parameters = {}
+        @production_constraints = {}
+        @hook_script = "Hello there\nHere is your great hook script\nskdfjkldjasfjawfuoiewfpiesjfasfj;es djeskeswk f,jsdk fpoaesw f;lsjfkljse f\n akjfoaswfepf psmjdfndsmvldjcvfk fewpfipew f"
       end
 
-      def extended=(val)
-        return unless val
+      def additional_instance=(value)
+        @additional_instance = value
+        return unless value
+        @hook_script_parameters = {
+          generated:            false,
+          hook_execution_order: '1',
+          hook_db_user_name:    'system',
+          hook_db_password:     '',
+          hook_port_number:     '31' + @np_instance + '15',
+          hook_db_instance:     '10'
+        }
+        @production_constraints = {
+          global_alloc_limit:    67_108_864.to_s,
+          preload_column_tables: 'no'
+        }
+      end
+
+      def np_instance=(value)
+        @np_instance = value
+        @hook_script_parameters[:hook_db_instance] = value
       end
 
       def configured?
@@ -106,16 +132,19 @@ module SapHA
               "There is no such HANA user store key detected.", 'Secure store key')
           end
           if @additional_instance
-            check.sap_instance_number(@np_instance, nil, 'Non-Productive Instance Number')
-            check.sap_sid(@np_system_id, nil, 'Non-Productive System ID')
+            check.sap_instance_number(@np_instance, nil, 'Non-Production Instance Number')
+            check.sap_sid(@np_system_id, nil, 'Non-Production System ID')
+            check.not_equal(@instance, @np_instance, 'SAP HANA instance numbers should not collide',
+              'Instance number')
+            check.not_equal(@system_id, @np_system_id, 'SAP HANA System IDs should not collide',
+              'System ID')
           end
-          .
         end
       end
 
       def description
         prepare_description do |dsc|
-          dsc.header('Primary instance') if @additional_instance
+          dsc.header('Production instance') if @additional_instance
           dsc.parameter('System ID', @system_id)
           dsc.parameter('Instance', @instance)
           dsc.parameter('Replication mode', @replication_mode)
@@ -130,11 +159,22 @@ module SapHA
             dsc.parameter('Backup file', @backup_file)
           end
           if @additional_instance
-            dsc.header('Non-productive instance')
+            dsc.header('Non-production instance')
             dsc.parameter('System ID', @np_system_id)
             dsc.parameter('Instance', @np_instance)
           end
         end
+      end
+
+      def hook_generated?
+        @hook_script_parameters[:generated]
+      end
+
+      def hook_script_parameters=(value)
+        @hook_script_parameters = value
+        options = value
+        @hook_script = SapHA::Helpers.render_template('tmpl_srhook.py.erb', binding)
+        @hook_script_parameters[:generated] = true
       end
 
       # Validator for the popup
@@ -144,6 +184,13 @@ module SapHA
         keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
         check.element_in_set(hash[:backup_user].downcase, keys,
           "There is no such HANA user store key detected.", 'Secure store key')
+      end
+
+      def hook_script_validation(check, hash)
+        check.nonneg_integer(hash[:hook_execution_order], 'Hook execution order')
+      end
+
+      def production_constraints_validation(check, hash)
       end
 
       def apply(role)

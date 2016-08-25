@@ -358,7 +358,11 @@ module Yast
 
     def debug_run
       @config.set_product_id "HANA"
-      @config.set_scenario_name 'Scale Up: Performance-optimized'
+      if WFM.Args.include? 'cost'
+        @config.set_scenario_name 'Scale Up: Cost-optimized'
+      else
+        @config.set_scenario_name 'Scale Up: Performance-optimized'
+      end
       set_test_values if @test
       :config_overview
     end

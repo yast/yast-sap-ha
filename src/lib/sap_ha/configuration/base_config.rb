@@ -137,7 +137,7 @@ module SapHA
       end
 
       def header(value)
-        @lines << "<h4>#{value}</h4>"
+        @lines << "<tr><td><h4>#{value}</h4><td></tr>"
       end
 
       def parameter(name, value)

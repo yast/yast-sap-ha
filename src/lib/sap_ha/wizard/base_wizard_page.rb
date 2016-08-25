@@ -38,7 +38,8 @@ module SapHA
 
       attr_accessor :model
 
-      INPUT_WIDGETS = [:InputField, :TextEntry, :Password, :CheckBox, :SelectionBox].freeze
+      INPUT_WIDGETS = [:InputField, :TextEntry, :Password, :CheckBox, :SelectionBox,
+                       :MultiLineEdit].freeze
       WRAPPING_WIDGETS = { MinWidth: 1, MinHeight: 1, MinSize: 2, Left: 0 }.freeze
 
       # Initialize the Wizard page
@@ -208,7 +209,7 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__} ---"
         Yast::UI.OpenDialog(
           VBox(
-            Label(message),
+            Yast::UI.TextMode ? Heading(message) : Label(message),
             *widgets,
             Yast::Wizard.CancelOKButtonBox
           )
@@ -232,7 +233,7 @@ module SapHA
               end.params[0]
               parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
             end
-            log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
+            log.info "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
             if validator && !@model.no_validators
               ret = SemanticChecks.instance.check_popup(validator, parameters)
               unless ret.empty?

@@ -2,6 +2,7 @@
   string_name: SAP HANA
   scenarios:
     - name: "Scale Up: Performance-optimized"
+      id: "supo"
       description: |
         <b>Performance-optimized scenario</b> allows to set up a synchronous system
         replication between two nodes, A and B, within the same cluster.
@@ -51,6 +52,7 @@
       additional_instance: false
 
     - name: "Scale Up: Cost-optimized"
+      id: "suco"
       description: |
         <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
         between two nodes, A and B, within the same cluster, while a development
@@ -67,7 +69,8 @@
                 Note that the machine you run the wizard on becomes the primary node in the cluster.
             </li>
             <li>
-                The second node has to have a secondary, non-productive HANA instance installed.
+                The second node has to have a secondary, non-production HANA instance installed, <b>
+                but not running</b>.
             </li>
             <li>
                 You have configured the firewall (using the SAP HANA Firewall module in the 
@@ -88,9 +91,10 @@
                 the following stages of the Wizard).
             </li>
         </ul>
-    additional_instance: true
+      additional_instance: true
 
     - name: "Scale Up: Chained (multi-tier)"
+      id: "sumt"
       number_of_nodes: 2
       fixed_number_of_nodes: true
       description: |
@@ -111,7 +115,7 @@
                 You have a remote HANA machine in another data center, which have to be registered manually.
             </li>
             <li>
-                The second node has to have a secondary, non-productive HANA instance installed.
+                The second node has to have a secondary, non-production HANA instance installed.
             </li>
             <li>
                 You have configured the firewall (using the SAP HANA Firewall module in the 
@@ -134,7 +138,7 @@
                     --remoteInstance=$(instance_number) --replicationMode=async --name=$(site_name)</code>.
             </li>
         </ul>
-    additional_instance: false
+      additional_instance: false
 
 # - id: NW
 #   string_name: NetWeaver
