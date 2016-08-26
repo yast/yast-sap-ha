@@ -112,7 +112,7 @@ module SapHA
         out = nil
         success = false
         str = hosts.map do |_, h|
-          "#{h[:ip_ring1]} #{h[:ip_ring2]}\t#{h[:host_name]} \# added by yast2-sap-ha"
+          "#{h[:ip_ring1]}\t#{h[:host_name]} \# added by yast2-sap-ha"
         end.join("\n")
         begin
           File.open('/etc/hosts', 'a') { |fh| fh.puts(str) }

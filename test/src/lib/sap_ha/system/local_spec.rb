@@ -324,8 +324,8 @@ compile type:        rel
     context 'when provided with a list of nodes in 1-ring configuration' do
       it 'writes the hosts file' do
         io = StringIO.new
-        exp = "192.168.100.1 \thana01 # added by yast2-sap-ha\n"\
-          "192.168.100.2 \thana02 # added by yast2-sap-ha\n"
+        exp = "192.168.100.1\thana01 # added by yast2-sap-ha\n"\
+          "192.168.100.2\thana02 # added by yast2-sap-ha\n"
         expect(File).to receive(:open).with('/etc/hosts', 'a').and_yield(io)
         SapHA::System::Local.append_hosts_file(hosts)
         expect(io.string).to eq exp
@@ -335,8 +335,8 @@ compile type:        rel
     context 'when provided with a list of nodes in 2-ring configuration' do
       it 'writes the hosts file' do
         io = StringIO.new
-        exp = "192.168.100.1 192.168.101.1\thana01 # added by yast2-sap-ha\n"\
-          "192.168.100.2 192.168.101.2\thana02 # added by yast2-sap-ha\n"
+        exp = "192.168.100.1\thana01 # added by yast2-sap-ha\n"\
+          "192.168.100.2\thana02 # added by yast2-sap-ha\n"
         hosts[:node1][:ip_ring2] = '192.168.101.1'
         hosts[:node2][:ip_ring2] = '192.168.101.2'
         expect(File).to receive(:open).with('/etc/hosts', 'a').and_yield(io)
