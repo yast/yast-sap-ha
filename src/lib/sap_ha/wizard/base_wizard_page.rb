@@ -233,7 +233,7 @@ module SapHA
               end.params[0]
               parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
             end
-            log.info "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
+            log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
             if validator && !@model.no_validators
               ret = SemanticChecks.instance.check_popup(validator, parameters)
               unless ret.empty?

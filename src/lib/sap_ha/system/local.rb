@@ -43,6 +43,7 @@ module SapHA
 
       COROSYNC_KEY_PATH = '/etc/corosync/authkey'.freeze
       CSYNC2_KEY_PATH = '/etc/csync2/key_hagroup'.freeze
+      HANA_GLOBAL_INI = "/hana/shared/%s/global/hdb/custom/config/global.ini".freeze
 
       
       # Try listing by
@@ -419,28 +420,57 @@ module SapHA
         end
         out.scan(regex).flatten
       end
+
+      # Write the takeover hook script
+      # @param system_id [String] HANA System ID (production)
+      # @param hook_script [String] HANA takeover hook script
+      def hana_write_sr_hook(system_id, hook_script)
+        hook_dir = "/hana/shared/#{system_id.upcase}/srHook"
+        begin
+          Dir.mkdir(hook_dir) unless Dir.exist?(hook_dir)
+        rescue StandardError => e
+          log.error "Error creating directory #{hook_dir}: #{e.message}"
+          NodeLogger.error("Could not create directory #{hook_dir}")
+          NodeLogger.output(e.message)
+          return false
+        end
+        begin
+          hook_path = File.join(hook_dir, 'srTakeover.py')
+          File.open(hook_path, 'wb') do |fh|
+            fh.write(hook_script)
+          end
+        rescue RuntimeError => e
+          log.error "Error writing file #{hook_path}: #{e.message}"
+          NodeLogger.error("Could not write the system replication hook script to #{hook_path}")
+          NodeLogger.output(e.message)
+          return false
+        end
+        NodeLogger.info("Wrote system replication hook script to #{hook_path}")
+        true
+      end
+
+      # Implement adjustments to the production system, so that a non-production
+      # HANA could be run along it
+      # @param system_id [String] HANA System ID (production)
+      # @param options [Hash] production system options
+      def hana_adjust_production_system(system_id, options = {})
+        require 'cfa/augeas_parser'
+        require 'cfa/base_model'
+        require 'cfa/matcher'
+        # Change the global.ini
+        global_ini_path = HANA_GLOBAL_INI % system_id.upcase
+        parser = CFA::AugeasParser.new('puppet.lns')
+        bm = CFA::BaseModel.new(parser, global_ini_path)
+        bm.load
+        bm.generic_set('ha_dr_provider_srTakeover/provider', 'srTakeover')
+        bm.generic_set('ha_dr_provider_srTakeover/path',
+          "/hana/shared/#{system_id.upcase}/srHook/srTakeover.py")
+        bm.generic_set('ha_dr_provider_srTakeover/execution_order', options[:execution_order])
+        bm.generic_set('memorymanager/global_allocation_limit', options[:global_alloc_limit])
+        bm.generic_set('system_replication/preload_column_tables', options[:preload_column_tables])
+        bm.save
+      end
     end
-
-    def hana_change_global_ini(system_id, options = {})
-      require 'cfa/augeas_parser'
-      require 'cfa/base_model'
-      # Copy the hook script
-
-
-      global_ini_path = "/hana/shared/#{system_id.upcase}/global/hdb/custom/config/global.ini"
-      parser = CFA::AugeasParser.new('puppet.lns')
-      bm = CFA::BaseModel.new(parser, global_ini_path)
-      bm.load
-
-      # Set the
-      bm.generic_set 'ha_dr_provider_srTakeover/provider', 'srTakeover'
-      bm.generic_set 'ha_dr_provider_srTakeover/path', '/hana/shared/srHook'
-      bm.generic_set 'ha_dr_provider_srTakeover/execution_order', '1'
-      bm.generic_set 'memorymanager/global_allocation_limit', '20G'
-      bm.generic_set 'system_replication/preload_column_tables', 'false'
-      bm.save
-    end
-
     Local = LocalClass.instance
   end
 end

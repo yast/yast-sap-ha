@@ -74,7 +74,7 @@ module SapHA
         @np_instance = '10'
         @hook_script_parameters = {}
         @production_constraints = {}
-        @hook_script = "Hello there\nHere is your great hook script\nskdfjkldjasfjawfuoiewfpiesjfasfj;es djeskeswk f,jsdk fpoaesw f;lsjfkljse f\n akjfoaswfepf psmjdfndsmvldjcvfk fewpfipew f"
+        @hook_script = ""
       end
 
       def additional_instance=(value)
@@ -85,18 +85,13 @@ module SapHA
           hook_execution_order: '1',
           hook_db_user_name:    'system',
           hook_db_password:     '',
-          hook_port_number:     '31' + @np_instance + '15',
+          hook_port_number:     '3' + @instance + '15',
           hook_db_instance:     '10'
         }
         @production_constraints = {
-          global_alloc_limit:    67_108_864.to_s,
-          preload_column_tables: 'no'
+          global_alloc_limit:    65_536.to_s,
+          preload_column_tables: 'false'
         }
-      end
-
-      def np_instance=(value)
-        @np_instance = value
-        @hook_script_parameters[:hook_db_instance] = value
       end
 
       def configured?
@@ -138,6 +133,10 @@ module SapHA
               'Instance number')
             check.not_equal(@system_id, @np_system_id, 'SAP HANA System IDs should not collide',
               'System ID')
+            hook_script_validation(check, @hook_script_parameters)
+            production_constraints_validation(check, @production_constraints)
+            check.non_empty_string(@hook_script, "The failover hook script was not generated.",
+              '', true)
           end
         end
       end
@@ -162,6 +161,9 @@ module SapHA
             dsc.header('Non-production instance')
             dsc.parameter('System ID', @np_system_id)
             dsc.parameter('Instance', @np_instance)
+            dsc.header('Production system constraints')
+            dsc.parameter('Global allocation limit (MB)', @production_constraints[:global_alloc_limit])
+            dsc.parameter('Column tables preload', @production_constraints[:preload_column_tables])
           end
         end
       end
@@ -172,7 +174,8 @@ module SapHA
 
       def hook_script_parameters=(value)
         @hook_script_parameters = value
-        options = value
+        @hook_script_parameters[:hook_port_number] = '3' + @instance + '15'
+        @hook_script_parameters[:hook_db_instance] = @instance
         @hook_script = SapHA::Helpers.render_template('tmpl_srhook.py.erb', binding)
         @hook_script_parameters[:generated] = true
       end
@@ -188,9 +191,14 @@ module SapHA
 
       def hook_script_validation(check, hash)
         check.nonneg_integer(hash[:hook_execution_order], 'Hook execution order')
+        check.identifier(hash[:hook_db_user_name], nil, 'DB user name')
+        check.port(hash[:hook_port_number], 'Port number')
       end
 
       def production_constraints_validation(check, hash)
+        check.element_in_set(hash[:preload_column_tables], ['true', 'false'],
+          'The field must contain a boolean value: "true" or "false"', 'Preload column tables')
+        check.nonneg_integer(hash[:global_alloc_limit], 'Global allocation limit')
       end
 
       def apply(role)
@@ -204,6 +212,9 @@ module SapHA
           configure_crm
         else
           SapHA::System::Local.hana_hdb_stop(@system_id)
+          SapHA::System::Local.hana_write_sr_hook(@system_id, @hook_script)
+          SapHA::System::Local.hana_adjust_production_system(@system_id,
+            @hook_script_parameters.merge(@production_constraints))
           master_host = @global_config.cluster.other_nodes_ext.first[:hostname]
           SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_2,
             master_host, @instance, @replication_mode)
@@ -213,6 +224,7 @@ module SapHA
 
       def configure_crm
         # TODO: move this to SapHA::System::Local.configure_crm
+        # TODO: generate a different config for cost_optimized scenario
         crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
         file_path = Helpers.write_var_file('cluster.config', crm_conf)
         out, status = exec_outerr_status('crm', '--file', file_path)

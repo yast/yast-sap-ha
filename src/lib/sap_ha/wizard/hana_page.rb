@@ -116,7 +116,9 @@ module SapHA
             return unless hook_parameters
             @my_model.hook_script_parameters = hook_parameters
           end
-          generate_and_show_hook
+          ret = generate_and_show_hook
+          return unless ret
+          @my_model.hook_script = ret[:hook_script]
         else
           super
         end
@@ -137,9 +139,8 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__} --- "
         base_popup(
           'Production system constraints',
-          # TODO: validators for the popups
           @my_model.method(:production_constraints_validation),
-          MinWidth(20, InputField(Id(:global_alloc_limit), 'Global &allocation limit:',
+          MinWidth(20, InputField(Id(:global_alloc_limit), 'Global &allocation limit (in MB):',
             values[:global_alloc_limit] || '')),
           MinWidth(20, InputField(Id(:preload_column_tables), '&Preload column tables:',
             values[:preload_column_tables] || ''))
@@ -181,10 +182,8 @@ module SapHA
                HWeight(50, HSpacing())),
           HBox(InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
                InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', '')),
-          HBox(base_true_false_combo(:site_takover, 'Prefer site takeover:'),
-               base_true_false_combo(:auto_reg, 'Automatic registration:')),
-          # HBox(CheckBox(Id(:site_takover), 'Prefer site takeover'),
-          #      CheckBox(Id(:auto_reg), 'Automatic registration')),
+          HBox(HWeight(50, base_true_false_combo(:site_takover, 'Prefer site takeover:')),
+               HWeight(50, base_true_false_combo(:auto_reg, 'Automatic registration:'))),
           HBox(InputField(Id(:site_name_1), Opt(:hstretch), 'Site name 1', ''),
                InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')),
           HBox(HWeight(50, CheckBox(Id(:create_backup), Opt(:hstretch, :notify), 
