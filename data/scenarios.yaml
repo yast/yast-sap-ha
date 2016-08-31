@@ -14,7 +14,7 @@
         - fencing
         - cluster
         - hana
-      screen_sequence:
+      screen_sequence: &id002
         - prerequisites
         - communication_layer
         - cluster_nodes
@@ -60,6 +60,7 @@
       number_of_nodes: 2
       fixed_number_of_nodes: true
       config_sequence: *id001
+      screen_sequence: *id002
       prerequisites_notice: |
         <h3>HANA System Replication Scale Up: Cost-optimized</h3>
         <p>Before proceeding with the installation, please make sure of the following:<p>
@@ -102,6 +103,7 @@
         three nodes: A, B and C, with synchronous replication between A and B and asynchronous
         between B and C. Note that node C is not managed by the cluster.
       config_sequence: *id001
+      screen_sequence: *id002
       prerequisites_notice: |
         <h3>HANA System Replication Scale Up: Multi-tier</h3>
         <p>Before proceeding with the installation, please make sure of the following:<p>

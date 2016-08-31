@@ -176,30 +176,39 @@ module SapHA
       def prepare_contents
         @contents = VBox(
           HBox(InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', ''),
-               InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')),
-          HBox(HWeight(50, ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
-                'Replication mode:', @my_model.class::HANA_REPLICATION_MODES)),
-               HWeight(50, HSpacing())),
-          HBox(InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
-               InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', '')),
+            HSpacing(1),
+            InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')),
+          HBox(HWeight(49, ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
+            'Replication mode:', @my_model.class::HANA_REPLICATION_MODES)),
+            HWeight(2, Empty()),
+            HWeight(49, HSpacing())),
+          HBox(
+            HWeight(49,
+              InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', '')),
+            HWeight(2, Empty()),
+            HWeight(49,
+              InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', ''))),
           HBox(HWeight(50, base_true_false_combo(:site_takover, 'Prefer site takeover:')),
-               HWeight(50, base_true_false_combo(:auto_reg, 'Automatic registration:'))),
+            HSpacing(1),
+            HWeight(50, base_true_false_combo(:auto_reg, 'Automatic registration:'))),
           HBox(InputField(Id(:site_name_1), Opt(:hstretch), 'Site name 1', ''),
-               InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')),
-          HBox(HWeight(50, CheckBox(Id(:create_backup), Opt(:hstretch, :notify), 
+            HSpacing(1),
+            InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')),
+          HBox(HWeight(50, CheckBox(Id(:create_backup), Opt(:hstretch, :notify),
             'Create initial backup')),
+            HSpacing(1),
             HWeight(50, PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')))
         )
         if @my_model.additional_instance
           @contents << HBox(
             HWeight(50, PushButton(Id(:production_constraints), Opt(:hstretch),
-               'Production system constraints...')),
+              'Production system constraints...')),
             HWeight(50, PushButton(Id(:hook_script_params), Opt(:hstretch), 'Hook script...')))
           @contents = VBox(
             Frame('Production instance', Yast::deep_copy(@contents)),
             Frame('Non-production instance',
               VBox(HBox(InputField(Id(:np_hana_sid), Opt(:hstretch), 'System ID:', ''),
-                   InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:', '')))
+                InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:', '')))
               )
             )
         end

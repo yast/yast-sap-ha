@@ -1,3 +1,7 @@
+- New dependencies: 
+        * ruby2.1-rubygem-cfa for configuration files parsing
+        * sysvinit-tools for `pidof` binary
+
 -------------------------------------------------------------------
 Wed Aug 24 12:44:14 UTC 2016 - imanyugin@suse.com
 

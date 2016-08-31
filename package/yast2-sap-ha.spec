@@ -38,11 +38,16 @@ Requires:       util-linux
 # lsmod, modprobe
 Requires:       kmod-compat
 Requires:       SAPHanaSR
+# configuration parser
+Requires:       ruby2.1-rubygem-cfa
+# for pidof
+Requires:       sysvinit-tools
 
 BuildRequires:  yast2
 BuildRequires:  yast2-ruby-bindings
 BuildRequires:  yast2-devtools
 BuildRequires:  yast2-packager
+BuildRequires:  ruby2.1-rubygem-cfa
 BuildRequires:  update-desktop-files
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
@@ -50,6 +55,7 @@ BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-cluster
 BuildRequires:  kmod-compat
 BuildRequires:  util-linux
+BuildRequires:       sysvinit-tools
 
 Group:          System/YaST
 License:        GPL-2.0

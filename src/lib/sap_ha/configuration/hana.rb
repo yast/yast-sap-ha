@@ -22,6 +22,7 @@
 require 'yast'
 require 'sap_ha/system/shell_commands'
 require 'sap_ha/system/local'
+require 'sap_ha/system/hana'
 require 'sap_ha/system/network'
 require_relative 'base_config'
 
@@ -122,7 +123,7 @@ module SapHA
           if @perform_backup && @global_config.role == :master
             check.identifier(@backup_file, nil, 'Backup settings/Backup file name')
             check.identifier(@backup_user, nil, 'Backup settings/Secure store key')
-            keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
+            keys = SapHA::System::Hana.check_secure_store(@system_id).map(&:downcase)
             check.element_in_set(@backup_user.downcase, keys,
               "There is no such HANA user store key detected.", 'Secure store key')
           end
@@ -180,22 +181,39 @@ module SapHA
         @hook_script_parameters[:generated] = true
       end
 
-      # Validator for the popup
+      # Validator for the backup settings popup
+      # @param check [SapHA::SemanticCheck]
+      # @param hash [Hash] input fields' contents
       def hana_backup_validator(check, hash)
         check.identifier(hash[:backup_file], nil, 'Backup file name')
         check.identifier(hash[:backup_user], nil, 'Secure store key')
-        keys = SapHA::System::Local.hana_check_secure_store(@system_id).map(&:downcase)
+        keys = SapHA::System::Hana.check_secure_store(@system_id).map(&:downcase)
         check.element_in_set(hash[:backup_user].downcase, keys,
           "There is no such HANA user store key detected.", 'Secure store key')
       end
 
+      # Validator for the hook script settings popup
+      # @param check [SapHA::SemanticCheck]
+      # @param hash [Hash] input fields' contents
       def hook_script_validation(check, hash)
         check.nonneg_integer(hash[:hook_execution_order], 'Hook execution order')
         check.identifier(hash[:hook_db_user_name], nil, 'DB user name')
         check.port(hash[:hook_port_number], 'Port number')
       end
 
+      # Validator for the production instance constraints popup
+      # @param check [SapHA::SemanticCheck]
+      # @param hash [Hash] input fields' contents
       def production_constraints_validation(check, hash)
+        check.element_in_set(hash[:preload_column_tables], ['true', 'false'],
+          'The field must contain a boolean value: "true" or "false"', 'Preload column tables')
+        check.nonneg_integer(hash[:global_alloc_limit], 'Global allocation limit')
+      end
+
+      # Validator for the non-production instance constraints popup
+      # @param check [SapHA::SemanticCheck]
+      # @param hash [Hash] input fields' contents
+      def non_production_constraints_validation(check, hash)
         check.element_in_set(hash[:preload_column_tables], ['true', 'false'],
           'The field must contain a boolean value: "true" or "false"', 'Preload column tables')
         check.nonneg_integer(hash[:global_alloc_limit], 'Global allocation limit')
@@ -205,19 +223,24 @@ module SapHA
         return false unless configured?
         @nlog.info('Appying HANA Configuration')
         if role == :master
-          SapHA::System::Local.hana_hdb_start(@system_id)
-          SapHA::System::Local.hana_make_backup(@system_id, @backup_user, @backup_file,
+          SapHA::System::Hana.hdb_start(@system_id)
+          SapHA::System::Hana.make_backup(@system_id, @backup_user, @backup_file,
             @instance) if @perform_backup
-          SapHA::System::Local.hana_enable_primary(@system_id, @site_name_1)
+          SapHA::System::Hana.enable_primary(@system_id, @site_name_1)
           configure_crm
-        else
-          SapHA::System::Local.hana_hdb_stop(@system_id)
-          SapHA::System::Local.hana_write_sr_hook(@system_id, @hook_script)
-          SapHA::System::Local.hana_adjust_production_system(@system_id,
-            @hook_script_parameters.merge(@production_constraints))
-          master_host = @global_config.cluster.other_nodes_ext.first[:hostname]
-          SapHA::System::Local.hana_enable_secondary(@system_id, @site_name_2,
-            master_host, @instance, @replication_mode)
+        else # secondary node
+          SapHA::System::Hana.hdb_stop(@system_id)
+          primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+          SapHA::System::Hana.enable_secondary(@system_id, @site_name_2,
+            primary_host_name, @instance, @replication_mode)
+          if @additional_instance # cost-optimized scenario
+            SapHA::System::Hana.hdb_stop(@np_system_id)
+            SapHA::System::Hana.write_sr_hook(@system_id, @hook_script)
+            SapHA::System::Hana.adjust_production_system(@system_id,
+              @hook_script_parameters.merge(@production_constraints))
+            # SapHA::System::Hana.adjust_non_production_system(@np_system_id)
+          end
+          SapHA::System::Hana.hdb_start(@system_id)
         end
         true
       end
@@ -225,11 +248,16 @@ module SapHA
       def configure_crm
         # TODO: move this to SapHA::System::Local.configure_crm
         # TODO: generate a different config for cost_optimized scenario
-        crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
+        if @additional_instance
+          primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+          crm_conf = Helpers.render_template('tmpl_cluster_config_cost_opt.erb', binding)
+        else
+          crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
+        end
         file_path = Helpers.write_var_file('cluster.config', crm_conf)
         out, status = exec_outerr_status('crm', '--file', file_path)
         @nlog.log_status(status.exitstatus == 0,
-          'Configured necessary cluster resources for HANA',
+          'Configured necessary cluster resources for HANA System Replication',
           'Could not configure HANA cluster resources', out)
       end
     end
