@@ -67,7 +67,7 @@ module SapHA
       # Copy SSH keys from the host
       def copy_keys_from_(host, password, path)
         stat = exec_status("/usr/bin/expect", "-f", @script_path,
-                           "copy", host, password, path.to_s)
+          "copy", host, password, path.to_s)
         check_status(stat, host)
       end
 
@@ -92,8 +92,7 @@ module SapHA
       # Copy own SSH identities to the specified host using the password
       def copy_keys_to(host, password)
         result = true
-        stat = exec_status("/usr/bin/expect", "-f", @script_path,
-                           "copy-id", host, password)
+        stat = exec_status("/usr/bin/expect", "-f", @script_path, "copy-id", host, password)
         check_status(stat, host)
         ssh_dir = File.join(Dir.home, '.ssh')
         @user_identities.each do |key|
@@ -173,14 +172,15 @@ module SapHA
         log.info "Copied #{keys_copied} keys."
         ::FileUtils.rm_rf tmpdir
         # make sure the target host has its own keys in authorized_keys
-        if exec_status("/usr/bin/expect", "-f",
-                       @script_path, "authorize", host, password).exitstatus != 0
+        stat = exec_status("/usr/bin/expect", "-f", @script_path, "authorize", host, password)
+        if stat.exitstatus != 0
           log.error "Executing ha-cluster-init ssh_remote on host #{host} failed"
         end
       end
 
       def run_rpc_server(host)
-        stat = exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", SapHA::Helpers.rpc_server_cmd)
+        stat = exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}",
+          SapHA::Helpers.rpc_server_cmd)
         check_status(stat, host)
       end
 

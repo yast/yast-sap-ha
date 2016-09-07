@@ -341,6 +341,31 @@ module SapHA
         command = command_prefix << '"SELECT * FROM DUMMY"'
         out, status = su_exec_outerr_status(user_name, *command)
       end
+
+      # Execute an HDBSQL command
+      # @param system_id [String] HANA System ID
+      # @param user_name [String] HANA user name
+      # @param instance number [String] HANA instance number
+      # @param password [String] HANA password
+      # @param environment [String] HANA host:port specification (can be empty)
+      # @param statement [String] SQL statement
+      def hdbsql_command(system_id, user_name, instance_number, password, environment, statement)
+        log.debug "--- called #{self.class}.#{__callee__} ---"
+        su_name = "#{system_id.downcase}adm"
+        cmd = 'hdbsql', '-x', '-u', user_name, '-i', instance_number.to_s, '-p', password
+        cmd << '-n' << environment unless environment.empty?
+        cmd << '"' << statement.gsub('"', "\\\"") << '"'
+        out, status = su_exec_outerr_status_no_echo(su_name, *cmd)
+        if status.exitstatus != 0
+          # remove the password from the command line
+          pass_index = (cmd.index('-p') || 0) + 1
+          cmd[pass_index] = "*" * cmd[pass_index].length
+          NodeLogger.error "Error executing command #{cmd.join(" ")}"
+          NodeLogger.output out
+          return
+        end
+        out
+      end
     end # HanaClass
     Hana = HanaClass.instance
   end # namespace System

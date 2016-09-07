@@ -65,6 +65,10 @@ module SapHA
         true
       end
 
+      def stop_rpc_server
+        
+      end
+
       def ping?
         call('sapha.ping')
       end
