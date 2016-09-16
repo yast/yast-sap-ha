@@ -18,6 +18,7 @@
 # Summary: SUSE High Availability Setup for SAP Products: In-memory logger class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
+require 'yast'
 require 'singleton'
 require 'logger'
 require 'stringio'
@@ -27,8 +28,7 @@ module SapHA
   # Log info messages, warnings and errors into memory
   class NodeLoggerClass
     include Singleton
-    extend Forwardable
-    def_delegators :@logger, :info, :warn, :error, :debug, :unknown, :fatal
+    include Yast::Logger
 
     attr_reader :node_name
 
@@ -48,6 +48,7 @@ module SapHA
     # Append command's stdout/stderr to the log
     # @param [String] str raw output
     def output(str)
+      return unless str
       str = str.strip
       str.split("\n").each { |line| @logger.unknown(line.strip) }
     end
@@ -127,32 +128,6 @@ module SapHA
 
     # Shorthands for logging
 
-    # Log the status of an attempt at enabling a systemd unit
-    # @param [Boolean] status
-    # @param [String] unit_name
-    # @param [Symbol] unit_type either :service or :socket
-    def enable_unit(status, unit_name, unit_type = :service)
-      if status
-        @logger.info("Enabled #{unit_type} #{unit_name}")
-      else
-        @logger.error("Could not enable #{unit_type} #{unit_name}")
-      end
-      status
-    end
-
-    # Log the status of an attempt at starting a systemd unit
-    # @param [Boolean] status
-    # @param [String] unit_name
-    # @param [Symbol] unit_type either :service or :socket
-    def start_unit(status, unit_name, unit_type = :service)
-      if status
-        @logger.info("Started #{unit_type} #{unit_name}")
-      else
-        @logger.error("Could not start #{unit_type} #{unit_name}")
-      end
-      status
-    end
-
     # Log a general fatal error
     def showstopper
       @logger.fatal("Interrupting configuration process due to earlier errors.")
@@ -172,6 +147,17 @@ module SapHA
         output(stdout) if stdout
       end
       status
+    end
+
+    private
+
+    def method_missing(method, *args, &block)
+      unless [:info, :warn, :error, :debug, :unknown, :fatal].include? method
+        log.error "Called a non-existing method #{method} on SapHA::NodeLoggerClass"
+        return
+      end
+      log.send(method, *args, &block)
+      @logger.send(method, *args, &block)
     end
   end
 

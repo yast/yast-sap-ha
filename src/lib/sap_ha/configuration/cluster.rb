@@ -72,7 +72,7 @@ module SapHA
         @enable_secauth = false
         @enable_csync2 = false
         @keys = {}
-        @append_hosts = true
+        @append_hosts = false
         init_rings
         init_nodes
       end

@@ -54,7 +54,7 @@ configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cl
 # non-production HANA and constraints
 #
 
-primitive rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> ocf:heartbeat:SAPDatabase \
+configure primitive rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> ocf:heartbeat:SAPDatabase \
     params DBTYPE="HDB" SID="<%= @np_system_id -%>" \
     MONITOR_SERVICES="hdbindexserver|hdbnameserver" \
     op start interval="0" timeout="600" \
@@ -62,15 +62,15 @@ primitive rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> ocf:heartbeat:SA
     op stop interval="0" timeout="300" \
     meta priority="100"
 
-location loc_<%= @np_system_id -%>_never_<%= primary_host_name -%> \
+configure location loc_<%= @np_system_id -%>_never_<%= primary_host_name -%> \
     rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> -inf: <%= primary_host_name -%>
 
 
-colocation col_<%= @np_system_id -%>_never_with_PRDip \
+configure colocation col_<%= @np_system_id -%>_never_with_PRDip \
     -inf: rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:Started \
     rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>
 
 
-order ord_<%= @np_system_id -%>_stop_before_PRDpromote inf: \
+configure order ord_<%= @np_system_id -%>_stop_before_PRDpromote inf: \
     rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
     msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote

@@ -126,9 +126,10 @@ module SapHA
 
       def hana_backup_popup
         log.debug "--- #{self.class}.#{__callee__} --- "
-        base_popup(
+        base_popup_new(
           "Initial HANA Backup Settings",
           @my_model.method(:hana_backup_validator),
+          {create_key: method(:secure_store_key_popup)},
           InputField(Id(:backup_file), 'Backup file name:', @my_model.backup_file),
           InputField(Id(:backup_user), 'Secure store key:', @my_model.backup_user)
         )
@@ -212,6 +213,16 @@ module SapHA
               )
             )
         end
+      end
+
+      def secure_store_key_popup
+        log.debug "--- #{self.class}.#{__callee__} --- "
+        base_popup(
+          'Create a secure store key',
+          nil,
+          InputField(Id(:hook_db_user_name), Opt(:hstretch), 'DB &user name:',
+              ''),
+            )
       end
     end
   end

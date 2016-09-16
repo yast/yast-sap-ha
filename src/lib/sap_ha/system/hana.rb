@@ -40,6 +40,7 @@ module SapHA
       # @param system_id [String] SAP SID of the HANA instance
       # @param instance_number [String] HANA instance number
       def check_hdb_daemon_running(system_id, instance_number)
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{instance_number}) ---"
         procname = "hdb.sap#{system_id.upcase}_HDB#{instance_number}"
         _out, status = exec_outerr_status('pidof', procname)
         status.exitstatus == 0
@@ -51,7 +52,8 @@ module SapHA
       # @param file_name [String] HANA backup file
       # @param instance_number [String] HANA instance number
       def make_backup(system_id, secstore_user, file_name, _instance_number)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secstore_user},"\
+          " #{file_name}, #{_instance_number}) ---"
         user_name = "#{system_id.downcase}adm"
         command = ['hdbsql', '-U', secstore_user, "\"BACKUP DATA USING FILE ('#{file_name}')\""]
         out, status = su_exec_outerr_status(user_name, *command)
@@ -67,20 +69,20 @@ module SapHA
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
       # @param system_id [String] SAP SID of the HANA instance
       def hdb_start(system_id)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'start']
         out, status = su_exec_outerr_status(user_name, *command)
         s = NodeLogger.log_status(status.exitstatus == 0,
-          "Started HANA",
-          "Could not start HANA, will retry.",
+          "Started HANA #{system_id}",
+          "Could not start HANA #{system_id}, will retry.",
           out
         )
         return true if s
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
-          "Started HANA",
-          "Could not start HANA, bailing out.",
+          "Started HANA #{system_id}",
+          "Could not start HANA #{system_id}, bailing out.",
           out
         )
       end
@@ -89,7 +91,7 @@ module SapHA
       # @param system_id [String] SAP SID of the HANA instance
       # @return [String, nil] version string or nil on failure
       def version(system_id)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'version']
         out, status = su_exec_outerr_status(user_name, *command)
@@ -106,20 +108,20 @@ module SapHA
       # Start HANA by issuing the `HDB start` command as `<sid>adm` user
       # @param system_id [String] SAP SID of the HANA instance
       def hdb_stop(system_id)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
         user_name = "#{system_id.downcase}adm"
         command = ['HDB', 'stop']
         out, status = su_exec_outerr_status(user_name, *command)
         s = NodeLogger.log_status(status.exitstatus == 0,
-          "Stopped HANA",
-          "Could not stop HANA, will retry.",
+          "Stopped HANA #{system_id}",
+          "Could not stop HANA #{system_id}, will retry.",
           out
         )
         return true if s
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
-          "Stopped HANA",
-          "Could not stop HANA, bailing out.",
+          "Stopped HANA #{system_id}",
+          "Could not stop HANA #{system_id}, bailing out.",
           out
         )
       end
@@ -128,13 +130,13 @@ module SapHA
       # @param system_id [String] HANA System ID
       # @param site_name [String] HANA site name of the primary instance
       def enable_primary(system_id, site_name)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name}) ---"
         user_name = "#{system_id.downcase}adm"
         command = ['hdbnsutil', '-sr_enable', "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
-          "Enabled HANA System Replication on the primary site #{site_name}",
-          "Could not enable HANA System Replication on the primary site #{site_name}",
+          "Enabled HANA (#{system_id}) System Replication on the primary site #{site_name}",
+          "Could not enable HANA (#{system_id}) System Replication on the primary site #{site_name}",
           out
         )
       end
@@ -146,7 +148,8 @@ module SapHA
       # @param instance [String] instance number of the primary
       # @param mode [String] replication mode
       def enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name},"\
+          " #{host_name_primary}, #{instance}, #{mode}) ---"
         user_name = "#{system_id.downcase}adm"
         version = version(system_id)
         # Select an appropriate command-line switch for replication mode
@@ -160,8 +163,8 @@ module SapHA
                    "--remoteInstance=#{instance}", mode_string, "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
-          "Enabled HANA System Replication on the secondary host #{site_name}",
-          "Could not enable HANA System Replication on the secondary host",
+          "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",
+          "Could not enable HANA (#{system_id}) System Replication on the secondary host",
           out
         )
       end
@@ -169,7 +172,7 @@ module SapHA
       # List the keys out of the HANA secure user store
       # @param system_id [String] HANA System ID
       def check_secure_store(system_id)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}) ---"
         regex = /^KEY (\w+)$/
         user_name = "#{system_id.downcase}adm"
         command = ['hdbuserstore', 'list']
@@ -183,7 +186,7 @@ module SapHA
       end
 
       def set_secute_store(system_id, key_name, env, user_name, password)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{key_name}, ...) ---"
         su_name = "#{system_id.downcase}adm"
         command = ['hdbuserstore', 'set', key_name, env, user_name, password]
         out, status = su_exec_outerr_status(su_name, *command)
@@ -198,7 +201,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param hook_script [String] HANA takeover hook script
       def write_sr_hook(system_id, hook_script)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{hook_script.insptect}) ---"
         hook_dir = "/hana/shared/#{system_id.upcase}/srHook"
         begin
           Dir.mkdir(hook_dir) unless Dir.exist?(hook_dir)
@@ -228,7 +231,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param options [Hash] production system options
       def adjust_production_system(system_id, options = {})
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.insptect}) ---"
         begin
           require 'cfa/augeas_parser'
           require 'cfa/base_model'
@@ -272,7 +275,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param options [Hash] production system options
       def adjust_non_production_system(system_id, options = {})
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.insptect}) ---"
         begin
           require 'cfa/augeas_parser'
           require 'cfa/base_model'
@@ -311,7 +314,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param options [Hash] production system options
       def create_monitoring_user(system_id, instance_number)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{instance_number}) ---"
         user_name = "#{system_id.downcase}adm"
         command_prefix = ['hdbsql', '-u', 'system', '-i', instance_number.to_s,
           '-n', 'localhost:31013']
@@ -350,7 +353,8 @@ module SapHA
       # @param environment [String] HANA host:port specification (can be empty)
       # @param statement [String] SQL statement
       def hdbsql_command(system_id, user_name, instance_number, password, environment, statement)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{user_name},"\
+          " #{instance_number}, password, #{environment}, #{statement}) ---"
         su_name = "#{system_id.downcase}adm"
         cmd = 'hdbsql', '-x', '-u', user_name, '-i', instance_number.to_s, '-p', password
         cmd << '-n' << environment unless environment.empty?

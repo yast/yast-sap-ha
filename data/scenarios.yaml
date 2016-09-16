@@ -70,10 +70,6 @@
                 Note that the machine you run the wizard on becomes the primary node in the cluster.
             </li>
             <li>
-                The second node has to have a secondary, non-production HANA instance installed, <b>
-                but not running</b>.
-            </li>
-            <li>
                 You have configured the firewall (using the SAP HANA Firewall module in the 
                 Administrator Settings), enabling the <code>HANA_HIGH_AVAILABILITY</code> and 
                 <code>HANA_SYSTEM_REPLICATION</code>
@@ -90,6 +86,15 @@
             <li>
                 You have prepared a takeover hook script for HANA (will be prompted for at one of
                 the following stages of the Wizard).
+            </li>
+            <li>
+                The second node has to have a secondary, non-production HANA instance installed, <i>
+                but not running</i>.
+            </li>
+            <li>
+                You've created a HANA Secure User Store key QASSAPDBCTRL for monitoring purposes 
+                (please refer to the <i>SAP HANA SR Cost Optimized Scenario</i> best practice guide,
+                section 4.2.7).
             </li>
         </ul>
       additional_instance: true
