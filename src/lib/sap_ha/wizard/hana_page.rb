@@ -53,6 +53,7 @@ module SapHA
         @my_model.system_id = value(:hana_sid).upcase
         @my_model.instance = value(:hana_inst)
         @my_model.replication_mode = value(:hana_replication_mode)
+        @my_model.operation_mode = value(:hana_operation_mode)
         @my_model.virtual_ip = value(:hana_vip)
         @my_model.prefer_takeover = value(:site_takover) == :true
         @my_model.auto_register = value(:auto_reg) == :true
@@ -76,6 +77,7 @@ module SapHA
         set_value(:hana_sid, @my_model.system_id)
         set_value(:hana_inst, @my_model.instance)
         set_value(:hana_replication_mode, @my_model.replication_mode)
+        set_value(:hana_operation_mode, @my_model.operation_mode)
         set_value(:hana_vip, @my_model.virtual_ip)
         set_value(:site_takover, @my_model.prefer_takeover.to_s.to_sym)
         set_value(:auto_reg, @my_model.auto_register.to_s.to_sym)
@@ -176,42 +178,59 @@ module SapHA
 
       def prepare_contents
         @contents = VBox(
-          HBox(InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', ''),
-            HSpacing(1),
-            InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')),
-          HBox(HWeight(49, ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
+          HBox(
+            HWeight(49, InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', '')),
+            HWeight(2, Empty()),
+            HWeight(49, InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', ''))
+          ),
+          HBox(
+            HWeight(49, ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
             'Replication mode:', @my_model.class::HANA_REPLICATION_MODES)),
             HWeight(2, Empty()),
-            HWeight(49, HSpacing())),
+            HWeight(49, ComboBox(Id(:hana_operation_mode), Opt(:hstretch, :notify),
+              'Operation mode:', @my_model.class::HANA_OPERATION_MODES))
+          ),
           HBox(
-            HWeight(49,
-              InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', '')),
+            HWeight(49, InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', '')),
             HWeight(2, Empty()),
-            HWeight(49,
-              InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', ''))),
-          HBox(HWeight(50, base_true_false_combo(:site_takover, 'Prefer site takeover:')),
-            HSpacing(1),
-            HWeight(50, base_true_false_combo(:auto_reg, 'Automatic registration:'))),
-          HBox(InputField(Id(:site_name_1), Opt(:hstretch), 'Site name 1', ''),
-            HSpacing(1),
-            InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')),
-          HBox(HWeight(50, CheckBox(Id(:create_backup), Opt(:hstretch, :notify),
-            'Create initial backup')),
-            HSpacing(1),
-            HWeight(50, PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')))
+            HWeight(49, InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', ''))
+          ),
+          HBox(
+            HWeight(49, base_true_false_combo(:site_takover, 'Prefer site takeover:')),
+            HSpacing(2),
+            HWeight(49, base_true_false_combo(:auto_reg, 'Automatic registration:'))
+          ),
+          HBox(
+            InputField(Id(:site_name_1), Opt(:hstretch), 'Site name 1', ''),
+            HSpacing(2),
+            InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')
+          ),
+          HBox(
+            HWeight(49, CheckBox(Id(:create_backup), Opt(:hstretch, :notify),
+              'Create initial backup')),
+            HSpacing(2),
+            HWeight(49, PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')))
         )
         if @my_model.additional_instance
           @contents << HBox(
-            HWeight(50, PushButton(Id(:production_constraints), Opt(:hstretch),
+            HWeight(49, PushButton(Id(:production_constraints), Opt(:hstretch),
               'Production system constraints...')),
-            HWeight(50, PushButton(Id(:hook_script_params), Opt(:hstretch), 'Hook script...')))
+            HSpacing(2),
+            HWeight(49, PushButton(Id(:hook_script_params), Opt(:hstretch), 'Hook script...'))
+          )
           @contents = VBox(
             Frame('Production instance', Yast::deep_copy(@contents)),
             Frame('Non-production instance',
-              VBox(HBox(InputField(Id(:np_hana_sid), Opt(:hstretch), 'System ID:', ''),
-                InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:', '')))
+              VBox(
+                HBox(
+                  HWeight(49, InputField(Id(:np_hana_sid), Opt(:hstretch), 'System ID:', '')),
+                  HSpacing(2),
+                  HWeight(49, InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:',
+                    ''))
+                )
               )
             )
+          )
         end
       end
 

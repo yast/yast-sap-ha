@@ -156,6 +156,11 @@ module SapHA
 
     def version_comparison(version_target, version_current, cmp = '~>')
       Gem::Dependency.new('', cmp + version_target).match?('', version_current)
+    rescue StandardError => e
+      log.error "HANA version comparison failed: target=#{version_target},"\
+      " current=#{version_current}, cmp=#{cmp}."
+      log.error "Gem::Dependency.match? :: #{e.message}"
+      return false
     end
 
     private

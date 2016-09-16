@@ -131,7 +131,8 @@ compile type:        rel
           .with('xxxadm', 'hdbnsutil', '-sr_register', '--remoteHost=hana01',
             '--remoteInstance=10', '--mode=sync', '--name=SECONDARY')
           .and_return(['', good_exit])
-        result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10')
+        result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10', 'sync',
+          'delta_datashipping')
         expect(result).to eq true
       end
     end
@@ -146,7 +147,8 @@ compile type:        rel
           .with('xxxadm', 'hdbnsutil', '-sr_register', '--remoteHost=hana01',
             '--remoteInstance=10', '--mode=sync', '--name=SECONDARY')
           .and_return(['Some error', bad_exit])
-        result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10')
+        result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10', 'sync',
+          'delta_datashipping')
         expect(result).to eq false
       end
     end
@@ -160,7 +162,8 @@ compile type:        rel
           .with('xxxadm', 'hdbnsutil', '-sr_register', '--remoteHost=hana01',
             '--remoteInstance=10', '--replicationMode=sync', '--name=SECONDARY')
           .and_return(['', good_exit])
-        result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10')
+        result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10','sync',
+          'delta_datashipping')
         expect(result).to eq true
       end
     end

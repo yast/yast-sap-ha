@@ -146,21 +146,28 @@ module SapHA
       # @param site_name [String] HANA site name of the secondary instance
       # @param host_name_primary [String] host name of the primary node
       # @param instance [String] instance number of the primary
-      # @param mode [String] replication mode
-      def enable_secondary(system_id, site_name, host_name_primary, instance, mode = 'sync')
+      # @param rmode [String] replication mode
+      # @param omode [String] operation mode
+      def enable_secondary(system_id, site_name, host_name_primary, instance, rmode, omode)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name},"\
-          " #{host_name_primary}, #{instance}, #{mode}) ---"
+          " #{host_name_primary}, #{instance}, #{rmode}, #{omode}) ---"
         user_name = "#{system_id.downcase}adm"
         version = version(system_id)
         # Select an appropriate command-line switch for replication mode
         # Assume legacy `mode` by default (pre-SPS12)
-        mode_string = if !version.nil? && SapHA::Helpers.version_comparison('1.00.120', version)
-                        "--replicationMode=#{mode}"
-                      else
-                        "--mode=#{mode}"
-                      end
+        rmode_string = if SapHA::Helpers.version_comparison('1.00.120', version)
+                         "--replicationMode=#{rmode}"
+                       else
+                         "--mode=#{rmode}"
+                       end
+        omode_string = if SapHA::Helpers.version_comparison('1.00.110', version)
+                         "--operationMode=#{omode}"
+                       else
+                         nil
+                       end
         command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
-                   "--remoteInstance=#{instance}", mode_string, "--name=#{site_name}"]
+                   "--remoteInstance=#{instance}", rmode_string, omode_string,
+                   "--name=#{site_name}"]
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
           "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",

@@ -44,12 +44,14 @@ module SapHA
         :backup_user,
         :perform_backup,
         :replication_mode,
+        :operation_mode,
         :additional_instance,
         :hook_script,
         :hook_script_parameters,
         :production_constraints
 
       HANA_REPLICATION_MODES = ['sync', 'syncmem', 'async'].freeze
+      HANA_OPERATION_MODES = ['delta_datashipping', 'logreplay'].freeze
 
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
@@ -62,6 +64,7 @@ module SapHA
         @virtual_ip = ''
         @virtual_ip_mask = '24'
         @replication_mode = HANA_REPLICATION_MODES.first
+        @operation_mode = HANA_OPERATION_MODES.first
         @prefer_takeover = true
         @auto_register = false
         @site_name_1 = 'WALLDORF'
@@ -111,6 +114,15 @@ module SapHA
             "Value should be one of the following: #{HANA_REPLICATION_MODES.join(',')}.",
             'Replication mode'
           )
+          if @operation_mode == 'logreplay'
+            # Logreplay is only available for SPS11+
+            version = SapHA::System::Hana.version(@system_id)
+            # TODO: remove debug
+            flag = SapHA::Helpers.version_comparison('1.00.110', version)
+            check.report_error(flag,
+              "Operation mode 'logreplay' is only available for HANA SPS11+"\
+              " (detected version #{version}).", 'Operation mode', @operation_mode)
+          end
           check.identifier(@site_name_1, nil, 'Site name 1')
           check.identifier(@site_name_2, nil, 'Site name 2')
           check.element_in_set(@prefer_takeover, [true, false],
@@ -148,6 +160,7 @@ module SapHA
           dsc.parameter('System ID', @system_id)
           dsc.parameter('Instance', @instance)
           dsc.parameter('Replication mode', @replication_mode)
+          dsc.parameter('Operation mode', @operation_mode)
           dsc.parameter('Virtual IP', @virtual_ip + '/' + @virtual_ip_mask)
           dsc.parameter('Prefer takeover', @prefer_takeover)
           dsc.parameter('Automatic registration', @auto_register)
@@ -163,8 +176,10 @@ module SapHA
             dsc.parameter('System ID', @np_system_id)
             dsc.parameter('Instance', @np_instance)
             dsc.header('Production system constraints')
-            dsc.parameter('Global allocation limit (MB)', @production_constraints[:global_alloc_limit])
-            dsc.parameter('Column tables preload', @production_constraints[:preload_column_tables])
+            dsc.parameter('Global allocation limit (MB)',
+              @production_constraints[:global_alloc_limit])
+            dsc.parameter('Column tables preload',
+              @production_constraints[:preload_column_tables])
           end
         end
       end
@@ -232,7 +247,7 @@ module SapHA
           SapHA::System::Hana.hdb_stop(@system_id)
           primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
           SapHA::System::Hana.enable_secondary(@system_id, @site_name_2,
-            primary_host_name, @instance, @replication_mode)
+            primary_host_name, @instance, @replication_mode, @operation_mode)
           if @additional_instance # cost-optimized scenario
             SapHA::System::Hana.hdb_stop(@np_system_id)
             SapHA::System::Hana.write_sr_hook(@system_id, @hook_script)
@@ -247,7 +262,6 @@ module SapHA
 
       def configure_crm
         # TODO: move this to SapHA::System::Local.configure_crm
-        # TODO: generate a different config for cost_optimized scenario
         if @additional_instance
           primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
           crm_conf = Helpers.render_template('tmpl_cluster_config_cost_opt.erb', binding)
