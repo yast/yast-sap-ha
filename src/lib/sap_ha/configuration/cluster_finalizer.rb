@@ -47,7 +47,6 @@ module SapHA
 
       def apply(role)
         if role == :master
-          SapHA::System::Local.cluster_cleanup()
           SapHA::System::Local.cluster_maintenance(:off)
         else
           true
