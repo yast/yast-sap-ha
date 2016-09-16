@@ -2,6 +2,7 @@
   string_name: SAP HANA
   scenarios:
     - name: "Scale Up: Performance-optimized"
+      id: "supo"
       description: |
         <b>Performance-optimized scenario</b> allows to set up a synchronous system
         replication between two nodes, A and B, within the same cluster.
@@ -13,7 +14,7 @@
         - fencing
         - cluster
         - hana
-      screen_sequence:
+      screen_sequence: &id002
         - prerequisites
         - communication_layer
         - cluster_nodes
@@ -24,11 +25,13 @@
         - config_overview
         - installation
         - summary
-      prerequisites_notice: |
+      prerequisites_notice: &prereq_hana 
+        |
+        <h3>HANA System Replication Scale Up: Performance-optimized</h3>
         <p>Before proceeding with the installation, please make sure of the following:<p>
         <ul>
             <li>
-                You have two machines with SAP HANA installed using the "SAP Product Installer".
+                You have two machines with SAP HANA installed using the "SAP Product Installer".<br>
                 Note that the machine you run the wizard on becomes the primary node in the cluster.
             </li>
             <li>
@@ -46,28 +49,107 @@
                 <li>an initial HANA backup on the primary HANA node.</li>
             </ul>
         </ul>
+      additional_instance: false
 
-    # - name: "Scale Up: Cost-optimized"
-    #   description: |
-    #     <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
-    #     between two nodes, A and B, within the same cluster, while a development
-    #     or quality assurance system is running on the node B, and the production database is shrunk.
-    #   number_of_nodes: 2
-    #   fixed_number_of_nodes: true
-    #   config_sequence: *id001
+    - name: "Scale Up: Cost-optimized"
+      id: "suco"
+      description: |
+        <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
+        between two nodes, A and B, within the same cluster, while a development
+        or quality assurance system is running on the node B, and the production database is shrunk.
+      number_of_nodes: 2
+      fixed_number_of_nodes: true
+      config_sequence: *id001
+      screen_sequence: *id002
+      prerequisites_notice: |
+        <h3>HANA System Replication Scale Up: Cost-optimized</h3>
+        <p>Before proceeding with the installation, please make sure of the following:<p>
+        <ul>
+            <li>
+                You have two machines with SAP HANA installed using the "SAP Product Installer".<br>
+                Note that the machine you run the wizard on becomes the primary node in the cluster.
+            </li>
+            <li>
+                You have configured the firewall (using the SAP HANA Firewall module in the 
+                Administrator Settings), enabling the <code>HANA_HIGH_AVAILABILITY</code> and 
+                <code>HANA_SYSTEM_REPLICATION</code>
+                services on <i>all</i> the interfaces that you are going to use.
+            </li>
+            <li>
+                You have created one of the following:
+            </li>
+            <ul type="square">
+                <li>either a key in the HANA Secure User Store (using the 
+                  <code>hdbuserstore</code> utility) on the primary HANA node, or</li>
+                <li>an initial HANA backup on the primary HANA node.</li>
+            </ul>
+            <li>
+                You have prepared a takeover hook script for HANA (will be prompted for at one of
+                the following stages of the Wizard).
+            </li>
+            <li>
+                The second node has to have a secondary, non-production HANA instance installed, <i>
+                but not running</i>.
+            </li>
+            <li>
+                You've created a HANA Secure User Store key QASSAPDBCTRL for monitoring purposes 
+                (please refer to the <i>SAP HANA SR Cost Optimized Scenario</i> best practice guide,
+                section 4.2.7).
+            </li>
+        </ul>
+      additional_instance: true
 
-    # - name: "Scale Up: Chained (multi-tier)"
-    #   number_of_nodes: 2
-    #   fixed_number_of_nodes: true
-    #   description: |
-    #     <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
-    #     three nodes: A, B and C, with synchronous replication between A and B and asynchronous
-    #     between B and C. Note that node C is not managed by the cluster.
-    #   config_sequence: *id001
+    - name: "Scale Up: Chained (multi-tier)"
+      id: "sumt"
+      number_of_nodes: 2
+      fixed_number_of_nodes: true
+      description: |
+        <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
+        three nodes: A, B and C, with synchronous replication between A and B and asynchronous
+        between B and C. Note that node C is not managed by the cluster.
+      config_sequence: *id001
+      screen_sequence: *id002
+      prerequisites_notice: |
+        <h3>HANA System Replication Scale Up: Multi-tier</h3>
+        <p>Before proceeding with the installation, please make sure of the following:<p>
+        <ul>
+            <li>
+                You have two machines within the same L2 network segment with SAP HANA installed 
+                using the "SAP Product Installer".<br>
+                Note that the machine you run the wizard on becomes the primary node in the cluster.
+            </li>
+            <li>
+                You have a remote HANA machine in another data center, which have to be registered manually.
+            </li>
+            <li>
+                The second node has to have a secondary, non-production HANA instance installed.
+            </li>
+            <li>
+                You have configured the firewall (using the SAP HANA Firewall module in the 
+                Administrator Settings), enabling the <code>HANA_HIGH_AVAILABILITY</code> and 
+                <code>HANA_SYSTEM_REPLICATION</code>
+                services on <i>all</i> the interfaces that you are going to use.
+            </li>
+            <li>
+                You have created one of the following:
+            </li>
+            <ul type="square">
+                <li>either a key in the HANA Secure User Store (using the 
+                  <code>hdbuserstore</code> utility) on the primary HANA node, or</li>
+                <li>an initial HANA backup on the primary HANA node.</li>
+            </ul>
+            <li>
+                When the Wizard is finished configuring the two-node cluster, make sure to register
+                the third node for system replication like so:<br>
+                    <code>hdbnsutil -sr_register --remoteHost=$(secondary_host_name)
+                    --remoteInstance=$(instance_number) --replicationMode=async --name=$(site_name)</code>.
+            </li>
+        </ul>
+      additional_instance: false
 
-- id: NW
-  string_name: NetWeaver
-  scenarios:
-    - name: Simple Stack
-    - name: Simple Stack with Enqueue Replication
-    - name: Simple Stack with Enqueue Replication (external DB)
+# - id: NW
+#   string_name: NetWeaver
+#   scenarios:
+#     - name: Simple Stack
+#     - name: Simple Stack with Enqueue Replication
+#     - name: Simple Stack with Enqueue Replication (external DB)

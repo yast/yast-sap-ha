@@ -2,10 +2,11 @@
 Sample for a HA/DR hook provider.
 
 """
-dbuser="<%= options[:db_username] %>"
-dbpwd="<%= options[:db_password] %>"
-dbinst="<%= options[:instance_number] %>"
-dbport="<%= options[:port_number] %>"
+
+dbuser="<%= @hook_script_parameters[:hook_db_user_name] %>"
+dbpwd="<%= @hook_script_parameters[:hook_db_password] %>"
+dbinst="<%= @hook_script_parameters[:hook_db_instance] %>"
+dbport="<%= @hook_script_parameters[:hook_port_number] %>"
 
 stmnt1 = "ALTER SYSTEM ALTER CONFIGURATION ('global.ini','SYSTEM') UNSET ('memorymanager','global_allocation_limit') WITH RECONFIGURE"
 stmnt2 = "ALTER SYSTEM ALTER CONFIGURATION ('global.ini','SYSTEM') UNSET ('system_replication','preload_column_tables') WITH RECONFIGURE"

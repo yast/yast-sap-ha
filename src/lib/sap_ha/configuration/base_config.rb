@@ -136,6 +136,10 @@ module SapHA
         @lines.join("\n")
       end
 
+      def header(value)
+        @lines << "<tr><td><h4>#{value}</h4><td></tr>"
+      end
+
       def parameter(name, value)
         if @ncurses
           @lines << "<b>#{name}</b>: #{value}" << "<br>"

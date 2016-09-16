@@ -35,7 +35,7 @@ describe SapHA::HAConfiguration do
     it 'sets the product ID correctly' do
       ha_configuration = SapHA::HAConfiguration.new
       ha_configuration.set_product_id('HANA')
-      ha_configuration.set_product_id('NW')
+      # ha_configuration.set_product_id('NW')
       expect { ha_configuration.set_product_id('Hana') }
         .to raise_error SapHA::Exceptions::ProductNotFoundException
     end

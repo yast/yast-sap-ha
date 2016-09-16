@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style type="text/css">
+        dt {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<h2>HANA Configuration for the Cost-Optimized Scenario</h2>
+<p>
+    This page defines the parameters specific for SAP HANA installations.
+</p>
+<h4>Production instance parameters</h4>
+<dl>
+    <dt>Virtual IP Address</dt>
+    <dd>
+        is the IP address that the current SAP HANA primary instance has.
+    </dd>
+    <dt>Replication mode</dt>
+    <dd>
+        is the system replication mode between the two HANA systems. Please refer to the HANA Administration Guide for details.
+    </dd>
+    <dt>Prefer Site Takeover</dt>
+    <dd>
+        defines, if the secondary instance should take over, if the primary instance fails.
+        If "false", prefer local restart of SAP HANA.
+    </dd>
+    <dt>Automatic Registration</dt>
+        <dd>
+            defines, if the former primary should be registered as the new secondary 
+            after the takeover procedure.
+        </dd>
+    <dt>Perform backup</dt>
+    <dd>
+        defines, if the primary instance should create a backup before enabling system replication.
+        If this is unchecked, it is assumed that the backup was already created manually.
+    </dd>
+    <dt>Production system constraints...</dt>
+    <dd>
+        defines the HANA system constraints to be written into <code>global.ini</code>, such as the global allocation limit and column tables preload.
+    </dd>
+    <dt>Hook script...</dt>
+    <dd>
+        defines the parameters required for the failover hook script, such as the HANA user name and password, as well as the port number for SQL connections.
+    </dd>
+</dl>
+<h4>Non-production instance parameters</h4>
+<dl>
+    <dt></dt>
+</dl>
+<p>
+    <b>Note</b> that the wizard can only perform backup if the secure user store has been configured 
+    prior to running the wizard.
+</p>
+</body>
+</html>

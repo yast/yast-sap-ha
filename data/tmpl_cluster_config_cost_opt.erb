@@ -1,9 +1,17 @@
+#
+# defaults
+#
+
 configure rsc_default \
     resource-stickiness="1000" \
     migration-threshold="5000"
 
 configure op_defaults \
     timeout="600"
+
+#
+# production HANA
+#
 
 configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
     params \
@@ -41,3 +49,28 @@ configure clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_
 configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
 
 configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
+
+#
+# non-production HANA and constraints
+#
+
+configure primitive rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> ocf:heartbeat:SAPDatabase \
+    params DBTYPE="HDB" SID="<%= @np_system_id -%>" \
+    MONITOR_SERVICES="hdbindexserver|hdbnameserver" \
+    op start interval="0" timeout="600" \
+    op monitor interval="120" timeout="700" \
+    op stop interval="0" timeout="300" \
+    meta priority="100"
+
+configure location loc_<%= @np_system_id -%>_never_<%= primary_host_name -%> \
+    rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> -inf: <%= primary_host_name -%>
+
+
+configure colocation col_<%= @np_system_id -%>_never_with_PRDip \
+    -inf: rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:Started \
+    rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>
+
+
+configure order ord_<%= @np_system_id -%>_stop_before_PRDpromote inf: \
+    rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
+    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote

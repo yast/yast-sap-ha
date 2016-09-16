@@ -66,9 +66,11 @@ module SapHA
       def can_go_next?
         return true if @model.no_validators
         return false unless @my_model.configured?
-        unless check_ssh_connectivity
-          @show_errors = false
-          return false
+        Yast::Popup.Feedback('Please wait', 'Checking SSH connection') do
+          unless check_ssh_connectivity
+            @show_errors = false
+            return false
+          end
         end
         true
       end

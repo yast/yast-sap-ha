@@ -130,6 +130,7 @@ module SapHA
         @scenario.fetch('fixed_number_of_nodes', false),
         @scenario.fetch('number_of_nodes', 2)
       )
+      @hana.additional_instance = @scenario['additional_instance'] || false if @hana
     end
 
     def all_scenarios
