@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Sep 28 14:51:14 UTC 2016 - imanyugin@suse.com
+
+- Version bump to 0.9.4
+- Fix cluster configuration (excessive semicolon in corosync.conf), fix bsc#1001442
+- Fix Hook script parameters in HANA Performance-Optimized scenario, fix bsc#1001445
+
+-------------------------------------------------------------------
 Fri Sep 16 12:25:10 UTC 2016 - imanyugin@suse.com
 
 - Update version to 0.9.3;

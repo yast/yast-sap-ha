@@ -167,7 +167,7 @@ module SapHA
                        end
         command = ['hdbnsutil', '-sr_register', "--remoteHost=#{host_name_primary}",
                    "--remoteInstance=#{instance}", rmode_string, omode_string,
-                   "--name=#{site_name}"]
+                   "--name=#{site_name}"].reject(&:nil?)
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
           "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",
@@ -208,7 +208,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param hook_script [String] HANA takeover hook script
       def write_sr_hook(system_id, hook_script)
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{hook_script.insptect}) ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{hook_script.inspect}) ---"
         hook_dir = "/hana/shared/#{system_id.upcase}/srHook"
         begin
           Dir.mkdir(hook_dir) unless Dir.exist?(hook_dir)
@@ -238,7 +238,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param options [Hash] production system options
       def adjust_production_system(system_id, options = {})
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.insptect}) ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
         begin
           require 'cfa/augeas_parser'
           require 'cfa/base_model'
@@ -282,7 +282,7 @@ module SapHA
       # @param system_id [String] HANA System ID (production)
       # @param options [Hash] production system options
       def adjust_non_production_system(system_id, options = {})
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.insptect}) ---"
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
         begin
           require 'cfa/augeas_parser'
           require 'cfa/base_model'

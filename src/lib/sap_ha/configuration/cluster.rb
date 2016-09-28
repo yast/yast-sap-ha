@@ -361,6 +361,7 @@ module SapHA
 
       def generate_cluster_export
         memberaddr = @nodes.map { |_, e| { addr1: e[:ip_ring1], addr2: e[:ip_ring2] } }
+        memberaddr.each { |m| m.delete(:addr2) } unless @number_of_rings == 2
         host_names = @nodes.map { |_, e| e[:host_name] }
         cluster_configuration = {
           "secauth"        => @enable_secauth,

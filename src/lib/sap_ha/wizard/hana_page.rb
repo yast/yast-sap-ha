@@ -177,56 +177,54 @@ module SapHA
       end
 
       def prepare_contents
+        # Production HANA
         @contents = VBox(
-          HBox(
-            HWeight(49, InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', '')),
-            HWeight(2, Empty()),
-            HWeight(49, InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', ''))
+          two_widget_hbox(
+            InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', ''),
+            InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')
           ),
-          HBox(
-            HWeight(49, ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
-            'Replication mode:', @my_model.class::HANA_REPLICATION_MODES)),
-            HWeight(2, Empty()),
-            HWeight(49, ComboBox(Id(:hana_operation_mode), Opt(:hstretch, :notify),
-              'Operation mode:', @my_model.class::HANA_OPERATION_MODES))
+          two_widget_hbox(
+            ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
+              'Replication mode:', @my_model.class::HANA_REPLICATION_MODES),
+            ComboBox(Id(:hana_operation_mode), Opt(:hstretch, :notify),
+              'Operation mode:', @my_model.class::HANA_OPERATION_MODES)
           ),
-          HBox(
-            HWeight(49, InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', '')),
-            HWeight(2, Empty()),
-            HWeight(49, InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', ''))
+          two_widget_hbox(
+            InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
+            InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', '')
           ),
-          HBox(
-            HWeight(49, base_true_false_combo(:site_takover, 'Prefer site takeover:')),
-            HSpacing(2),
-            HWeight(49, base_true_false_combo(:auto_reg, 'Automatic registration:'))
+          two_widget_hbox(
+            base_true_false_combo(:site_takover, 'Prefer site takeover:'),
+            base_true_false_combo(:auto_reg, 'Automatic registration:')
           ),
-          HBox(
+          two_widget_hbox(
             InputField(Id(:site_name_1), Opt(:hstretch), 'Site name 1', ''),
-            HSpacing(2),
             InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')
           ),
-          HBox(
-            HWeight(49, CheckBox(Id(:create_backup), Opt(:hstretch, :notify),
-              'Create initial backup')),
-            HSpacing(2),
-            HWeight(49, PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')))
+          two_widget_hbox(
+            PushButton(Id(:production_constraints), Opt(:hstretch),
+              'Production system constraints...'),
+            PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')
+          )
         )
+        # Non-Production HANA
         if @my_model.additional_instance
-          @contents << HBox(
-            HWeight(49, PushButton(Id(:production_constraints), Opt(:hstretch),
-              'Production system constraints...')),
-            HSpacing(2),
-            HWeight(49, PushButton(Id(:hook_script_params), Opt(:hstretch), 'Hook script...'))
+          @contents << two_widget_hbox(
+            Empty(),
+            CheckBox(Id(:create_backup), Opt(:hstretch, :notify), 'Create initial backup'),
+            2.49
           )
           @contents = VBox(
-            Frame('Production instance', Yast::deep_copy(@contents)),
+            Frame('Production instance', Yast.deep_copy(@contents)),
             Frame('Non-production instance',
               VBox(
-                HBox(
-                  HWeight(49, InputField(Id(:np_hana_sid), Opt(:hstretch), 'System ID:', '')),
-                  HSpacing(2),
-                  HWeight(49, InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:',
-                    ''))
+                two_widget_hbox(
+                  InputField(Id(:np_hana_sid), Opt(:hstretch), 'System ID:', ''),
+                  InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:', '')
+                ),
+                two_widget_hbox(
+                  Empty(),
+                  PushButton(Id(:hook_script_params), Opt(:hstretch), 'Hook script...')
                 )
               )
             )
@@ -239,9 +237,7 @@ module SapHA
         base_popup(
           'Create a secure store key',
           nil,
-          InputField(Id(:hook_db_user_name), Opt(:hstretch), 'DB &user name:',
-              ''),
-            )
+          InputField(Id(:hook_db_user_name), Opt(:hstretch), 'DB &user name:', ''))
       end
     end
   end

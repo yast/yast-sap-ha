@@ -352,6 +352,14 @@ module SapHA
       def show_message(message, title)
         Yast::Popup.LongText(title, RichText(message), 55, 10)
       end
+
+      def two_widget_hbox(widget_one, widget_two, spacing = 2)
+        HBox(
+          HWeight(1, widget_one),
+          HSpacing(spacing),
+          HWeight(1, widget_two)
+        )
+      end
     end
   end
 end

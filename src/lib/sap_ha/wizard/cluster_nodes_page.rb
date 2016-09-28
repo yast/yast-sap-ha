@@ -52,8 +52,11 @@ module SapHA
                 PushButton(Id(:delete_node), _('Delete node'))
               ),
               HBox(
-                HWeight(50, InputField(Id(:expected_votes), Opt(:hstretch), _('Expected votes:'), '')),
-                HWeight(50, CheckBox(Id(:append_hosts), Opt(:stretch, :notify), _('Append to /etc/hosts')))
+                HWeight(49, InputField(Id(:expected_votes), Opt(:hstretch),
+                  _('Expected votes:'), '')),
+                HWeight(2, Empty()),
+                HWeight(49, VBox(Label(' '), Left(CheckBox(Id(:append_hosts),
+                  Opt(:stretch, :notify), _('Append to /etc/hosts')))))
               )
             )
           ),

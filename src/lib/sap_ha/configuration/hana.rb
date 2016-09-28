@@ -87,15 +87,23 @@ module SapHA
         @hook_script_parameters = {
           generated:            false,
           hook_execution_order: '1',
-          hook_db_user_name:    'system',
+          hook_db_user_name:    'SYSTEM',
           hook_db_password:     '',
-          hook_port_number:     '3' + @instance + '15',
-          hook_db_instance:     '10'
+          hook_port_number:     '3' + @np_instance + '15',
+          hook_db_instance:     @np_instance
         }
         @production_constraints = {
           global_alloc_limit:    65_536.to_s,
           preload_column_tables: 'false'
         }
+      end
+
+      def np_instance=(value)
+        @np_instance = value
+        unless @hook_script_parameters[:generated]
+          @hook_script_parameters[:hook_db_instance] = @np_instance
+          @hook_script_parameters[:hook_port_number] = '3' + @np_instance + '15'
+        end
       end
 
       def configured?
@@ -189,9 +197,7 @@ module SapHA
       end
 
       def hook_script_parameters=(value)
-        @hook_script_parameters = value
-        @hook_script_parameters[:hook_port_number] = '3' + @instance + '15'
-        @hook_script_parameters[:hook_db_instance] = @instance
+        @hook_script_parameters.merge!(value)
         @hook_script = SapHA::Helpers.render_template('tmpl_srhook.py.erb', binding)
         @hook_script_parameters[:generated] = true
       end

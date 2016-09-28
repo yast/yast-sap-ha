@@ -160,7 +160,8 @@ compile type:        rel
           .and_return([hdb_version_output, good_exit])
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
           .with('xxxadm', 'hdbnsutil', '-sr_register', '--remoteHost=hana01',
-            '--remoteInstance=10', '--replicationMode=sync', '--name=SECONDARY')
+            '--remoteInstance=10', '--replicationMode=sync', '--operationMode=delta_datashipping',
+            '--name=SECONDARY')
           .and_return(['', good_exit])
         result = SapHA::System::Hana.enable_secondary('XXX', 'SECONDARY', 'hana01', '10','sync',
           'delta_datashipping')
