@@ -257,7 +257,7 @@ module SapHA
           return false
         end
         begin
-          parser = CFA::AugeasParser.new('puppet.lns')
+          parser = CFA::AugeasParser.new('sapini.lns')
           bm = CFA::BaseModel.new(parser, global_ini_path)
           bm.load
           bm.generic_set('ha_dr_provider_srTakeover/provider', 'srTakeover')
@@ -301,7 +301,7 @@ module SapHA
           return false
         end
         begin
-          parser = CFA::AugeasParser.new('puppet.lns')
+          parser = CFA::AugeasParser.new('sapini.lns')
           bm = CFA::BaseModel.new(parser, global_ini_path)
           bm.load
           bm.generic_set('memorymanager/global_allocation_limit', options[:global_alloc_limit])

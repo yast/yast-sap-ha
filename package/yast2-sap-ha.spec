@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 
 Name:           yast2-sap-ha
-Version:        0.9.4
+Version:        0.9.5
 Release:        0
 BuildArch:      noarch
 
@@ -39,15 +39,16 @@ Requires:       util-linux
 Requires:       kmod-compat
 Requires:       SAPHanaSR
 # configuration parser
-Requires:       ruby2.1-rubygem-cfa
+Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
 Requires:       sysvinit-tools
+Requires:       augeas-lenses
 
 BuildRequires:  yast2
 BuildRequires:  yast2-ruby-bindings
 BuildRequires:  yast2-devtools
 BuildRequires:  yast2-packager
-BuildRequires:  ruby2.1-rubygem-cfa
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
 BuildRequires:  update-desktop-files
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
@@ -55,7 +56,8 @@ BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-cluster
 BuildRequires:  kmod-compat
 BuildRequires:  util-linux
-BuildRequires:       sysvinit-tools
+BuildRequires:  sysvinit-tools
+BuildRequires:  augeas-lenses
 
 Group:          System/YaST
 License:        GPL-2.0
@@ -66,6 +68,7 @@ URL:            http://www.suse.com
 A YaST2 module to enable high availability for SAP HANA and SAP NetWeaver installations.
 
 %prep
+%define augeas_dir %{_datarootdir}/augeas/lenses/dist
 %setup -n %{name}-%{version}
 
 %check
@@ -77,9 +80,19 @@ rake test:unit
 mkdir -p %{buildroot}%{yast_dir}/data/sap_ha/
 mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
 mkdir -p %{yast_scrconfdir}
+mkdir -p %{buildroot}%{augeas_dir}
+
 rake install DESTDIR="%{buildroot}"
-install -m 644 data/*[!.expect] %{buildroot}%{yast_dir}/data/sap_ha/
+# wizard help files
+install -m 644 data/*.html %{buildroot}%{yast_dir}/data/sap_ha/
+# ruby templates
+install -m 644 data/*.erb %{buildroot}%{yast_dir}/data/sap_ha/
+# HA scenarios definitions
+install -m 644 data/scenarios.yaml %{buildroot}%{yast_dir}/data/sap_ha/
+# SSH invocation wrapper
 install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
+# Augeas lens for SAP INI files
+install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
 
 %files
 %defattr(-,root,root)
@@ -90,5 +103,6 @@ install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 %{yast_dir}/data/sap_ha/
 %{yast_vardir}/sap_ha/
 %{yast_scrconfdir}/*.scr
+%{augeas_dir}/sapini.aug
 
 %changelog
