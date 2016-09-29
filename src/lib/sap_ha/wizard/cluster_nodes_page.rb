@@ -41,22 +41,18 @@ module SapHA
           base_layout_with_label(
             _('Define the cluster nodes configuration'),
             VBox(
-              HBox(
-                # HSpacing(20),
-                MinHeight(4, nodes_table)
-                # HSpacing(20)
-              ),
+              MinHeight(4, nodes_table),
               HBox(
                 PushButton(Id(:add_node), _('Add node')),
                 PushButton(Id(:edit_node), _('Edit selected')),
                 PushButton(Id(:delete_node), _('Delete node'))
               ),
               HBox(
-                HWeight(49, InputField(Id(:expected_votes), Opt(:hstretch),
-                  _('Expected votes:'), '')),
-                HWeight(2, Empty()),
-                HWeight(49, VBox(Label(' '), Left(CheckBox(Id(:append_hosts),
-                  Opt(:stretch, :notify), _('Append to /etc/hosts')))))
+                two_widget_hbox(
+                  InputField(Id(:expected_votes), Opt(:hstretch), _('Expected votes:'), ''),
+                  VBox(Label(' '), Left(CheckBox(Id(:append_hosts), Opt(:stretch, :notify),
+                    _('Append to /etc/hosts'))))
+                )
               )
             )
           ),

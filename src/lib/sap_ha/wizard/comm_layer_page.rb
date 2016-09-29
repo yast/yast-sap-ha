@@ -44,10 +44,9 @@ module SapHA
             'Define the communication layer configuration',
             VBox(
               VBox(
-                HBox(
+                two_widget_hbox(
                   ComboBox(Id(:transport_mode), Opt(:notify, :hstretch), 'Transport mode:',
                     ['Unicast', 'Multicast']),
-                  HSpacing(3),
                   ComboBox(Id(:number_of_rings), Opt(:notify, :hstretch),
                     'Number of rings:', ['1', '2'])
                 ),
