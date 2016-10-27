@@ -147,6 +147,14 @@ module SapHA
         validate_comm_layer(:silent) && validate_nodes(:silent)
       end
 
+      def comm_configured?
+        validate_comm_layer(:silent)
+      end
+
+      def nodes_configured?
+        validate_nodes(:silent)
+      end
+
       def update_node(k, values)
         @nodes[k].update(values)
       end
@@ -155,8 +163,8 @@ module SapHA
         SapHA::Helpers.render_template('tmpl_csync2_config.erb', binding)
       end
 
-      def description
-        prepare_description do |dsc|
+      def description(component = :both)
+        def comm_description(dsc)
           dsc.parameter('Transport mode', @transport_mode)
           dsc.parameter('Cluster name', @cluster_name)
           dsc.parameter('Expected votes', @expected_votes)
@@ -171,7 +179,10 @@ module SapHA
             dsc.list_item(str)
           end
           dsc.list_end
-          dsc.list_begin('Nodes')
+        end
+
+        def nodes_description(dsc)
+          dsc.list_begin('')
           @nodes.each do |_, node|
             str = "#{node[:host_name]}: " \
               << dsc.iparam([node[:ip_ring1], node[:ip_ring2]][0...@number_of_rings].join(", "))
@@ -179,6 +190,18 @@ module SapHA
           end
           dsc.list_end
           dsc.parameter('Append /etc/hosts', @append_hosts)
+        end
+
+        prepare_description do |dsc|
+          case component
+          when :nodes
+            nodes_description(dsc)
+          when :comm_layer
+            comm_description(dsc)
+          else
+            nodes_description(dsc)
+            comm_description(dsc)
+          end
         end
       end
 
@@ -203,7 +226,7 @@ module SapHA
       # return IPs of the first ring for nodes other than current node
       def other_nodes
         ips = @nodes.map { |_, n| n[:ip_ring1] } - SapHA::System::Network.ip_addresses
-        raise ClusterMembersConfException, "Empty IPs detected" if ips.any?(&:empty?)
+        return [] if ips.any?(&:empty?)
         ips
       end
 
@@ -285,8 +308,8 @@ module SapHA
       end
 
       def ring_validator(check, ring)
-        check.ipv4(ring[:address], 'IP Address')
-        check.port(ring[:port], 'Port Number')
+        check.ipv4(ring[:address], 'Ring IP Address')
+        check.port(ring[:port], 'Ring Port Number')
         check.ipv4_multicast(ring[:mcast], 'Multicast Address') if multicast?
       end
 
@@ -313,6 +336,25 @@ module SapHA
         @nlog.log_status(status, 'Opened necessary communication ports',
           'Could not open necessary communication ports')
         flag
+      end
+
+      def html_errors(component = :both)
+        case component
+        when :comm_layer
+          errors = validate_comm_layer(:verbose)
+        when :nodes
+          errors = validate_nodes(:verbose)
+        else 
+          errors = validate(:verbose)
+        end
+                  
+        tmpl = "<ul>
+        <% errors.each do |error| %>
+          <li> <%= error %> </li>
+        <% end %>
+        </ul>
+        "
+        ERB.new(tmpl, nil, '-').result(binding)
       end
 
       private

@@ -196,6 +196,11 @@ module SapHA
       NodeLogger.text
     end
 
+    def write_config
+      SapHA::Helpers.write_var_file('configuration.yml', dump(false, true),
+        timestamp: @timestamp)
+    end
+
     private
 
     # Load scenarios from the YAML configuration file

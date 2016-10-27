@@ -46,13 +46,14 @@ module SapHA
 
       def refresh_view
         Yast::Wizard.DisableBackButton
-        log.warn "--- #{self.class}.#{__callee__} : can_install=#{@config.can_install?.inspect} ---"
+        log.info "--- #{self.class}.#{__callee__} : can_install=#{@config.can_install?.inspect} ---"
+        Yast::Wizard.SetNextButton(:next, "&Install")
         if can_go_next?
           Yast::Wizard.EnableNextButton
         else
           Yast::Wizard.DisableNextButton
+          set_value(:next, false, :Enabled)
         end
-        Yast::Wizard.SetNextButton(:next, "&Install")
       end
 
       def can_go_next?
@@ -69,6 +70,7 @@ module SapHA
         Yast::Wizard.SetNextButton(:summary, "&Overview") unless input == :next
         input.to_sym
       end
+
     end
   end
 end

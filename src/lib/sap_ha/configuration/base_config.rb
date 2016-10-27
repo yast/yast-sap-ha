@@ -111,6 +111,17 @@ module SapHA
         raise @exception_type, "Validation failed"
       end
 
+      def html_errors
+        errors = validate(:verbose)
+        tmpl = "<ul>
+        <% errors.each do |error| %>
+          <li> <%= error %> </li>
+        <% end %>
+        </ul>
+        "
+        ERB.new(tmpl, nil, '-').result(binding)
+      end
+
       def prepare_description
         d = Description.new
         d.start
@@ -125,7 +136,7 @@ module SapHA
         @list_type = "ol"
         @ncurses = Yast::UI.TextMode
       end
-      
+
       def start
         @lines = []
         @lines << "<table>" unless @ncurses
@@ -157,7 +168,7 @@ module SapHA
           "<code>#{value}</code>"
         end
       end
-      
+
       def list_begin(name, opts = {})
         @list_type = opts[:type] ? opts[:type] : @list_type
         @lines << "<tr>\n<td  colspan=\"2\">" \
