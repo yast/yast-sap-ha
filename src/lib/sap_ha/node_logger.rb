@@ -71,6 +71,12 @@ module SapHA
       @fd.string
     end
 
+    # Return log as <br>'ed text for ncurses mode
+    def text_br
+      @fd.flush
+      @fd.string.split("\n").join("\n<br>")
+    end
+
     # Return log as HTML
     def html
       to_html(text)

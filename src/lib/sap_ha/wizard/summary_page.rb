@@ -35,7 +35,7 @@ module SapHA
 
       def set_contents
         super
-        contents = Yast::UI.TextMode ? SapHA::NodeLogger.text : SapHA::NodeLogger.html
+        contents = Yast::UI.TextMode ? SapHA::NodeLogger.text_br : SapHA::NodeLogger.html
         Yast::Wizard.SetContents(
           "High-Availability Setup Summary",
           VBox(
