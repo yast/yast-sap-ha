@@ -36,8 +36,8 @@ module SapHA
       include Singleton
       include Yast::Logger
       include ShellCommands
-
-      MODULES_PATH = '/usr/src/linux/drivers/watchdog'.freeze
+      
+      MODULES_PATH = "/lib/modules/#{`uname -r`.strip}/kernel/drivers/watchdog".freeze
 
       # Add the watchdog with the given name to the /etc/modules-load.d
       # @param module_name [String]
@@ -112,7 +112,7 @@ module SapHA
           log.error "Could not find the kernel modules source directory #{MODULES_PATH}"
           return []
         end
-        Dir.glob(MODULES_PATH + '/*.c').map { |path| File.basename(path, '.c') }
+        Dir.glob(MODULES_PATH + '/*.ko').map { |path| File.basename(path, '.ko') }
       end
 
       # Look into the /etc/modules-load.d and list all of the modules

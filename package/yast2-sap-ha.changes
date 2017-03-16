@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Mar 16 14:14:37 UTC 2017 - imanyugin@suse.com
+
+- Version bump to 0.9.7;
+- Fix bsc#1029694: the wizard cannot detect available watchdog modules
+- Improve log in ncruses mode
+- Change the layout of the overview screen
+
+-------------------------------------------------------------------
 Wed Oct  5 15:39:23 UTC 2016 - imanyugin@suse.com
 
 - Version bump to 0.9.6;
