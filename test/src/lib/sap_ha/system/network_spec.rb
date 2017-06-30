@@ -28,11 +28,7 @@ describe SapHA::System::Network do
     it 'returns the list of network interfaces on the local machine' do
       result = SapHA::System::Network.interfaces
       expect(result).not_to be_nil
-      if user_root?
-        expect(result).not_to be_empty
-      else
-        expect(result).to be_empty
-      end
+      expect(result).not_to be_empty
     end
   end
 
