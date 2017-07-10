@@ -79,12 +79,12 @@ module SapHA
         set_value(:stonith_method, false, :Enabled)
         set_value(:sbd_dev_list_table, @my_model.table_items, :Items)
         set_value(:sbd_options, @my_model.sbd_options)
-        set_value(:sbd_delayed_start, @my_model.sbd_delayed_start)
+        set_value(:sbd_delayed_start, @my_model.sbd_delayed_start == 'yes' ? true : false)
       end
 
       def update_model
         @my_model.sbd_options = value(:sbd_options)
-        @my_model.sbd_delayed_start = value(:sbd_delayed_start)
+        @my_model.sbd_delayed_start = value(:sbd_delayed_start) ? 'yes' : 'no'
       end
 
       def handle_user_input(input, event)

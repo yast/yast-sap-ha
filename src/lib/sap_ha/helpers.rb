@@ -154,7 +154,7 @@ module SapHA
       basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"
     end
 
-    def version_comparison(version_target, version_current, cmp = '~>')
+    def version_comparison(version_target, version_current, cmp = '>=')
       Gem::Dependency.new('', cmp + version_target).match?('', version_current)
     rescue StandardError => e
       log.error "HANA version comparison failed: target=#{version_target},"\

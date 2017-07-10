@@ -126,7 +126,7 @@ module SapHA
             # Logreplay is only available for SPS11+
             version = SapHA::System::Hana.version(@system_id)
             # TODO: remove debug
-            flag = SapHA::Helpers.version_comparison('1.00.110', version)
+            flag = SapHA::Helpers.version_comparison('1.00.110', version, '>=')
             check.report_error(flag,
               "Operation mode 'logreplay' is only available for HANA SPS11+"\
               " (detected version #{version}).", 'Operation mode', @operation_mode)

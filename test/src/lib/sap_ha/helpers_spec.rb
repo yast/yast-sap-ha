@@ -127,6 +127,20 @@ describe SapHA::HelpersClass do
     end
   end
 
+  describe '#version_comparison' do
+    it 'compares versions as expected' do
+      # SPS12 is greater than SPS11
+      result = SapHA::Helpers.version_comparison('1.00.110', '1.00.120', '>=')
+      expect(result).to be true
+      # SPS09 is lower than SPS11
+      result = SapHA::Helpers.version_comparison('1.00.110', '1.00.090', '>=')
+      expect(result).to be false
+      # HANA 2.0 SPS1 is greater than HANA 1.0 SPS12
+      result = SapHA::Helpers.version_comparison('1.00.110', '2.00.010', '>=')
+      expect(result).to be true
+    end
+  end
+
   # # TODO: auto-generated
   # describe '#write_var_file' do
   #   it 'works' do

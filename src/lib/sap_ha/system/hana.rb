@@ -155,12 +155,12 @@ module SapHA
         version = version(system_id)
         # Select an appropriate command-line switch for replication mode
         # Assume legacy `mode` by default (pre-SPS12)
-        rmode_string = if SapHA::Helpers.version_comparison('1.00.120', version)
+        rmode_string = if SapHA::Helpers.version_comparison('1.00.120', version, '>=')
                          "--replicationMode=#{rmode}"
                        else
                          "--mode=#{rmode}"
                        end
-        omode_string = if SapHA::Helpers.version_comparison('1.00.110', version)
+        omode_string = if SapHA::Helpers.version_comparison('1.00.110', version, '>=')
                          "--operationMode=#{omode}"
                        else
                          nil
