@@ -60,13 +60,14 @@ module SapHA
       # Check if we can initiate an SSH connection to the host using the specified password
       def check_ssh_password(host, password)
         log.info "--- #{self.class}.#{__callee__} --- "
-        stat = exec_status("/usr/bin/expect", "-f", @script_path, "check", host, password)
+        stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path, "check", host,
+          password)
         check_status(stat, host)
       end
 
       # Copy SSH keys from the host
       def copy_keys_from_(host, password, path)
-        stat = exec_status("/usr/bin/expect", "-f", @script_path,
+        stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path,
           "copy", host, password, path.to_s)
         check_status(stat, host)
       end
@@ -92,7 +93,8 @@ module SapHA
       # Copy own SSH identities to the specified host using the password
       def copy_keys_to(host, password)
         result = true
-        stat = exec_status("/usr/bin/expect", "-f", @script_path, "copy-id", host, password)
+        stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path, "copy-id",
+          host, password)
         check_status(stat, host)
         ssh_dir = File.join(Dir.home, '.ssh')
         @user_identities.each do |key|
@@ -121,7 +123,7 @@ module SapHA
           log.error "Could not copy 'authorized_keys' to host #{host}: #{out}."
           result = false
         end
-        stat = exec_status("/usr/bin/expect", "-f", @script_path,
+        stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path,
                            "authorize", host, password)
         NodeLogger.log_status(result, "Copied SSH keys to node #{host}",
           "Could not copy SSH keys to node #{host}")
@@ -172,7 +174,8 @@ module SapHA
         log.info "Copied #{keys_copied} keys."
         ::FileUtils.rm_rf tmpdir
         # make sure the target host has its own keys in authorized_keys
-        stat = exec_status("/usr/bin/expect", "-f", @script_path, "authorize", host, password)
+        stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path, "authorize",
+          host, password)
         if stat.exitstatus != 0
           log.error "Executing ha-cluster-init ssh_remote on host #{host} failed"
         end

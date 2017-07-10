@@ -366,7 +366,7 @@ module SapHA
         cmd = 'hdbsql', '-x', '-u', user_name, '-i', instance_number.to_s, '-p', password
         cmd << '-n' << environment unless environment.empty?
         cmd << '"' << statement.gsub('"', "\\\"") << '"'
-        out, status = su_exec_outerr_status_no_echo(su_name, *cmd)
+        out, status = su_exec_outerr_status_mask_password([7], su_name, *cmd)
         if status.exitstatus != 0
           # remove the password from the command line
           pass_index = (cmd.index('-p') || 0) + 1

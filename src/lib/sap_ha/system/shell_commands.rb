@@ -44,6 +44,17 @@ module SapHA
         Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
       end
 
+      # Execute command and return its status
+      # mask_fields is an array of fields to be masked
+      # @return [Process::Status]
+      def exec_status_mask_password(mask_fields, *command)
+        cmd_echo = command.clone
+        mask_fields.each {|fn| cmd_echo[fn] = '*no echo*'}
+        log.info "Executing command #{cmd_echo}"
+        Open3.popen3(*command) { |_, _, _, wait_thr| wait_thr.value }
+      end
+
+
       # Execute command and return its status and output (stdout)
       # @return [[Process::Status, String]]
       def exec_output_status(*command)
@@ -85,9 +96,12 @@ module SapHA
       end
 
       # Execute command as user _user_name_ and return its output and status
-      # Do not log the command
+      # mask_fields is an array of fields to be masked
       # @return [[String, String]] [stdout_and_stderr, status]
-      def su_exec_outerr_status_no_echo(user_name, *params)
+      def su_exec_outerr_status_mask_password(mask_fields, user_name, *params)
+        cmd_echo = params.clone
+        mask_fields.each {|fn| cmd_echo[fn] = '*no echo*'}
+        log.info "Executing #{cmd_echo} as user #{user_name}"
         Open3.capture2e('su', '-lc', params.join(' '), user_name)
       rescue SystemCallError => e
         return ["System call failed with ERRNO=#{e.errno}: #{e.message}", FakeProcessStatus.new(1)]
