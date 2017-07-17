@@ -22,7 +22,7 @@
 
 # >>> Arguments:
 # 0: action
-#    either "check", "copy", "authorize"
+#    either "check", "copy", "authorize", "copy-file"
 # 1: host name
 # 2: [password] (only if action==copy)
 # 3: [path] (only if action==copy)
@@ -54,7 +54,7 @@ proc usage {{msg ""}} {
         puts "Error: $msg"
     }
     puts "Usage: $argv0 action host \[password\] \[path\]"
-    puts "\taction: check, copy, authorize"
+    puts "\taction: check, copy, authorize, copy-file"
     exit 1
 }
 
@@ -107,6 +107,13 @@ switch -exact -- $action {
         set password [lindex $argv 2]
         spawn ssh-copy-id root@$host
     }
+    copy-file {
+        # copy hostname password path
+        # copy file from localhost to the same path on hostname
+        set password [lindex $argv 2]
+        set path [lindex $argv 3]
+        spawn sh -c "scp $path root@$host:'$path'"
+    }
     default { 
         usage "Unknown action $action"
     }
@@ -153,7 +160,7 @@ while {1} {
             exit 54
         }
         eof {
-            if {$action eq "copy" || $action eq "check" || $action eq "copy-id"} {
+            if {$action eq "copy" || $action eq "check" || $action eq "copy-id" || $action eq "copy-file"} {
                 exit 0
             } else {
                 exit 55

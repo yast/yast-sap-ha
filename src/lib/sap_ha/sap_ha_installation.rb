@@ -68,10 +68,6 @@ module SapHA
       @ui.next_node if @ui
     end
 
-    def recoverable_error(title, message)
-
-    end
-
     def remote_configuration(node)
       # # Catch 'execution expired and start afresh'
       # connected = false
@@ -132,11 +128,11 @@ module SapHA
     def calculate_gui
       tasks = ['Connecting']
       tasks.concat(@config.config_sequence.map { |e| e[:screen_name] })
-      stages = ['Configure the local node']
-      titles = ['Configuring the local node']
+      stages = ['Configure local node']
+      titles = ['Configuring local node']
       @other_nodes.each do |n|
-        stages << "Configure the remote node [#{n[:hostname]}]"
-        titles << "Configuring the remote node [#{n[:hostname]}]"
+        stages << "Configure remote node [#{n[:hostname]}]"
+        titles << "Configuring remote node [#{n[:hostname]}]"
       end
       @ui.set(stages, titles, tasks)
     end

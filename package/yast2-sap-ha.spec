@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-sap-ha
 #
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -13,9 +13,11 @@
 # published by the Open Source Initiative.
 
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
+#
+
 
 Name:           yast2-sap-ha
-Version:        0.9.7
+Version:        1.0.0
 Release:        0
 BuildArch:      noarch
 
@@ -28,41 +30,41 @@ Requires:       yast2-ruby-bindings
 Requires:       xdg-utils
 # for handling the SSH client
 Requires:       expect
+Requires:       ha-cluster-bootstrap
 Requires:       openssh
+Requires:       sap-installation-wizard
 Requires:       yast2-cluster
 Requires:       yast2-ntp-client
-Requires:       sap-installation-wizard
-Requires:       ha-cluster-bootstrap
 # for lsblk
 Requires:       util-linux
 # lsmod, modprobe
-Requires:       kmod-compat
 Requires:       SAPHanaSR
+Requires:       kmod-compat
 # configuration parser
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
-Requires:       sysvinit-tools
 Requires:       augeas-lenses
+Requires:       sysvinit-tools
 
-BuildRequires:  yast2
-BuildRequires:  yast2-ruby-bindings
-BuildRequires:  yast2-devtools
-BuildRequires:  yast2-packager
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
-BuildRequires:  update-desktop-files
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
-BuildRequires:  yast2-ntp-client
-BuildRequires:  yast2-cluster
-BuildRequires:  kmod-compat
-BuildRequires:  util-linux
-BuildRequires:  sysvinit-tools
 BuildRequires:  augeas-lenses
+BuildRequires:  kmod-compat
+BuildRequires:  sysvinit-tools
+BuildRequires:  update-desktop-files
+BuildRequires:  util-linux
+BuildRequires:  yast2
+BuildRequires:  yast2-cluster
+BuildRequires:  yast2-devtools
+BuildRequires:  yast2-ntp-client
+BuildRequires:  yast2-packager
+BuildRequires:  yast2-ruby-bindings
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 
-Group:          System/YaST
-License:        GPL-2.0
 Summary:        SUSE High Availability Setup for SAP Products
-URL:            http://www.suse.com
+License:        GPL-2.0
+Group:          System/YaST
+Url:            http://www.suse.com
 
 %description
 A YaST2 module to enable high availability for SAP HANA and SAP NetWeaver installations.

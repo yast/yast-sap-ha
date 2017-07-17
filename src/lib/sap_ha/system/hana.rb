@@ -23,6 +23,7 @@ require 'yast'
 require 'sap_ha/exceptions'
 require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
+require 'sap_ha/system/ssh'
 require_relative 'shell_commands'
 
 module SapHA
@@ -55,7 +56,14 @@ module SapHA
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secstore_user},"\
           " #{file_name}, #{_instance_number}) ---"
         user_name = "#{system_id.downcase}adm"
-        command = ['hdbsql', '-U', secstore_user, "\"BACKUP DATA USING FILE ('#{file_name}')\""]
+        # do backup differently for HANA 2.0
+        version = version(system_id)
+        if SapHA::Helpers.version_comparison('2.00.010', version, '>=')
+          command = 'hdbsql', '-U', secstore_user, '-d', 'SYSTEMDB',
+            "\"BACKUP DATA FOR FULL SYSTEM USING FILE ('#{file_name}')\""
+        else
+          command = 'hdbsql', '-U', secstore_user, "\"BACKUP DATA USING FILE ('#{file_name}')\""
+        end
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(
           status.exitstatus == 0,
@@ -376,6 +384,32 @@ module SapHA
           return
         end
         out
+      end
+
+      # Copy PKI SSFS key files from primary to secondary
+      # @param system_id [String] HANA System ID
+      # @param user_name [String] HANA user name 
+      def copy_ssfs_keys(system_id, secondary_host_name, password)
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secondary_host_name} ---"
+        # TODO: check the paths, ideally taking them from the ENV
+        # according to the docs, they should be:
+        #   $DIR_INSTANCE/../global/security/rsecssfs/data/SSFS_<SID>.DAT
+        #   $DIR_INSTANCE/../global/security/rsecssfs/key/SSFS_<SID>.KEY
+        # but those paths are invalid
+        file_list = [
+          "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/data/SSFS_#{system_id}.DAT",
+          "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/key/SSFS_#{system_id}.KEY"
+        ]
+        file_list.each do |file_path|
+          begin
+            SapHA::System::SSH.instance.copy_file_to(file_path, secondary_host_name, password)
+          rescue SSHException => e
+            NodeLogger.error "Could not copy HANA PKI SSFS file #{file_path}"
+            NodeLogger.output e.message
+          else
+            NodeLogger.info "Copied HANA PKI SSFS file #{file_path} to node #{secondary_host_name}"
+          end          
+        end
       end
     end # HanaClass
     Hana = HanaClass.instance

@@ -170,6 +170,7 @@ module SapHA
               show_message(e.message, 'Error')
               return false
             else
+              @my_model.set_host_password(ip, password)
               SapHA::System::SSH.instance.copy_keys_to(ip, password)
             end
           rescue SSHException => e

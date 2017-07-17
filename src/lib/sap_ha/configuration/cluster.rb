@@ -34,7 +34,8 @@ module SapHA
     # Cluster members configuration
     class Cluster < BaseConfig
       attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes, :keys
-      attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2, :append_hosts
+      attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2, :append_hosts,
+                    :host_passwords
 
       include Yast::UIShortcuts
       include SapHA::Exceptions
@@ -73,8 +74,11 @@ module SapHA
         @enable_csync2 = false
         @keys = {}
         @append_hosts = false
+        # IP to root passwd mapping
+        @host_passwords = {}
         init_rings
         init_nodes
+        @yaml_exclude << :@host_passwords
       end
 
       def set_fixed_nodes(fixed, number)
@@ -228,6 +232,15 @@ module SapHA
         ips = @nodes.map { |_, n| n[:ip_ring1] } - SapHA::System::Network.ip_addresses
         return [] if ips.any?(&:empty?)
         ips
+      end
+
+      def set_host_password(ip, password)
+        node = @nodes.values.find {|v| v[:ip_ring1] == ip }
+        if node.nil?
+          log.error "Trying to set password for node with IP #{ip}: No such node."
+          return
+        end
+        @host_passwords[node[:host_name]] = password
       end
 
       def ring_addresses

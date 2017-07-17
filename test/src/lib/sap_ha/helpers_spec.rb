@@ -138,6 +138,9 @@ describe SapHA::HelpersClass do
       # HANA 2.0 SPS1 is greater than HANA 1.0 SPS12
       result = SapHA::Helpers.version_comparison('1.00.110', '2.00.010', '>=')
       expect(result).to be true
+      # HANA 2.0 SPS1 is greater or equal to HANA 2.0 SPS1
+      result = SapHA::Helpers.version_comparison('2.00.010', '2.00.010.00.1491294693')
+      expect(result).to be true
     end
   end
 

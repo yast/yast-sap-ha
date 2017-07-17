@@ -72,6 +72,12 @@ module SapHA
         check_status(stat, host)
       end
 
+      def copy_file_to(file_path, host, password)
+        stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path,
+          "copy-file", host, password, file_path)
+        check_status(stat, host)
+      end
+
       def check_user_identities
         !@user_identities.empty? && @user_identities.all? { |p| File.readable? p }
       end
