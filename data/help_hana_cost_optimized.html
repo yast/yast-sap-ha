@@ -37,6 +37,13 @@
     <dd>
         defines, if the primary instance should create a backup before enabling system replication.
         If this is unchecked, it is assumed that the backup was already created manually.
+        If backup is not created during this step, the Wizard will fail to register secondary HANA system.
+        In order to perform initial backup, the Wizard needs to have a key in Secure User Storage. <br/>
+        If you are configuring a multi-tenant HANA installation (default for HANA versions 
+        2.0 SPS01 and above), please make sure that the secure store key is properly 
+        configured for connecting to the <code>SystemDB</code>, i.e., specify port 
+        <code>3&lt;SID&gt;13</code> in the environment settings and 
+        <code>SystemDB</code> as the target database.
     </dd>
     <dt>Production system constraints...</dt>
     <dd>
