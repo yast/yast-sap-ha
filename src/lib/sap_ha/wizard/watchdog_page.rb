@@ -38,7 +38,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _('Watchdog Setup'),
           base_layout_with_label(
-            'Select the appropriate watchdog modules to load at system startup',
+            'Select appropriate watchdog modules to load at system startup',
             VBox(
               SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate),
                 'Watchdogs to configure:', []),

@@ -38,7 +38,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _('Fencing Mechanism'),
           base_layout_with_label(
-            'Choose the STONITH method',
+            'Choose STONITH method',
             VBox(
               ComboBox(Id(:stonith_method), Opt(:hstretch), 'STONITH method:', ['SBD', 'IPMI']),
               HBox(

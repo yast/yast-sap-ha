@@ -41,7 +41,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _('Communication Layer'),
           base_layout_with_label(
-            'Define the communication layer configuration',
+            'Define communication layer\'s configuration',
             VBox(
               VBox(
                 two_widget_hbox(

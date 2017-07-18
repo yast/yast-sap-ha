@@ -213,7 +213,7 @@ module Yast
       help = @config.scenarios_help
       selection = SapHA::Wizard::ListSelection.new.run(
         "Scenario selection for #{@config.product_name}",
-        "An #{@config.product_name} installation was detected."\
+        "An #{@config.product_name} installation was detected. "\
         "Select one of the high-avaliability scenarios from the list below:",
         scenarios,
         help,

@@ -40,7 +40,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _('HANA Configuration'),
           base_layout_with_label(
-            'Set the HANA-specific parameters',
+            'Set HANA-specific parameters',
             @contents
           ),
           Helpers.load_help(help_file),

@@ -39,7 +39,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _('Cluster nodes'),
           base_layout_with_label(
-            _('Define the cluster nodes configuration'),
+            _('Define cluster nodes\' configuration'),
             VBox(
               MinHeight(4, nodes_table),
               HBox(

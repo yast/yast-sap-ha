@@ -38,7 +38,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _('NTP Configuration'),
           base_layout_with_label(
-            'Configure the Network Time Protocol settings',
+            'Configure Network Time Protocol client',
             VBox(
               SelectionBox(Id(:ntp_servers), 'Used servers:', []),
               PushButton(Id(:ntp_configure), 'Reconfigure'),
