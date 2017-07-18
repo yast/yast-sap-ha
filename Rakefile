@@ -28,6 +28,7 @@ Yast::Tasks.configuration do |conf|
   conf.skip_license_check << /pry_debug.rb/
   conf.skip_license_check << /make_package.sh/
   conf.skip_license_check << /srhook.py.tmpl/
+  conf.skip_license_check << /collect_logs.sh/
   conf.exclude_files << /pry_debug.rb/
   conf.exclude_files << /.rubocop.yml/
   conf.exclude_files << /TODO.md/
