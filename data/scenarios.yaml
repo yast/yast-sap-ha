@@ -25,39 +25,7 @@
         - config_overview
         - installation
         - summary
-      prerequisites_notice: &prereq_hana 
-        |
-        <h3>HANA System Replication Scale Up: Performance-optimized</h3>
-        <p>Before proceeding with the installation, please make sure of the following:<p>
-        <ul>
-            <li>
-                There are two machines with SAP HANA installed.<br>
-                Note that the machine you run the wizard on becomes the primary node in the cluster.
-            </li>
-            <li>
-                There is a firewall configured using the SAP HANA Firewall module in 
-                Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and 
-                <code>HANA_SYSTEM_REPLICATION</code>
-                services are enabled on <i>all</i> relevant network interfaces.
-            </li>
-            <li>
-                You have created one of the following:
-            <ul type="square">
-                <li>A key in the HANA Secure User Store (using the <code>hdbuserstore</code> 
-                utility) on the primary HANA node. <br/>
-                If you are configuring a multi-tenant HANA installation (default for HANA versions 
-                2.0 SPS01 and above), please make sure that the secure store key is properly 
-                configured for connecting to the <code>SystemDB</code>, i.e., specify port 
-                <code>3&lt;SID&gt;13</code> in the environment settings and 
-                <code>SystemDB</code> as the target database.
-                </li>
-                <li>An initial HANA backup (of the <code>SystemDB</code> and all tenant databases,
-                in an MDC setup) on the primary HANA node.
-                </li>
-            </ul>
-            </li>
-            <span></span> <!-- make Qt renderer happy -->
-        </ul>
+      prerequisites_notice: prereq_hana_su_po
       additional_instance: false
 
     - name: "Scale Up: Cost-optimized"
@@ -70,49 +38,7 @@
       fixed_number_of_nodes: true
       config_sequence: *id001
       screen_sequence: *id002
-      prerequisites_notice: |
-        <h3>HANA System Replication Scale Up: Performance-optimized</h3>
-        <p>Before proceeding with the installation, please make sure of the following:<p>
-        <ul>
-            <li>
-                There are two machines with SAP HANA installed.<br>
-                Note that the machine you run the wizard on becomes the primary node in the cluster.
-            </li>
-            <li>
-                There is a firewall configured using the SAP HANA Firewall module in 
-                Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and 
-                <code>HANA_SYSTEM_REPLICATION</code>
-                services are enabled on <i>all</i> relevant network interfaces.
-            </li>
-            <li>
-                You have created one of the following:
-            <ul type="square">
-                <li>A key in the HANA Secure User Store (using the 
-                  <code>hdbuserstore</code> utility) on the primary HANA node. </br>
-                If you are configuring a multi-tenant HANA installation (default for HANA versions 
-                2.0 SPS01 and above), please make sure that the secure store key is properly 
-                configured for connecting to the <code>SystemDB</code>, i.e., specify port
-                <code>3&lt;SID&gt;13</code> in the environment settings and 
-                <code>SystemDB</code> as the target database.
-                </li>
-                <li>An initial HANA backup (of the <code>SystemDB</code> and all tenant 
-                databases, in an MDC setup) on the primary HANA node.</li>
-                </ul>
-            </li>
-        <li>
-            You have prepared a takeover hook script for HANA (will be prompted for at one of
-            the following stages of the Wizard).
-        </li>
-        <li>
-            The second node has to have a secondary, non-production HANA instance installed, <i>
-            but not running</i>.
-        </li>
-        <li>
-            You've created a HANA Secure User Store key QASSAPDBCTRL for monitoring purposes 
-            (please refer to the <i>SAP HANA SR Cost Optimized Scenario</i> best practice guide,
-            section 4.2.7).
-        </li>
-        </ul>
+      prerequisites_notice: prereq_hana_su_co
       additional_instance: true
 
     - name: "Scale Up: Chained (multi-tier)"
@@ -125,43 +51,7 @@
         between B and C. Note that node C is not managed by the cluster.
       config_sequence: *id001
       screen_sequence: *id002
-      prerequisites_notice: |
-        <h3>HANA System Replication Scale Up: Performance-optimized</h3>
-        <p>Before proceeding with the installation, please make sure of the following:<p>
-        <ul>
-            <li>
-                There are two machines with SAP HANA installed.<br>
-                Note that the machine you run the wizard on becomes the primary node in the cluster.
-            </li>
-            <li>
-                There is a firewall configured using the SAP HANA Firewall module in 
-                Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and 
-                <code>HANA_SYSTEM_REPLICATION</code>
-                services are enabled on <i>all</i> relevant network interfaces.
-            </li>
-            <li>
-                You have created one of the following:
-            <ul type="square">
-                <li>A key in the HANA Secure User Store (using the 
-                  <code>hdbuserstore</code> utility) on the primary HANA node. <br/>
-                If you are configuring a multi-tenant HANA installation (default for HANA versions 
-                2.0 SPS01 and above), please make sure that the secure store key is properly 
-                configured for connecting to the <code>SystemDB</code>, i.e., specify port
-                <code>3&lt;SID&gt;13</code> in the environment settings and 
-                <code>SystemDB</code> as the target database.
-                </li>
-                <li>An initial HANA backup (of the <code>SystemDB</code> and all tenant 
-                databases, in an MDC setup) on the primary HANA node.</li>
-            </ul>
-            </li>
-            <li>
-                When the Wizard is finished configuring the two-node cluster, make sure to register
-                the third node for system replication like so:<br/>
-                    <code>hdbnsutil -sr_register --remoteHost=$(secondary_host_name)
-                    --remoteInstance=$(instance_number) --replicationMode=async 
-                    --name=$(site_name)</code>.
-            </li>
-        </ul>
+      prerequisites_notice: prereq_hana_su_mt
       additional_instance: false
 
 # - id: NW
