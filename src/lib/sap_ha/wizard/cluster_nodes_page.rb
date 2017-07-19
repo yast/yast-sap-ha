@@ -171,7 +171,9 @@ module SapHA
               return false
             else
               @my_model.set_host_password(ip, password)
-              SapHA::System::SSH.instance.copy_keys_to(ip, password)
+              Yast::Popup.Feedback('Please wait', 'Copying SSH keys') do
+                SapHA::System::SSH.instance.copy_keys_to(ip, password)
+              end
             end
           rescue SSHException => e
             # Yast::Popup.Error(e.message)

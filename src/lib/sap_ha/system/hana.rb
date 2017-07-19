@@ -396,6 +396,11 @@ module SapHA
         #   $DIR_INSTANCE/../global/security/rsecssfs/data/SSFS_<SID>.DAT
         #   $DIR_INSTANCE/../global/security/rsecssfs/key/SSFS_<SID>.KEY
         # but those paths are invalid
+        hana_version = version(system_id)
+        unless SapHA::Helpers.version_comparison('2.00', hana_version, '>=')
+          log.info "No need to copy SSFS keys for HANA version #{hana_version}"
+          return
+        end
         file_list = [
           "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/data/SSFS_#{system_id}.DAT",
           "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/key/SSFS_#{system_id}.KEY"
