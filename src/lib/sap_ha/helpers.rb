@@ -61,6 +61,7 @@ module SapHA
 
     # Render an ERB template by its name
     def render_template(basename, binding)
+      log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
       full_path = data_file_path(basename)
       if !@storage.key? basename
         template = ERB.new(read_file(full_path), nil, '-')
@@ -78,6 +79,7 @@ module SapHA
 
     # Load the help file by its name
     def load_help(basename)
+      log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
       file_name = "help_#{basename}.html"
       if !@storage.key? file_name
         full_path = File.join(@data_path, file_name)
@@ -90,25 +92,23 @@ module SapHA
 
     # Get the path to the file given its name
     def data_file_path(basename)
+      log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
       File.join(@data_path, basename)
     end
 
     def var_file_path(basename)
+      log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
       File.join(@var_path, basename)
     end
-
-    # def program_file_path(basename)
-    #   File.join(@yast_path, basename)
-    # end
 
     # Write a file to /var/lib/YaST2/sap_ha
     # Use it for logs and intermediate configuration files
     def write_var_file(basename, data, options = {})
+      log.debug "--- called #{self.class}.#{__callee__}(#{basename}, #{data}, #{options}) ---"
       basename = timestamp_file(basename, options[:timestamp])
       file_path = var_file_path(basename)
-      File.open(file_path, 'wb') do |fh|
-        fh.write(data)
-      end
+      write_file(file_path, data)
+      log.debug "--- called #{self.class}.#{__callee__}: Wrote file #{file_path} ---"
       file_path
     end
 
@@ -117,6 +117,7 @@ module SapHA
     # @param product_id [String]
     # @param scenario_name [String]
     def get_configuration_files(product_id = nil, scenario_name = nil)
+      log.debug "--- called #{self.class}.#{__callee__}(#{product_id}, #{scenario_name}) ---"
       files = Dir.chdir(@var_path) { Dir.glob('configuration_*.yml') }
       configs = files.map { |fn| YAML.load(read_file(var_file_path(fn))) }
       selected = configs.select do |c|
@@ -127,6 +128,7 @@ module SapHA
     end
 
     def write_file(path, data)
+      log.debug "--- called #{self.class}.#{__callee__}(#{path}, #{data}) ---"
       begin
         File.open(path, 'wb') do |fh|
           fh.write(data)
@@ -139,6 +141,7 @@ module SapHA
     end
 
     def open_url(url)
+      log.debug "--- called #{self.class}.#{__callee__}(#{url}) ---"
       require 'yast'
       Yast.import 'UI'
       Yast::UI.BusyCursor
@@ -148,6 +151,7 @@ module SapHA
     end
 
     def timestamp_file(basename, timestamp = nil)
+      log.debug "--- called #{self.class}.#{__callee__}(#{basename}, #{timestamp}) ---"
       return basename if timestamp.nil?
       ext = File.extname(basename)
       name = File.basename(basename, ext)
@@ -155,6 +159,7 @@ module SapHA
     end
 
     def version_comparison(version_target, version_current, cmp = '>=')
+      log.debug "--- called #{self.class}.#{__callee__}(#{version_target}, #{version_current}, #{cmp}) ---"
       Gem::Dependency.new('', cmp + version_target).match?('', version_current)
     rescue StandardError => e
       log.error "HANA version comparison failed: target=#{version_target},"\
@@ -167,6 +172,7 @@ module SapHA
 
     # Read file's contents
     def read_file(path)
+      log.debug "--- called #{self.class}.#{__callee__}(#{path}) ---"
       File.read(path)
     rescue Errno::ENOENT => e
       log.error("Could not find the file '#{path}': #{e.message}.")

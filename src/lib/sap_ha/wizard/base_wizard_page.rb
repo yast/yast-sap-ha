@@ -55,20 +55,24 @@ module SapHA
 
       # Refresh the view, populating the values from the model
       def refresh_view
+        log.debug "--- called #{self.class}.#{__callee__} ---"
       end
 
       # Refresh model, populating the values from the view
       def update_model
+        log.debug "--- called #{self.class}.#{__callee__} ---"
       end
 
       # Return true if the user can proceed to the next screen
       # Use this if additional verification of the data is needed
       def can_go_next?
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         true
       end
 
       # Show the error dialog if model validation failed?
       def show_errors?
+        log.debug "--- called #{self.class}.#{__callee__} ---"
         true
       end
 
@@ -96,7 +100,7 @@ module SapHA
         loop do
           log.debug "--- #{self.class}.#{__callee__} ---"
           event = Yast::Wizard.WaitForEvent
-          log.error "--- #{self.class}.#{__callee__}: event=#{event} ---"
+          log.info "--- #{self.class}.#{__callee__}: event=#{event} ---"
           input = event["ID"]
           case input
           # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
@@ -159,6 +163,7 @@ module SapHA
       # @param widget_id [Symbol]
       # @param property [Symbol]
       def value(widget_id, property = :Value)
+        log.debug "--- #{self.class}.#{__callee__}(#{widget_id}, #{property}) ---"
         unless Yast::UI.WidgetExists(Id(widget_id))
           log.error "--- #{self.class}.#{__callee__}: widget with "\
             "ID=#{widget_id} does not exist ---"
@@ -167,6 +172,7 @@ module SapHA
       end
 
       def set_value(widget_id, value, property = :Value)
+        log.debug "--- #{self.class}.#{__callee__}(#{widget_id}, #{value}, #{property}) ---"
         unless Yast::UI.WidgetExists(Id(widget_id))
           log.error "--- #{self.class}.#{__callee__}: widget with "\
             "ID=#{widget_id} does not exist ---"
@@ -320,6 +326,7 @@ module SapHA
       # Do not use base_popup because it logs the input!
       # @param message [String] additional prompt message
       def password_prompt(message)
+        log.debug "--- #{self.class}.#{__callee__}(#{message}) ---"
         Yast::UI.OpenDialog(
           VBox(
             Label(message),
@@ -341,7 +348,7 @@ module SapHA
       end
 
       def show_dialog_errors(error_list, title = "Invalid input")
-        log.error "--- #{self.class}.#{__callee__}: #{error_list} ---"
+        log.debug "--- #{self.class}.#{__callee__}(#{error_list}, #{title}) ---"
         html_str = "<p>Configuration is invalid or incomplete and the Wizard
           cannot proceed to the next step.</p><p>Please review the following warnings:</p>\n"
         html_str << "<ul>\n"
@@ -351,6 +358,7 @@ module SapHA
       end
 
       def show_message(message, title)
+        log.debug "--- #{self.class}.#{__callee__}(#{message}, #{title}) ---"
         Yast::Popup.LongText(title, RichText(message), 55, 10)
       end
 

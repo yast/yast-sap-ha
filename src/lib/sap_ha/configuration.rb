@@ -83,6 +83,7 @@ module SapHA
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
     # @param [String] value product ID
     def set_product_id(value)
+      log.debug "--- called #{self.class}.#{__callee__}(#{value}) ---"
       @product_id = value
       product = @yaml_configuration.find do |p|
         p.fetch('id', '') == @product_id
@@ -95,6 +96,7 @@ module SapHA
     # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found
     # @param [String] value scenario name
     def set_scenario_name(value)
+      log.debug "--- called #{self.class}.#{__callee__}(#{value}) ---"
       log.info "Selected scenario is '#{value}' for product '#{@product_name}'"
       raise ProductNotFoundException,
         "Setting scenario name before setting the Product ID" if @product.nil?
@@ -108,6 +110,7 @@ module SapHA
     end
 
     def apply_scenario
+      log.debug "--- called #{self.class}.#{__callee__}() ---"
       if @scenario['config_sequence']
         @config_sequence = @scenario['config_sequence'].map do |el|
           instv = "@#{el}".to_sym
@@ -136,6 +139,7 @@ module SapHA
     end
 
     def all_scenarios
+      log.debug "--- called #{self.class}.#{__callee__}() ---"
       raise ProductNotFoundException,
         "Getting scenarios list before setting the Product ID" if @product.nil?
       @product['scenarios'].map { |s| s['name'] }
@@ -143,6 +147,7 @@ module SapHA
 
     # Generate help string for all scenarios
     def scenarios_help
+      log.debug "--- called #{self.class}.#{__callee__}() ---"
       raise ProductNotFoundException,
         "Getting scenarios help before setting the Product ID" if @product.nil?
       (@product['scenarios'].map { |s| s['description'] }).join('<br><br>')
@@ -150,6 +155,7 @@ module SapHA
 
     # Can the cluster be set up?
     def can_install?
+      log.debug "--- called #{self.class}.#{__callee__}() ---"
       return false if @config_sequence.empty?
       @config_sequence.map do |config|
         flag = config[:object].configured?
@@ -162,6 +168,7 @@ module SapHA
     end
 
     def verbose_validate
+      log.debug "--- called #{self.class}.#{__callee__}() ---"
       return ["Configuration sequence is empty"] if @config_sequence.empty?
       @config_sequence.map do |config|
         config[:object].validate
@@ -171,6 +178,7 @@ module SapHA
     # Dump this object to a YAML representation
     # @param [Boolean] slave
     def dump(slave = false, force = false)
+      log.debug "--- called #{self.class}.#{__callee__}(#{slave}, #{force}) ---"
       return unless can_install? || force
       # TODO: the proposals are also kept in this way of duplicating...
       old_role = @role
@@ -182,6 +190,7 @@ module SapHA
 
     # Below are the methods for logging the setup process
     def start_setup
+      log.debug "--- called #{self.class}.#{__callee__} ---"
       @timestamp = Time.now
       NodeLogger.info(
         "Starting setup process on node #{SapHA::NodeLogger.node_name}")
@@ -189,16 +198,19 @@ module SapHA
     end
 
     def end_setup
+      log.debug "--- called #{self.class}.#{__callee__} ---"
       NodeLogger.info(
         "Finished setup process on node #{SapHA::NodeLogger.node_name}")
       true
     end
 
     def collect_log
+      log.debug "--- called #{self.class}.#{__callee__} ---"
       NodeLogger.text
     end
 
     def write_config
+      log.debug "--- called #{self.class}.#{__callee__} ---"
       SapHA::Helpers.write_var_file('configuration.yml', dump(false, true),
         timestamp: @timestamp)
     end
@@ -207,6 +219,7 @@ module SapHA
 
     # Load scenarios from the YAML configuration file
     def load_scenarios
+      log.debug "--- called #{self.class}.#{__callee__} ---"
       YAML.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
     end
   end # class ScenarioConfiguration
