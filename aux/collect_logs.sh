@@ -1,10 +1,16 @@
 #!/bin/bash
 
+# Files from /tmp will overwrite files from /var/lib, as we assume that the dev-run files are
+# more important
 FILE_LIST="
 /var/lib/YaST2/sap_ha/cluster.config
 /var/lib/YaST2/sap_ha/configuration_*_*.yml
 /var/lib/YaST2/sap_ha/installation_log_*_*.txt
 /var/lib/YaST2/sap_ha/installation_log_*_*.html
+/tmp/yast-sap-ha-tmp/cluster.config
+/tmp/yast-sap-ha-tmp/configuration_*_*.yml
+/tmp/yast-sap-ha-tmp/installation_log_*_*.txt
+/tmp/yast-sap-ha-tmp/installation_log_*_*.html
 /var/log/messages
 /var/log/pacemaker.log
 /var/log/YaST2/y2log

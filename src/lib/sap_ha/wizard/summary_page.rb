@@ -30,6 +30,7 @@ module SapHA
       attr_accessor :model
 
       def initialize(model)
+        super(model)
         @config = model
       end
 
