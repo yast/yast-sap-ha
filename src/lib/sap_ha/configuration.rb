@@ -51,7 +51,8 @@ module SapHA
       :watchdog,
       :hana,
       :ntp,
-      :cluster_finalizer
+      :cluster_finalizer,
+      :imported
 
     include Yast::Logger
     include Yast::I18n
@@ -59,6 +60,7 @@ module SapHA
 
     def initialize(role = :master)
       @timestamp = Time.now
+      @imported = false
       @role = role
       @debug = false
       @no_validators = false

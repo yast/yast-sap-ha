@@ -193,6 +193,21 @@ module SapHA
         check_status(stat, host)
       end
 
+      def rpc_server_running?(host)
+        log.debug "--- #{self.class}.#{__callee__} --- "
+        stat = exec_status("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}",
+          'ps aux | grep [r]pc_server.rb')
+        stat.exitstatus == 0
+      end
+
+      def kill_rpc_server(host)
+        log.debug "--- #{self.class}.#{__callee__} --- "
+        out, stat = exec_outerr_status("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}",
+          "RPCPID=$(ps aux | grep [r]pc_server.rb | awk '{print $2}') && kill -9 $RPCPID")
+        log.info "Remote host returned: #{out}"
+        stat.exitstatus == 0
+      end
+
       def run_command(host, *cmd)
         exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
       end

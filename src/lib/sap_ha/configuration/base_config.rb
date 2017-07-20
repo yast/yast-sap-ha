@@ -41,16 +41,16 @@ module SapHA
         @exception_type = BaseConfigException
         @nlog = SapHA::NodeLogger
         # Exclude these members from marshalling with YAML
-        @yaml_exclude = [:@yaml_exclude, :@nlog]
+        @yaml_exclude = [:@nlog]
       end
 
       def encode_with(coder)
         instance_variables.each do |variable_name|
-          next if @yaml_exclude.include? variable_name
+          next if !@yaml_exclude.nil? && @yaml_exclude.include?(variable_name)
           key = variable_name.to_s[1..-1]
           coder[key] = instance_variable_get(variable_name)
         end
-        coder['instance_variables'] = instance_variables - @yaml_exclude
+        coder['instance_variables'] = instance_variables - @yaml_exclude if @yaml_exclude
       end
 
       def init_with(coder)

@@ -1,0 +1,502 @@
+--- &5 !ruby/object:SapHA::HAConfiguration
+timestamp: 2017-07-19 17:33:43.102659506 +02:00
+imported: false
+role: :master
+debug: false
+no_validators: false
+product_id: HANA
+product_name: SAP HANA
+product:
+  id: HANA
+  string_name: SAP HANA
+  scenarios: &4
+  - &3
+    name: 'Scale Up: Performance-optimized'
+    id: supo
+    description: |
+      <b>Performance-optimized scenario</b> allows to set up a synchronous system
+      replication between two nodes, A and B, within the same cluster.
+    number_of_nodes: 2
+    fixed_number_of_nodes: true
+    config_sequence: &1
+    - ntp
+    - watchdog
+    - fencing
+    - cluster
+    - hana
+    screen_sequence: &2
+    - prerequisites
+    - communication_layer
+    - cluster_nodes
+    - ntp
+    - fencing
+    - watchdog
+    - hana
+    - config_overview
+    - installation
+    - summary
+    prerequisites_notice: prereq_hana_su_po
+    additional_instance: false
+  - name: 'Scale Up: Cost-optimized'
+    id: suco
+    description: |
+      <b>Cost-optimized scenario</b> allows to set up a synchronous system replication
+      between two nodes, A and B, within the same cluster, while a development
+      or quality assurance system is running on the node B, and the production database is shrunk.
+    number_of_nodes: 2
+    fixed_number_of_nodes: true
+    config_sequence: *1
+    screen_sequence: *2
+    prerequisites_notice: prereq_hana_su_co
+    additional_instance: true
+  - name: 'Scale Up: Chained (multi-tier)'
+    id: sumt
+    number_of_nodes: 2
+    fixed_number_of_nodes: true
+    description: |
+      <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
+      three nodes: A, B and C, with synchronous replication between A and B and asynchronous
+      between B and C. Note that node C is not managed by the cluster.
+    config_sequence: *1
+    screen_sequence: *2
+    prerequisites_notice: prereq_hana_su_mt
+    additional_instance: false
+scenario_name: 'Scale Up: Performance-optimized'
+scenario: *3
+scenario_summary: 
+yaml_configuration:
+- id: HANA
+  string_name: SAP HANA
+  scenarios: *4
+cluster: !ruby/object:SapHA::Configuration::Cluster
+  global_config: *5
+  screen_name: Cluster Configuration
+  exception_type: &19 !ruby/class 'SapHA::Exceptions::ClusterConfigurationException'
+  yaml_exclude: &20
+  - :@nlog
+  fixed_number_of_nodes: true
+  number_of_nodes: 2
+  number_of_rings: 1
+  nodes: &21
+    :node1:
+      :host_name: hana01
+      :ip_ring1: 192.168.101.7
+      :ip_ring2: ''
+      :node_id: '1'
+    :node2:
+      :host_name: hana02
+      :ip_ring1: 192.168.101.8
+      :ip_ring2: ''
+      :node_id: '2'
+  rings: &22
+    :ring1:
+      :address: 192.168.101.0/24
+      :port: '5405'
+      :id: 1
+      :mcast: ''
+      :address_no_mask: 192.168.101.0
+  transport_mode: :unicast
+  expected_votes: '2'
+  cluster_name: hanushka
+  enable_secauth: false
+  enable_csync2: false
+  keys: &23 {}
+  append_hosts: false
+  host_passwords: &24
+    hana02: s
+  instance_variables:
+  - :@global_config
+  - :@screen_name
+  - :@exception_type
+  - :@yaml_exclude
+  - :@fixed_number_of_nodes
+  - :@number_of_nodes
+  - :@number_of_rings
+  - :@nodes
+  - :@rings
+  - :@transport_mode
+  - :@expected_votes
+  - :@cluster_name
+  - :@enable_secauth
+  - :@enable_csync2
+  - :@keys
+  - :@append_hosts
+  - :@host_passwords
+cluster_finalizer: !ruby/object:SapHA::Configuration::ClusterFinalizer
+  global_config: *5
+  screen_name: Cluster Configuration Finalizer
+  exception_type: &6 !ruby/class 'SapHA::Exceptions::BaseConfigException'
+  yaml_exclude:
+  - :@nlog
+  instance_variables:
+  - :@global_config
+  - :@screen_name
+  - :@exception_type
+  - :@yaml_exclude
+fencing: !ruby/object:SapHA::Configuration::Fencing
+  global_config: *5
+  screen_name: Fencing Mechanism
+  exception_type: *6
+  yaml_exclude: &15
+  - :@nlog
+  devices: &16
+  - "/dev/vdb"
+  proposals: &17
+    by-uuid:
+      8a799988-5197-4ce0-b7c7-d647a7892017: "/dev/disk/by-uuid/8a799988-5197-4ce0-b7c7-d647a7892017"
+      568df267-aad8-4b70-8068-6b1cc41fa2df: "/dev/disk/by-uuid/568df267-aad8-4b70-8068-6b1cc41fa2df"
+    by-device:
+      vda: "/dev/vda"
+      vda1: "/dev/vda1"
+      vda2: "/dev/vda2"
+      vdb: "/dev/vdb"
+      vdc: "/dev/vdc"
+  sbd_options: "-W"
+  sbd_delayed_start: 'no'
+  sysconfig: &18
+    :device: ''
+    :pacemaker: ''
+    :startmode: ''
+    :delay_start: ''
+    :watchdog: ''
+    :options: ''
+  instance_variables:
+  - :@global_config
+  - :@screen_name
+  - :@exception_type
+  - :@yaml_exclude
+  - :@devices
+  - :@proposals
+  - :@sbd_options
+  - :@sbd_delayed_start
+  - :@sysconfig
+watchdog: !ruby/object:SapHA::Configuration::Watchdog
+  global_config: *5
+  screen_name: Watchdog Setup
+  exception_type: *6
+  yaml_exclude: &10
+  - :@nlog
+  loaded: &11
+  - i6300esb
+  configured: &12 []
+  to_install: &13 []
+  proposals: &14
+  - wdt_pci
+  - w83977f_wdt
+  - iTCO_vendor_support
+  - smsc37b787_wdt
+  - alim7101_wdt
+  - cpu5wdt
+  - alim1535_wdt
+  - pcwd_usb
+  - pc87413_wdt
+  - sbc60xxwdt
+  - it8712f_wdt
+  - advantechwdt
+  - softdog
+  - acquirewdt
+  - machzwd
+  - ibmasr
+  - w83627hf_wdt
+  - ib700wdt
+  - hpwdt
+  - pcwd_pci
+  - iTCO_wdt
+  - xen_wdt
+  - sc1200wdt
+  - wafer5823wdt
+  - w83877f_wdt
+  - i6300esb
+  - eurotechwdt
+  instance_variables:
+  - :@global_config
+  - :@screen_name
+  - :@exception_type
+  - :@yaml_exclude
+  - :@loaded
+  - :@configured
+  - :@to_install
+  - :@proposals
+hana: !ruby/object:SapHA::Configuration::HANA
+  global_config: *5
+  screen_name: HANA Configuration
+  exception_type: *6
+  yaml_exclude: &25
+  - :@nlog
+  system_id: NDB
+  instance: '00'
+  virtual_ip: 192.168.101.223
+  virtual_ip_mask: '24'
+  replication_mode: sync
+  operation_mode: delta_datashipping
+  prefer_takeover: true
+  auto_register: false
+  site_name_1: WALLDORF
+  site_name_2: ROT
+  backup_user: system
+  backup_file: backup
+  perform_backup: false
+  additional_instance: false
+  np_system_id: QAS
+  np_instance: '10'
+  hook_script_parameters: &26 {}
+  production_constraints: &27 {}
+  hook_script: ''
+  instance_variables:
+  - :@global_config
+  - :@screen_name
+  - :@exception_type
+  - :@yaml_exclude
+  - :@system_id
+  - :@instance
+  - :@virtual_ip
+  - :@virtual_ip_mask
+  - :@replication_mode
+  - :@operation_mode
+  - :@prefer_takeover
+  - :@auto_register
+  - :@site_name_1
+  - :@site_name_2
+  - :@backup_user
+  - :@backup_file
+  - :@perform_backup
+  - :@additional_instance
+  - :@np_system_id
+  - :@np_instance
+  - :@hook_script_parameters
+  - :@production_constraints
+  - :@hook_script
+ntp: !ruby/object:SapHA::Configuration::NTP
+  global_config: *5
+  screen_name: NTP Configuration
+  exception_type: *6
+  yaml_exclude: &7
+  - :@nlog
+  config: &8
+    synchronize_time: false
+    sync_interval: 5
+    start_at_boot: true
+    start_in_chroot: false
+    ntp_policy: auto
+    peers:
+    - type: driftfile
+      address: "/var/lib/ntp/drift/ntp.drift "
+      options: ''
+      comment: |2+
+
+        # Clients from this (example!) subnet have unlimited access, but only if
+        # cryptographically authenticated.
+        #restrict 192.168.123.0 mask 255.255.255.0 notrust
+
+        ##
+        ## Miscellaneous stuff
+        ##
+
+    - type: logfile
+      address: "/var/log/ntp\t\t"
+      options: ''
+      comment: |+
+        # path for drift file
+
+    - type: keys
+      address: "/etc/ntp.keys\t\t"
+      options: ''
+      comment: "# alternate log file\n# logconfig =syncstatus + sysevents\n# logconfig
+        =all\n\n# statsdir /tmp/\t\t# directory for statistics files\n# filegen peerstats
+        \ file peerstats  type day enable\n# filegen loopstats  file loopstats  type
+        day enable\n# filegen clockstats file clockstats type day enable\n\n#\n# Authentication
+        stuff\n#\n"
+    - type: trustedkey
+      address: "1\t\t\t"
+      options: ''
+      comment: |
+        # path for keys file
+    - type: requestkey
+      address: "1\t\t\t"
+      options: ''
+      comment: |
+        # define trusted keys
+    - type: controlkey
+      address: "1\t\t\t"
+      options: ''
+      comment: |
+        # key (7) for accessing server variables
+    - type: server
+      address: ntp.suse.de
+      options: iburst
+    restricts: []
+  ntpd_cron: false
+  used_servers: &9
+  - ntp.suse.de
+  instance_variables:
+  - :@global_config
+  - :@screen_name
+  - :@exception_type
+  - :@yaml_exclude
+  - :@config
+  - :@ntpd_cron
+  - :@used_servers
+config_sequence:
+- :id: ntp
+  :var_name: :@ntp
+  :object: !ruby/object:SapHA::Configuration::NTP
+    global_config: *5
+    screen_name: NTP Configuration
+    exception_type: *6
+    yaml_exclude: *7
+    config: *8
+    ntpd_cron: false
+    used_servers: *9
+    instance_variables:
+    - :@global_config
+    - :@screen_name
+    - :@exception_type
+    - :@yaml_exclude
+    - :@config
+    - :@ntpd_cron
+    - :@used_servers
+  :screen_name: NTP Configuration
+  :rpc_object: sapha.config_ntp
+  :rpc_method: sapha.config_ntp.apply
+- :id: watchdog
+  :var_name: :@watchdog
+  :object: !ruby/object:SapHA::Configuration::Watchdog
+    global_config: *5
+    screen_name: Watchdog Setup
+    exception_type: *6
+    yaml_exclude: *10
+    loaded: *11
+    configured: *12
+    to_install: *13
+    proposals: *14
+    instance_variables:
+    - :@global_config
+    - :@screen_name
+    - :@exception_type
+    - :@yaml_exclude
+    - :@loaded
+    - :@configured
+    - :@to_install
+    - :@proposals
+  :screen_name: Watchdog Setup
+  :rpc_object: sapha.config_watchdog
+  :rpc_method: sapha.config_watchdog.apply
+- :id: fencing
+  :var_name: :@fencing
+  :object: !ruby/object:SapHA::Configuration::Fencing
+    global_config: *5
+    screen_name: Fencing Mechanism
+    exception_type: *6
+    yaml_exclude: *15
+    devices: *16
+    proposals: *17
+    sbd_options: "-W"
+    sbd_delayed_start: 'no'
+    sysconfig: *18
+    instance_variables:
+    - :@global_config
+    - :@screen_name
+    - :@exception_type
+    - :@yaml_exclude
+    - :@devices
+    - :@proposals
+    - :@sbd_options
+    - :@sbd_delayed_start
+    - :@sysconfig
+  :screen_name: Fencing Mechanism
+  :rpc_object: sapha.config_fencing
+  :rpc_method: sapha.config_fencing.apply
+- :id: cluster
+  :var_name: :@cluster
+  :object: !ruby/object:SapHA::Configuration::Cluster
+    global_config: *5
+    screen_name: Cluster Configuration
+    exception_type: *19
+    yaml_exclude: *20
+    fixed_number_of_nodes: true
+    number_of_nodes: 2
+    number_of_rings: 1
+    nodes: *21
+    rings: *22
+    transport_mode: :unicast
+    expected_votes: '2'
+    cluster_name: hanushka
+    enable_secauth: false
+    enable_csync2: false
+    keys: *23
+    append_hosts: false
+    host_passwords: *24
+    instance_variables:
+    - :@global_config
+    - :@screen_name
+    - :@exception_type
+    - :@yaml_exclude
+    - :@fixed_number_of_nodes
+    - :@number_of_nodes
+    - :@number_of_rings
+    - :@nodes
+    - :@rings
+    - :@transport_mode
+    - :@expected_votes
+    - :@cluster_name
+    - :@enable_secauth
+    - :@enable_csync2
+    - :@keys
+    - :@append_hosts
+    - :@host_passwords
+  :screen_name: Cluster Configuration
+  :rpc_object: sapha.config_cluster
+  :rpc_method: sapha.config_cluster.apply
+- :id: hana
+  :var_name: :@hana
+  :object: !ruby/object:SapHA::Configuration::HANA
+    global_config: *5
+    screen_name: HANA Configuration
+    exception_type: *6
+    yaml_exclude: *25
+    system_id: NDB
+    instance: '00'
+    virtual_ip: 192.168.101.223
+    virtual_ip_mask: '24'
+    replication_mode: sync
+    operation_mode: delta_datashipping
+    prefer_takeover: true
+    auto_register: false
+    site_name_1: WALLDORF
+    site_name_2: ROT
+    backup_user: system
+    backup_file: backup
+    perform_backup: false
+    additional_instance: false
+    np_system_id: QAS
+    np_instance: '10'
+    hook_script_parameters: *26
+    production_constraints: *27
+    hook_script: ''
+    instance_variables:
+    - :@global_config
+    - :@screen_name
+    - :@exception_type
+    - :@yaml_exclude
+    - :@system_id
+    - :@instance
+    - :@virtual_ip
+    - :@virtual_ip_mask
+    - :@replication_mode
+    - :@operation_mode
+    - :@prefer_takeover
+    - :@auto_register
+    - :@site_name_1
+    - :@site_name_2
+    - :@backup_user
+    - :@backup_file
+    - :@perform_backup
+    - :@additional_instance
+    - :@np_system_id
+    - :@np_instance
+    - :@hook_script_parameters
+    - :@production_constraints
+    - :@hook_script
+  :screen_name: HANA Configuration
+  :rpc_object: sapha.config_hana
+  :rpc_method: sapha.config_hana.apply
