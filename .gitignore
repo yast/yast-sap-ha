@@ -9,3 +9,5 @@ coverage
 
 yast-sap-ha.sublime-project
 yast-sap-ha.sublime-workspace
+
+package/yast2-sap-ha-*.tar.bz2

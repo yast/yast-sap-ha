@@ -9,6 +9,7 @@ FILE_LIST="
 /var/log/pacemaker.log
 /var/log/YaST2/y2log
 /tmp/rpc_serv
+/root/kill_rpc_server.log
 "
 
 function usage(){

@@ -52,7 +52,13 @@ module Yast
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
-      @config = SapHA::HAConfiguration.new
+      if WFM.Args.include?('readconfig')
+        ix = WFM.Args.index('readconfig') + 1
+        @config = YAML.load(File.read(WFM.Args[ix]))
+        @config.imported = true
+      else
+        @config = SapHA::HAConfiguration.new
+      end
       @config.debug = WFM.Args.include? 'over'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
       @test = WFM.Args.include?('tst')

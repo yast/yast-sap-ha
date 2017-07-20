@@ -90,7 +90,13 @@ module SapHA
     class RPCCallException < BaseException
     end
 
+    class RPCRecoverableException < BaseException
+    end
+
     class RPCFatalException < BaseException
+    end
+
+    class ConfigurationFatalException < BaseException
     end
   end
 end

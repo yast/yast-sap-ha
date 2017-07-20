@@ -76,15 +76,18 @@ module SapHA
         @append_hosts = false
         # IP to root passwd mapping
         @host_passwords = {}
-        init_rings
-        init_nodes
-        @yaml_exclude << :@host_passwords
+        unless global_config.imported
+          init_rings
+          init_nodes
+        end
+        # TODO: decide if we want to save passwords
+        # @yaml_exclude << :@host_passwords
       end
 
       def set_fixed_nodes(fixed, number)
         @fixed_number_of_nodes = fixed
         @number_of_nodes = number
-        init_nodes
+        init_nodes unless @global_config.imported
       end
 
       # return the table-like representation
@@ -241,6 +244,15 @@ module SapHA
           return
         end
         @host_passwords[node[:host_name]] = password
+      end
+
+      def get_host_password(ip)
+        node = @nodes.values.find {|v| v[:ip_ring1] == ip }
+        if node.nil?
+          log.error "Trying to get password for node with IP #{ip}: No such node."
+          return nil
+        end
+        @host_passwords[node[:host_name]]
       end
 
       def ring_addresses

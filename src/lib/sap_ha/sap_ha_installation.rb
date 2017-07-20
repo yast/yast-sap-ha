@@ -40,6 +40,7 @@ module SapHA
 
     def run
       # perform local configuration first, since it can change the state of the config
+      log.debug "--- #{self.class}.#{__callee__} ---"
       local_configuration
       @yaml_config = @config.dump(true)
       next_node
@@ -47,7 +48,11 @@ module SapHA
         log.info "--- #{self.class}.#{__callee__}: configuring node #{node[:hostname]} ---"
         begin
           remote_configuration(node)
-        rescue 
+        rescue SapHA::Exceptions::ConfigurationFatalException => e
+          log.error "SAP HA Configuration was interrupted due to a fatal error: #{e.message}"
+          NodeLogger.fatal "SAP HA Configuration was interrupted due to a fatal error: #{e.message}"
+          @ui.unblock if @ui
+          return :next
         end
         next_node
         log.info "--- #{self.class}.#{__callee__}: finished configuring node #{node[:hostname]} ---"
@@ -61,35 +66,29 @@ module SapHA
     private
 
     def next_task
+      log.debug "--- #{self.class}.#{__callee__} ---"
       @ui.next_task if @ui
     end
 
     def next_node
+      log.debug "--- #{self.class}.#{__callee__} ---"
       @ui.next_node if @ui
     end
 
     def remote_configuration(node)
-      # # Catch 'execution expired and start afresh'
-      # connected = false
-      # attempt = 0
-      # while !connected && attempt < 5
-      #   connected = connect(node)
-      #   unless connected
-      #     NodeLogger.error "Could not connect to node #{node} (attempt #{attempt})"
-      #     sleep 3
-      #   end
-      # end
-      # unless connected
-      #   NodeLogger.fatal "Could not connect to node #{node}. Cluster setup is interrupted."
-      #   return false
-      # end
-
+      log.debug "--- #{self.class}.#{__callee__}(#{node}) ---"
       next_task
       # Export config
       SapHA::System::Connectivity.configure(node[:hostname]) do |rpc|
-        rpc.connect
-        rpc.polling_call('sapha.import_config', @yaml_config)
-        rpc.polling_call('sapha.config.start_setup')
+        begin
+          rpc.connect
+          rpc.polling_call('sapha.import_config', @yaml_config)
+          rpc.polling_call('sapha.config.start_setup')
+        rescue SapHA::Exceptions::RPCRecoverableException => e
+          log.debug "--- #{self.class}.#{__callee__}(#{node}) :: caught RPCRecoverableException ---"
+          NodeLogger.fatal "Could not connect to node #{node[:hostname]}. Cluster setup is interrupted."
+          raise SapHA::Exceptions::ConfigurationFatalException, e.message
+        end
         next_task
         @config.config_sequence.each do |component|
           log.info "--- #{self.class}.#{__callee__}: configuring component "\
@@ -105,6 +104,7 @@ module SapHA
     end
 
     def local_configuration
+      log.debug "--- #{self.class}.#{__callee__} ---"
       log.info "--- #{self.class}.#{__callee__}: configuring current node ---"
       next_node
       next_task # we are not connecting to the local node
@@ -118,6 +118,7 @@ module SapHA
     end
 
     def prepare
+      log.debug "--- #{self.class}.#{__callee__} ---"
       # TODO: rename other_nodes_ext
       @other_nodes = @config.cluster.other_nodes_ext
       SapHA::System::Connectivity.init_from_config(@config.cluster)
@@ -126,6 +127,7 @@ module SapHA
     end
 
     def calculate_gui
+      log.debug "--- #{self.class}.#{__callee__} ---"
       tasks = ['Connecting']
       tasks.concat(@config.config_sequence.map { |e| e[:screen_name] })
       stages = ['Configure local node']

@@ -157,7 +157,9 @@ module SapHA
             SapHA::System::SSH.instance.check_ssh(ip)
           rescue SSHAuthException => e
             log.error e.message
-            password = password_prompt("Password is required for node #{ip}:")
+            # Check if password is already present in the [imported] configuration
+            password = @my_model.get_host_password(ip)
+            password = password_prompt("Password is required for node #{ip}:") if password.nil?
             return false if password.nil?
             begin
               SapHA::System::SSH.instance.check_ssh_password(ip, password)
