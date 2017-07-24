@@ -4,6 +4,7 @@ Mon Jul 17 07:53:11 UTC 2017 - imanyugin@suse.com
 - Version bump to 1.0.0;
 - Fix bsc#1045482: incorrect opetationMode for HANA 2.0;
 - Adapt module for changes in HANA 2.0;
+- Store and recover settings for unfinished cluster configurations;
 
 -------------------------------------------------------------------
 Thu Mar 16 14:14:37 UTC 2017 - imanyugin@suse.com
