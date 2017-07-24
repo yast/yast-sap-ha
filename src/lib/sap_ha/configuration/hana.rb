@@ -130,7 +130,7 @@ module SapHA
             flag = SapHA::Helpers.version_comparison('1.00.110', version, '>=')
             check.report_error(flag,
               "Operation mode 'logreplay' is only available for HANA SPS11+"\
-              " (detected version #{version}).", 'Operation mode', @operation_mode)
+              " (detected version #{version || 'Unknown' }).", 'Operation mode', @operation_mode)
           end
           check.identifier(@site_name_1, nil, 'Site name 1')
           check.identifier(@site_name_2, nil, 'Site name 2')

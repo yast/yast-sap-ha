@@ -62,7 +62,6 @@ module Yast
       end
       @config.debug = WFM.Args.include? 'over'
       @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
-      @test = WFM.Args.include?('tst')
       Wizard.SetTitleIcon('yast-heartbeat')
       @sequence = {
         "ws_start"              => "product_check",
@@ -214,40 +213,9 @@ module Yast
       @config.product.fetch('id', 'abort').downcase.to_sym
     end
 
-    def scenario_selection_OLD
-      log.debug "--- called #{self.class}.#{__callee__} ---"
-      scenarios = @config.all_scenarios
-      help = @config.scenarios_help
-      selection = SapHA::Wizard::ListSelection.new.run(
-        "Scenario selection for #{@config.product_name}",
-        "An #{@config.product_name} installation was detected. "\
-        "Select one of the high-avaliability scenarios from the list below:",
-        scenarios,
-        help,
-        false,
-        true
-      )
-      case selection
-      when :next
-        begin
-          @config.set_scenario_name(UI.QueryWidget(:selection_box, :Value))
-        rescue ScenarioNotFoundException
-          return :unknown
-        rescue GUIFatal => e
-          Popup.Error(e.message)
-          return :abort
-        end
-      when :abort
-        return :abort
-      end
-      set_test_values if @test
-      selection
-    end
-
     def scenario_selection
       log.debug "--- called #{self.class}.#{__callee__} ---"
       selection = SapHA::Wizard::ScenarioSelectionPage.new(@config).run
-      set_test_values if @test
       log.debug "--- called #{self.class}.#{__callee__}:: ret is #{selection.class} ---"
       if selection.is_a?(SapHA::HAConfiguration)
         @config = selection
@@ -353,23 +321,6 @@ module Yast
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      if WFM.Args.include? 'noinst'
-        SapHA::NodeLogger.import [
-          '[hana01] 2016-06-15 14:51:14 INFO: Starting setup process on node hana01',
-          '[hana01] 2016-06-15 14:51:14 INFO: Applying Cluster Configuration',
-          '[hana01] 2016-06-15 14:51:20 INFO: Wrote cluster settings',
-          '[hana01] 2016-06-15 14:51:20 INFO: Enabled service csync2',
-          '[hana01] 2016-06-15 14:51:20 INFO: Enabled service pacemaker',
-          '[hana01] 2016-06-15 14:51:21 INFO: Started service pacemaker',
-          '[hana01] 2016-06-15 14:51:21 INFO: Enabled service hawk',
-          '[hana01] 2016-06-15 14:51:22 INFO: Started service hawk',
-          '[hana01] 2016-06-15 14:51:23 ERROR: Have done something stupid. The log is:',
-          '[hana01] 2016-06-15 14:51:23 OUTPUT: Log line 1',
-          '[hana01] 2016-06-15 14:51:23 OUTPUT: Log line 2',
-          '[hana01] 2016-06-15 14:51:23 OUTPUT: Log line 3',
-          '[hana01] 2016-06-15 14:51:22 WARN: Finished with errors'
-        ].join("\n")
-      end
       SapHA::Wizard::SetupSummaryPage.new(@config).run
     end
 
@@ -380,80 +331,7 @@ module Yast
       else
         @config.set_scenario_name 'Scale Up: Performance-optimized'
       end
-      set_test_values if @test
       :config_overview
-    end
-
-    def set_test_values
-      @config.cluster.import(
-        number_of_rings: 2,
-        transport_mode:  :unicast,
-        cluster_name:    'hana_sysrep',
-        expected_votes:  2,
-        rings:           {
-          ring1: {
-            address:         '192.168.101.0/24',
-            port:            '5405',
-            id:              1,
-            mcast:           '',
-            address_no_mask: '192.168.101.0'
-          },
-          ring2: {
-            address:         '192.168.103.0/24',
-            port:            '5405',
-            id:              2,
-            mcast:           '',
-            address_no_mask: '192.168.103.0'
-          }
-        }
-      )
-      @config.cluster.import(
-        number_of_rings: 2,
-        number_of_nodes: 2,
-        nodes:           {
-          node1: {
-            host_name: "hana01",
-            ip_ring1:  "192.168.101.21",
-            ip_ring2:  "192.168.103.21",
-            node_id:   '1'
-          },
-          node2: {
-            host_name: "hana02",
-            ip_ring1:  "192.168.101.22",
-            ip_ring2:  "192.168.103.22",
-            node_id:   '2'
-          }
-        }
-      )
-      @config.fencing.import(devices: ['/dev/vdb'])
-      @config.watchdog.import(to_install: ['softdog'])
-      @config.hana.import(
-        system_id:   'XXX',
-        instance:    '00',
-        virtual_ip:  '192.168.101.100',
-        backup_user: 'xxxadm'
-      )
-      ntp_cfg = {
-        "synchronize_time" => false,
-        "sync_interval"    => 5,
-        "start_at_boot"    => true,
-        "start_in_chroot"  => false,
-        "ntp_policy"       => "auto",
-        "restricts"        => [],
-        "peers"            => [
-          { "type"    => "server",
-            "address" => "ntp.local",
-            "options" => " iburst",
-            "comment" => "# key (6) for accessing server variables\n"
-          }
-        ]
-      }
-      unless WFM.Args.include? 'nontp'
-        Yast.import 'NtpClient'
-        NtpClient.Import ntp_cfg
-        NtpClient.Write
-      end
-      @config.ntp.read_configuration
     end
   end
 
