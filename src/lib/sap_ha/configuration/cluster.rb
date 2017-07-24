@@ -59,6 +59,7 @@ module SapHA
 
       def initialize(global_config)
         super
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "Cluster Configuration"
         @fixed_number_of_nodes = false
         @number_of_nodes = 2
@@ -76,12 +77,17 @@ module SapHA
         @append_hosts = false
         # IP to root passwd mapping
         @host_passwords = {}
-        unless global_config.imported
-          init_rings
-          init_nodes
-        end
-        # TODO: decide if we want to save passwords
-        # @yaml_exclude << :@host_passwords
+        init_rings
+        init_nodes
+        @yaml_exclude << :@host_passwords
+      end
+
+      def init_with(coder)
+        super(coder)
+        # always exclude passwords from the configuration
+        @yaml_exclude = [:@nlog] unless @yaml_exclude.nil?
+        @yaml_exclude << :@host_passwords
+        @host_passwords = {}
       end
 
       def set_fixed_nodes(fixed, number)
@@ -238,7 +244,7 @@ module SapHA
       end
 
       def set_host_password(ip, password)
-        node = @nodes.values.find {|v| v[:ip_ring1] == ip }
+        node = @nodes.values.find { |v| v[:ip_ring1] == ip }
         if node.nil?
           log.error "Trying to set password for node with IP #{ip}: No such node."
           return
@@ -247,7 +253,7 @@ module SapHA
       end
 
       def get_host_password(ip)
-        node = @nodes.values.find {|v| v[:ip_ring1] == ip }
+        node = @nodes.values.find { |v| v[:ip_ring1] == ip }
         if node.nil?
           log.error "Trying to get password for node with IP #{ip}: No such node."
           return nil

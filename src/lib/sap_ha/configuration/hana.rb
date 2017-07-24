@@ -58,6 +58,7 @@ module SapHA
 
       def initialize(global_config)
         super
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "HANA Configuration"
         @system_id = 'NDB'
         @instance = '00'

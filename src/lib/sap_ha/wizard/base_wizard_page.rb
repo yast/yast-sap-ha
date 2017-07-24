@@ -44,35 +44,35 @@ module SapHA
 
       # Initialize the Wizard page
       def initialize(model)
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @model = model
       end
 
       # Set the Wizard's contents, help and the back/next buttons
       def set_contents
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.debug "--- #{self.class}.#{__callee__} ---"
       end
 
       # Refresh the view, populating the values from the model
       def refresh_view
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.debug "--- #{self.class}.#{__callee__} ---"
       end
 
       # Refresh model, populating the values from the view
       def update_model
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.debug "--- #{self.class}.#{__callee__} ---"
       end
 
       # Return true if the user can proceed to the next screen
       # Use this if additional verification of the data is needed
       def can_go_next?
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.debug "--- #{self.class}.#{__callee__} ---"
         true
       end
 
       # Show the error dialog if model validation failed?
       def show_errors?
-        log.debug "--- called #{self.class}.#{__callee__} ---"
+        log.debug "--- #{self.class}.#{__callee__} ---"
         true
       end
 
@@ -98,7 +98,6 @@ module SapHA
       def main_loop
         log.debug "--- #{self.class}.#{__callee__} ---"
         loop do
-          log.debug "--- #{self.class}.#{__callee__} ---"
           event = Yast::Wizard.WaitForEvent
           log.info "--- #{self.class}.#{__callee__}: event=#{event} ---"
           input = event["ID"]

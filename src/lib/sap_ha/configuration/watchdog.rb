@@ -34,6 +34,7 @@ module SapHA
 
       def initialize(global_config)
         super
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "Watchdog Setup"
         @loaded = System::Watchdog.loaded_watchdogs
         @configured = System::Watchdog.installed_watchdogs

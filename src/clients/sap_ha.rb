@@ -34,6 +34,7 @@ require 'sap_ha/wizard/summary_page'
 require 'sap_ha/wizard/gui_installation_page'
 require 'sap_ha/wizard/list_selection'
 require 'sap_ha/wizard/rich_text'
+require 'sap_ha/wizard/scenario_selection_page'
 require 'sap_ha/configuration'
 
 # YaST module
@@ -213,7 +214,7 @@ module Yast
       @config.product.fetch('id', 'abort').downcase.to_sym
     end
 
-    def scenario_selection
+    def scenario_selection_OLD
       log.debug "--- called #{self.class}.#{__callee__} ---"
       scenarios = @config.all_scenarios
       help = @config.scenarios_help
@@ -240,6 +241,18 @@ module Yast
         return :abort
       end
       set_test_values if @test
+      selection
+    end
+
+    def scenario_selection
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      selection = SapHA::Wizard::ScenarioSelectionPage.new(@config).run
+      set_test_values if @test
+      log.debug "--- called #{self.class}.#{__callee__}:: ret is #{selection.class} ---"
+      if selection.is_a?(SapHA::HAConfiguration)
+        @config = selection
+        return :next
+      end
       selection
     end
 
@@ -285,9 +298,7 @@ module Yast
 
     def configuration_overview
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      ret = SapHA::Wizard::ConfigurationOverviewPage.new(@config).run
-      return :abort if ret == :back # TODO: find out why it returns "back"
-      ret
+      SapHA::Wizard::ConfigurationOverviewPage.new(@config).run
     end
 
     def configure_cluster
