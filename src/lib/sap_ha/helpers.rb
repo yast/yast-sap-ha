@@ -122,7 +122,8 @@ module SapHA
       configs = files.map { |fn| YAML.load(read_file(var_file_path(fn))) }
       selected = configs.select do |c|
         (product_id.nil? || c.product_id == product_id) &&
-          (scenario_name.nil? || c.scenario_name == scenario_name)
+          (scenario_name.nil? || c.scenario_name == scenario_name) &&
+          (c.completed.nil? || c.completed == false)
       end
       selected.map { |c| ["#{c.product_name} Installation [#{c.timestamp.utc}]", c] }
     end

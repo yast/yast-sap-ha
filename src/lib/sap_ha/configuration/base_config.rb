@@ -45,6 +45,7 @@ module SapHA
       end
 
       def encode_with(coder)
+        log.debug "--- #{self.class}.#{__callee__}(#{coder}) ---"
         instance_variables.each do |variable_name|
           next if !@yaml_exclude.nil? && @yaml_exclude.include?(variable_name)
           key = variable_name.to_s[1..-1]
@@ -54,6 +55,7 @@ module SapHA
       end
 
       def init_with(coder)
+        log.debug "--- #{self.class}.#{__callee__}(#{coder}) ---"
         raise @exception_type,
           "The object has no field named `instance_variables`" if coder['instance_variables'].nil?
         coder['instance_variables'].each do |variable_name|
@@ -95,6 +97,7 @@ module SapHA
       end
 
       def export
+        log.debug "--- #{self.class}.#{__callee__} ---"
         Hash[instance_variables.map { |name| [name, instance_variable_get(name)] }]
       end
 

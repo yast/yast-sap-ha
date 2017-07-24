@@ -33,6 +33,7 @@ module SapHA
 
       def initialize(global_config)
         super
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "Fencing Mechanism"
         @devices = []
         @proposals = []

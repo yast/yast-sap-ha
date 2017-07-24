@@ -35,6 +35,7 @@ module SapHA
       
       def initialize(global_config)
         super
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "NTP Configuration"
         log.info "--- #{self.class}.#{__callee__} ---"
         read_configuration

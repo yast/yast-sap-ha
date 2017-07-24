@@ -64,14 +64,24 @@ module SapHA
       protected
 
       def main_loop
-        # TODO: the 'x' button of the window doesn't work here...
         log.debug "--- #{self.class}.#{__callee__} ---"
-        input = Yast::Wizard.UserInput
-        log.error "--- #{self.class}.#{__callee__}: input is #{input.inspect} ---"
-        Yast::Wizard.SetNextButton(:summary, "&Overview") unless input == :next
-        input.to_sym
+        loop do
+          event = Yast::Wizard.WaitForEvent
+          log.info "--- #{self.class}.#{__callee__}: event=#{event} ---"
+          # input can be a string from handling a click on <a href="<id>">
+          input = event["ID"]
+          case input
+          when :abort, :cancel
+            @model.write_config
+            return input
+          when :next
+            return input if can_go_next?
+          else
+            Yast::Wizard.SetNextButton(:summary, "&Overview")
+            return input.to_sym
+          end
+        end
       end
-
     end
   end
 end

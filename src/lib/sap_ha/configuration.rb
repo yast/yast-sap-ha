@@ -52,7 +52,8 @@ module SapHA
       :hana,
       :ntp,
       :cluster_finalizer,
-      :imported
+      :imported,
+      :completed
 
     include Yast::Logger
     include Yast::I18n
@@ -61,6 +62,7 @@ module SapHA
     def initialize(role = :master)
       @timestamp = Time.now
       @imported = false
+      @completed = false
       @role = role
       @debug = false
       @no_validators = false
@@ -222,5 +224,5 @@ module SapHA
       log.debug "--- called #{self.class}.#{__callee__} ---"
       YAML.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
     end
-  end # class ScenarioConfiguration
+  end # class Configuration
 end # module Yast

@@ -34,6 +34,7 @@ module SapHA
     class ClusterFinalizer < BaseConfig
       def initialize(global_config)
         super
+        log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "Cluster Configuration Finalizer"
       end
 
@@ -48,6 +49,7 @@ module SapHA
       def apply(role)
         if role == :master
           SapHA::System::Local.cluster_maintenance(:off)
+          @global_config.completed = true
         else
           true
         end
