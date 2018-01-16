@@ -84,7 +84,7 @@ module SapHA
         stat = Yast::NtpClient.Write
         @nlog.log_status(stat,
           "Wrote NTP configuration",
-          "Could not write NPT configuration")
+          "Could not write NTP configuration")
         stat
       end
     end
