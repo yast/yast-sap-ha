@@ -183,7 +183,7 @@ module SapHA
         stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path, "authorize",
           host, password)
         if stat.exitstatus != 0
-          log.error "Executing ha-cluster-init ssh_remote on host #{host} failed"
+          log.error "Cannot authorize own SSH keys on host #{host}"
         end
       end
 

@@ -51,7 +51,8 @@ Packaging.configuration do |conf|
   conf.package_name = "yast2-sap-ha"
   conf.obs_api = "https://api.suse.de/"
   # conf.obs_target = "SLE_12_SP1"
-  conf.obs_target = "SLE_12_SP2"
+  #conf.obs_target = "SLE_12_SP2"
+  conf.obs_target = "SLE_15"
 end
 
 Rake::Task["check:committed"].clear

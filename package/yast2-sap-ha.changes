@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Feb 13 16:31:20 UTC 2018 - imanyugin@suse.com
+
+- Package: Remove unnecessary dependency on sap-installation-wizard
+- Package: Remove unnecessary dependency on ha-cluster-bootstrap
+
+-------------------------------------------------------------------
 Mon Jul 17 07:53:11 UTC 2017 - imanyugin@suse.com
 
 - Version bump to 1.0.0;

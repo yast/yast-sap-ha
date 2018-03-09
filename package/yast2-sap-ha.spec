@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-sap-ha
 #
-# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2018 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -17,9 +17,14 @@
 
 
 Name:           yast2-sap-ha
-Version:        1.0.0
+Version:        1.0.2
 Release:        0
+
+%if 0%{?sle_version} >= 150000
+ExclusiveArch:  x86_64 ppc64le
+%else
 BuildArch:      noarch
+%endif
 
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
@@ -30,9 +35,7 @@ Requires:       yast2-ruby-bindings
 Requires:       xdg-utils
 # for handling the SSH client
 Requires:       expect
-Requires:       ha-cluster-bootstrap
 Requires:       openssh
-Requires:       sap-installation-wizard
 Requires:       yast2-cluster
 Requires:       yast2-ntp-client
 # for lsblk

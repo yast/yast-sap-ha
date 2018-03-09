@@ -26,13 +26,14 @@ require_relative 'base_config'
 
 Yast.import 'NtpClient'
 Yast.import 'Progress'
+Yast.import 'OSRelease'
 
 module SapHA
   module Configuration
     # Cluster members configuration
     class NTP < BaseConfig
       attr_reader :used_servers
-      
+
       def initialize(global_config)
         super
         log.debug "--- #{self.class}.#{__callee__} ---"
@@ -72,7 +73,11 @@ module SapHA
       end
 
       def start_at_boot?
-        @config["start_at_boot"]
+        if Yast::OSRelease.ReleaseVersion.start_with?('15') # if we are running on SLE 15
+          @config["ntp_sync"] == 'systemd'
+        else # on SLE 12
+          @config["start_at_boot"]
+        end
       end
 
       def apply(role)

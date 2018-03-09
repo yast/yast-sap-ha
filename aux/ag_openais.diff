@@ -1,0 +1,29 @@
+--- ag_openais.bak	2018-03-01 18:31:34.092828476 +0800
++++ ag_openais	2018-03-01 18:32:50.952449466 +0800
+@@ -188,11 +188,11 @@
+ 		  }
+ 
+ # Using [] instead of {} is because some sections like nodelist have many nodes
+-totem_options = {}
+-logging_options = {}
++totem_options = {"interface":[]}
++logging_options = {"logger_subsys":[]}
+ quorum_qdevice_options={}
+ quorum_options={}
+-nodelist_options={}
++nodelist_options={"node":[]}
+ qb_options={}
+ 
+ def strip_comments_and_pending_space(line):
+@@ -727,8 +727,9 @@
+ 				quorum_options[path[1]] = args
+ 				return "true"
+ 			elif len(path) == 2 and path[1] == "device" and args == "":
+-				del(quorum_options["device"])
+-				quorum_qdevice_options = {}
++				if is_quorum_qdevice_configured():
++					del(quorum_options["device"])
++					quorum_qdevice_options = {}
+ 				return "true"
+ 			elif len(path) == 3 and path[1] == "device" and \
+ 				path[2] in quorum_qdevice_option_table.keys():

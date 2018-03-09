@@ -26,9 +26,11 @@ describe SapHA::System::Network do
 
   describe '#interfaces' do
     it 'returns the list of network interfaces on the local machine' do
+      # It can happen that files under /etc/sysconfig/network are only accessible for root
+      # Accept an empty list of interfaces for non-root user
       result = SapHA::System::Network.interfaces
       expect(result).not_to be_nil
-      expect(result).not_to be_empty
+      expect(result).not_to be_empty if user_root?
     end
   end
 

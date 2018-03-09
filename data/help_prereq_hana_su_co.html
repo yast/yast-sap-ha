@@ -29,4 +29,7 @@
     <li>
         You've created a HANA Secure User Store key <code>QASSAPDBCTRL</code> for monitoring purposes (please refer to the <i>SUSE SAP HANA SR Cost Optimized Scenario</i> best practice guide, section 4.2.7).
     </li>
+    <li>
+        <i>For SUSE Linux Enterprise Server version 15 and later:</i> please ensure that during the HA setup procedure the TCP port <code>8080</code> is open on the secondary node. After the HA setup is complete, please enable the <code>cluster</code> service in <code>firewalld</code> on both nodes.
+    </li>
 </ul>

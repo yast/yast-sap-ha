@@ -75,7 +75,7 @@ module SapHA
         @enable_csync2 = false
         @keys = {}
         @append_hosts = false
-        # IP to root passwd mapping
+        # host name to root passwd mapping
         @host_passwords = {}
         init_rings
         init_nodes
@@ -83,11 +83,12 @@ module SapHA
       end
 
       def init_with(coder)
+        log.debug "--- #{self.class}.#{__callee__} ---"
         super(coder)
-        # always exclude passwords from the configuration
         @yaml_exclude = [:@nlog] unless @yaml_exclude.nil?
+        # always exclude passwords from the configuration
         @yaml_exclude << :@host_passwords
-        @host_passwords = {}
+        @host_passwords = {} unless coder['instance_variables'].include?(:@host_passwords)
       end
 
       def set_fixed_nodes(fixed, number)
@@ -362,10 +363,15 @@ module SapHA
         flag &= SapHA::System::Local.start_cluster_services
         flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
-        status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
-        flag &= status
-        @nlog.log_status(status, 'Opened necessary communication ports',
-          'Could not open necessary communication ports')
+        # Do not touch firewalld settings on SLE-15, yast2-cluster will do it
+        if Yast::OSRelease.ReleaseVersion.start_with?('15')
+          @nlog.info('Please enable the cluster firewalld service manually')
+        else
+          status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
+          flag &= status
+          @nlog.log_status(status, 'Opened necessary communication ports',
+            'Could not open necessary communication ports')
+        end
         flag
       end
 

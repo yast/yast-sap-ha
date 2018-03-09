@@ -32,6 +32,7 @@ require 'socket'
 
 Yast.import 'SuSEFirewall'
 Yast.import 'Service'
+Yast.import 'OSRelease'
 
 module SapHA
   # RPC Server for inter-node communication
@@ -61,16 +62,14 @@ module SapHA
       else
         @server = XMLRPC::Server.new(8080, '0.0.0.0', 50, @fh)
       end
-      open_port unless options[:local]
-      
+      @port_opened = false
+      # Do not alter the firewall settings on SLE-15
+      open_port unless options[:local] or Yast::OSRelease.ReleaseVersion.start_with?('15')
       install_handlers(options[:test])
-
       # Mutex for 'busy'
       @mutex = Mutex.new
-      
       # If we are busy with configuration
       @busy = false
-
       # Worker thread
       @thread = nil
     end
@@ -196,20 +195,24 @@ module SapHA
       return if rule_no
       _out, rc  = exec_output_status('/usr/sbin/iptables', '-I',
                                      'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
-      rc.exitstatus == 0
+      @port_opened = true
+      rc.exitstatus == 0      
     end
 
     # close the RPC Server port by manipulating the iptables directly
     def close_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
+      return unless @port_opened
       rule_no = get_rule_number
       puts "close_port: rule_no=#{rule_no} #{!!rule_no}"
       return unless rule_no
       out, rc = exec_output_status('/usr/sbin/iptables', '-D', 'INPUT', rule_no.to_s)
       puts "close_port: rc=#{rc}, out=#{out}"
+      @port_opened = false
       rc.exitstatus == 0
     end
 
+    # get iptables rule number for the RPC Server port
     def get_rule_number
       @logger.info "--- #{self.class}.#{__callee__} ---"
       out = pipeline(['/usr/sbin/iptables', '-L', 'INPUT', '-n', '-v', '--line-number'],
