@@ -20,10 +20,10 @@ Name:           yast2-sap-ha
 Version:        1.0.2
 Release:        0
 
+BuildArch:      noarch
+
 %if 0%{?sle_version} >= 150000
 ExclusiveArch:  x86_64 ppc64le
-%else
-BuildArch:      noarch
 %endif
 
 Source0:        %{name}-%{version}.tar.bz2
@@ -45,8 +45,8 @@ Requires:       SAPHanaSR
 Requires:       kmod-compat
 # configuration parser
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
-# for pidof
 Requires:       augeas-lenses
+# for pidof
 Requires:       sysvinit-tools
 
 BuildRequires:  augeas-lenses
