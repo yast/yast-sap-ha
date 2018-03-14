@@ -12,9 +12,8 @@ Fri Mar 09 13:38:37 UTC 2018 - imanyugin@suse.com
 Tue Feb 13 16:31:20 UTC 2018 - imanyugin@suse.com
 
 - Package: adjust dependencies for SLE-15 (bsc#1079235):
-    + Change architecture for SLE-15: build only on x86_64 and ppc64le
     + Remove unnecessary dependency on sap-installation-wizard
-    + Package: Remove unnecessary dependency on ha-cluster-bootstrap
+    + Remove unnecessary dependency on ha-cluster-bootstrap
 
 -------------------------------------------------------------------
 Mon Jul 17 07:53:11 UTC 2017 - imanyugin@suse.com

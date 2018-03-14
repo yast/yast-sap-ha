@@ -22,10 +22,6 @@ Release:        0
 
 BuildArch:      noarch
 
-%if 0%{?sle_version} >= 150000
-ExclusiveArch:  x86_64 ppc64le
-%endif
-
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
 
@@ -44,8 +40,8 @@ Requires:       util-linux
 Requires:       SAPHanaSR
 Requires:       kmod-compat
 # configuration parser
-Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 Requires:       augeas-lenses
+Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
 Requires:       sysvinit-tools
 
