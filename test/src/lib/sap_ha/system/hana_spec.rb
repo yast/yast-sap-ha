@@ -181,6 +181,11 @@ USER: uname
           .and_return([hdb_version_output, good_exit])
         result = SapHA::System::Hana.version('XXX')
         expect(result).to eq '1.00.121'
+        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
+          .with('xxxadm', 'HDB', 'version')
+          .and_return([hdb_version_output_20, good_exit])
+        result = SapHA::System::Hana.version('XXX')
+        expect(result).to eq '2.00.010'
       end
     end
 
