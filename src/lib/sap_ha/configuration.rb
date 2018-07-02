@@ -127,7 +127,7 @@ module SapHA
             screen_name: instance_variable_get(instv).screen_name, # screen name for GUI
             rpc_object:  "sapha.config_#{el}",
             rpc_method:  "sapha.config_#{el}.apply"
-          } 
+          }
         end
       else
         log.error "Scenario #{@scenario} does not set a configuration sequence."

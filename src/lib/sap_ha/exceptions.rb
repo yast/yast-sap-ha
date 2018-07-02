@@ -98,5 +98,11 @@ module SapHA
 
     class ConfigurationFatalException < BaseException
     end
+
+    class UnattendedModeException < BaseException
+    end
+
+    class ConfigValidationException < BaseException
+    end
   end
 end
