@@ -163,7 +163,7 @@ module SapHA
         flag = config[:object].configured?
         unless flag
           log.warn "Component #{config[:screen_name]} is not configured:" unless flag
-          config[:object].validate(:verbose).each { |e| log.warn e}
+          config[:object].validate(:verbose).each { |e| log.warn e }
         end
         flag
       end.all?

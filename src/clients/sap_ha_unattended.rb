@@ -22,6 +22,7 @@
 require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha/exceptions'
+require 'sap_ha/system/ssh'
 require 'sap_ha/node_logger'
 require 'sap_ha/wizard/gui_installation_page'
 require 'sap_ha/configuration'
@@ -38,23 +39,22 @@ module Yast
     include SapHA::Exceptions
 
     def initialize
-      log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
-      log.warn "--- ARGV is #{ARGV} ---"
     end
 
     def main
       begin
         parse_command_line
         validate_config
+        check_ssh
       rescue UnattendedModeException, ConfigValidationException => e
         puts e.message
         log.error e.message
-        # FIXME: y2start overrides return code, therefore exit prematurely without shutting down
-        # Yast properly, see bsc#1099871
+        # FIXME: y2start overrides the return code, therefore exit prematurely without
+        # shutting down Yast properly, see bsc#1099871
         exit!(1)
       end
       begin
-        SapHA::SAPHAInstallation.new(@config, ui).run
+        SapHA::SAPHAInstallation.new(@config, nil).run
       rescue StandardError => e
         log.error "An error occured during the installation"
         log.error e.message
@@ -85,12 +85,52 @@ module Yast
     def validate_config
       errors = @config.verbose_validate
       unless errors.empty?
+        log.error "The following errors were detected in the configuration file"
         puts "Errors were detected in the configuration:"
-        errors.each { |e| puts "- #{e}" }
+        errors.each do |e|
+          puts "- #{e}"
+          log.error e
+        end
         puts "Please fix the errors in the configuration file and try again"
         raise ConfigValidationException, "Errors detected in the configuration"
       end
-      # TODO: check if passwords are present in the config
+      raise ConfigValidationException, "Configuration file is not complete"\
+        unless @config.can_install?
+    end
+
+    def check_ssh
+      failed_nodes = []
+      @config.cluster.other_nodes_ext.each do |h|
+        # option 1: SSH without a password
+        begin
+          SapHA::System::SSH.instance.check_ssh(h[:hostname])
+        rescue SSHAuthException => e
+          pw = @config.cluster.get_host_password(h[:hostname])
+          if pw.nil?
+            failed_nodes << h[:hostname]
+            log.error e.message
+            log.error "Host #{h[:hostname]} requires password, but no password "\
+              "is provided in the configuration file"
+            next
+          end
+          begin
+            # option 2: SSH with a password taken from the config
+            SapHA::System::SSH.instance.check_ssh_password(h[:hostname], pw)
+          rescue SSHPassException => e
+            failed_nodes << h[:hostname]
+            log.error e.message
+            log.error "Could not SSH to host #{h[:hostname]}: password provided in the "\
+              "configuration file is incorrect"
+            next
+          end
+        rescue SSHException => e
+          failed_nodes << h[:hostname]
+          log.error "Error connecting to host #{h[:hostname]}: #{e.message}"
+        end
+      end
+      raise ConfigValidationException,
+        "Error while connecting to the following node(s): #{failed_nodes.join(", ")}"\
+        unless failed_nodes.empty?
     end
 
     SAPHA = SAPHAClass.new
