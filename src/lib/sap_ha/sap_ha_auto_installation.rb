@@ -20,50 +20,52 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
-#require 'sap_ha'
 require 'sap_ha/helpers'
 require 'sap_ha/exceptions'
 require 'sap_ha/system/ssh'
 require 'sap_ha/node_logger'
 require 'sap_ha/wizard/gui_installation_page'
 require 'sap_ha/configuration'
+require 'pry'
 
 # YaST module
-module Yast
+module SapHA
   # Main client class
-  class SAPHAAutoClass < Client
+  class SAPHAAutoInstallation
     attr_reader :sequence
-    Yast.import 'sap_ha'
-    Yast.import 'Sequencer'
+    #Yast.import 'sap_ha'
+    #Yast.import 'Sequencer'
     include Yast::UIShortcuts
     include Yast::Logger
     include SapHA::Exceptions
 
-    def initialize
-      
+    def initialize(config)
+      @config = config   
     end
 
-    def main
+    def run
       begin
-        parse_command_line
+        #parse_command_line
         validate_config
         check_ssh
+        :next
       rescue UnattendedModeException, ConfigValidationException => e
         puts e.message
         log.error e.message
         # FIXME: y2start overrides the return code, therefore exit prematurely without
         # shutting down Yast properly, see bsc#1099871
-        exit!(1)
-      end
-      begin
-        SapHA::SAPHAInstallation.new(@config, nil).run
-      rescue StandardError => e
-        log.error "An error occured during the installation"
-        log.error e.message
-        log.error e.backtrace.to_s
-        # Let Yast handle the exception
+        #exit!(1)
         raise e
       end
+      #begin
+      #  SapHA::SAPHAInstallation.new(@config, nil).run
+      #rescue StandardError => e
+      #  log.error "An error occured during the installation"
+      #  log.error e.message
+      #  log.error e.backtrace.to_s
+      #  # Let Yast handle the exception
+      #  raise e
+      #end
     end
 
     private
@@ -87,11 +89,12 @@ module Yast
     def validate_config
       errors = @config.verbose_validate
       unless errors.empty?
-        log.error "The following errors were detected in the configuration file"
-        puts "Errors were detected in the configuration:"
+        log.error "The following errors were detected in the configuration file :"
+        NodeLogger.fatal "The following errors were detected in the configuration file :"
         errors.each do |e|
           puts "- #{e}"
           log.error e
+          NodeLogger.fatal e
         end
         puts "Please fix the errors in the configuration file and try again"
         raise ConfigValidationException, "Errors detected in the configuration"
@@ -113,6 +116,8 @@ module Yast
             log.error e.message
             log.error "Host #{h[:hostname]} requires password, but no password "\
               "is provided in the configuration file"
+            NodeLogger.fatal "Host #{h[:hostname]} requires password, but no password "\
+            "is provided in the configuration file"  
             next
           end
           begin
@@ -123,11 +128,14 @@ module Yast
             log.error e.message
             log.error "Could not SSH to host #{h[:hostname]}: password provided in the "\
               "configuration file is incorrect"
+              NodeLogger.fatal "Could not SSH to host #{h[:hostname]}: password provided in the "\
+              "configuration file is incorrect"
             next
           end
         rescue SSHException => e
           failed_nodes << h[:hostname]
           log.error "Error connecting to host #{h[:hostname]}: #{e.message}"
+          NodeLogger.fatal "Error connecting to host #{h[:hostname]}: #{e.message}"
         end
       end
       raise ConfigValidationException,
@@ -135,7 +143,7 @@ module Yast
         unless failed_nodes.empty?
     end
 
-    SAPHA = SAPHAAutoClass.new
-    SAPHA.main
+    #SAPHA = SAPHAAutoClass.new
+    #SAPHA.main
   end
 end

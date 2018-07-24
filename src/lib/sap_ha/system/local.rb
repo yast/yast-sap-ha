@@ -237,7 +237,7 @@ module SapHA
         Yast::Cluster.Read
         log.debug "--- Exporting Cluster settings to yast2-cluster: #{settings}"
         Yast::Cluster.Import(settings)
-        stat = Yast::Cluster.Write
+         stat = Yast::Cluster.Write
         NodeLogger.log_status(stat, 'Wrote cluster settings', 'Could not write cluster settings')
       end
 

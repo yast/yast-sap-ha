@@ -36,6 +36,7 @@ require 'sap_ha/wizard/list_selection'
 require 'sap_ha/wizard/rich_text'
 require 'sap_ha/wizard/scenario_selection_page'
 require 'sap_ha/configuration'
+require 'pry'
 
 # YaST module
 module Yast
@@ -71,6 +72,13 @@ module Yast
           nw:                "scenario_selection",
           unknown:           "product_not_supported",
           next:              "product_not_supported"
+        },
+        "auto_install_check"    =>  {
+          abort:             :abort,
+          cancel:            :abort,
+          next:              "config_overview",
+          unknown:           "summary",
+          summary:           "config_overview"
         },
         "scenario_selection"    => {
           abort:             :abort,
@@ -164,8 +172,10 @@ module Yast
           next:              :ws_finish
         }
       }
+      
       @aliases = {
         'product_check'         => -> { product_check },
+        'auto_install_check'    => -> { auto_install_check },
         'scenario_selection'    => -> { scenario_selection },
         'product_not_supported' => -> { product_not_supported },
         # 'prereqs_notice'        => [-> () { show_prerequisites }, true],
@@ -190,7 +200,11 @@ module Yast
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
-        Sequencer.Run(@aliases, @sequence)
+        if @config.imported
+          @sequence["product_check"][:hana] = "auto_install_check"
+          #Sequencer.Run(@aliases, @sequence)
+        end 
+          Sequencer.Run(@aliases, @sequence)   
       ensure
         Wizard.CloseDialog
       end
@@ -209,9 +223,27 @@ module Yast
         log.error e.message
         return :unknown
       end
-      # TODO: here we should check if the symbol can be handled by the Sequencer
+      # TODO: here we should check if the symbol can be handled by th
+        #stat = Yast::Cluster.LoadClusterConfig
+        #Yast::Cluster.load_csync2_confe Sequencer
       @config.product.fetch('id', 'abort').downcase.to_sym
     end
+
+    def auto_install_check
+        log.debug "--- called #{self.class}.#{__callee__} ---"
+      begin   
+        SapHA::SAPHAAutoInstallation.new(@config).run
+      rescue ConfigValidationException => e
+        log.error e.message
+        return :unknown
+      rescue StandardError => e
+        log.error "An error occured during the check for auto installation"
+        log.error e.message
+        log.error e.backtrace.to_s
+        # Let Yast handle the exception
+        raise e
+      end    
+    end  
 
     def scenario_selection
       log.debug "--- called #{self.class}.#{__callee__} ---"
