@@ -23,7 +23,7 @@ require 'yast'
 require 'sap_ha/helpers'
 require 'sap_ha/wizard/base_wizard_page'
 require 'sap_ha/sap_ha_installation'
-require 'sap_ha/sap_ha_auto_installation'
+require 'sap_ha/sap_ha_unattended_install'
 
 Yast.import 'UI'
 Yast.import 'Progress'

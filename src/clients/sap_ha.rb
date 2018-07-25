@@ -58,6 +58,9 @@ module Yast
         ix = WFM.Args.index('readconfig') + 1
         @config = YAML.load(File.read(WFM.Args[ix]))
         @config.imported = true
+        if WFM.Args.include?('unattended')
+          @config.unattended = true
+        end  
       else
         @config = SapHA::HAConfiguration.new
       end
@@ -73,12 +76,12 @@ module Yast
           unknown:           "product_not_supported",
           next:              "product_not_supported"
         },
-        "auto_install_check"    =>  {
+        "file_import_check"    =>  {
           abort:             :abort,
           cancel:            :abort,
           next:              "config_overview",
           unknown:           "summary",
-          summary:           "config_overview"
+          back:              "config_overview"
         },
         "scenario_selection"    => {
           abort:             :abort,
@@ -173,9 +176,34 @@ module Yast
         }
       }
       
+      @unattended_sequence = {
+        "ws_start"              => "product_check",
+        "product_check"         =>  {
+          abort:             :abort,
+          hana:              "file_import_check",
+          nw:                "file_import_check",
+          unknown:           :ws_finish,
+          next:              :ws_finish
+        },
+        "file_import_check"    =>  {
+          abort:             :abort,
+          cancel:            :abort,
+          next:              "unattended_install",
+          unknown:           :ws_finish
+        },
+        "unattended_install"   =>  {
+          abort:             :abort,
+          cancel:            :abort,
+          next:              :ws_finish,
+          unknown:           :ws_finish,
+          summary:           :ws_finish
+        }
+      }
+
+
       @aliases = {
         'product_check'         => -> { product_check },
-        'auto_install_check'    => -> { auto_install_check },
+        'file_import_check'    => -> { file_import_check },
         'scenario_selection'    => -> { scenario_selection },
         'product_not_supported' => -> { product_not_supported },
         # 'prereqs_notice'        => [-> () { show_prerequisites }, true],
@@ -188,6 +216,7 @@ module Yast
         'hana'                  => -> { configure_hana },
         'debug_run'             => -> { debug_run },
         'installation'          => -> { run_installation },
+        'unattended_install'    => -> { run_unattended_install },
         'ntp'                   => -> { configure_ntp },
         'config_overview'       => -> { configuration_overview },
         'summary'               => -> { show_summary }
@@ -197,16 +226,24 @@ module Yast
     def main
       textdomain 'sap-ha'
       @sequence["ws_start"] = "debug_run" if @config.debug
+      @sequence["product_check"][:hana] = "file_import_check" if @config.imported
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
-        if @config.imported
-          @sequence["product_check"][:hana] = "auto_install_check"
-          #Sequencer.Run(@aliases, @sequence)
-        end 
-          Sequencer.Run(@aliases, @sequence)   
+        if @config.unattended 
+          Sequencer.Run(@aliases, @unattended_sequence) 
+        else
+          Sequencer.Run(@aliases, @sequence)      
+        end
+      rescue StandardError => e
+        # FIXME: y2start overrides the return code, therefore exit prematurely without
+        # shutting down Yast properly, see bsc#1099871
+        # If the error was not catched until here, we know that is a unattended installation.
+        # exit!(1)
+        puts "Error Ocurred during the unattended installation: #{e.message}"
       ensure
         Wizard.CloseDialog
+        success = SapHA::Helpers.write_file("./sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text) if @config.unattended
       end
     end
 
@@ -229,20 +266,19 @@ module Yast
       @config.product.fetch('id', 'abort').downcase.to_sym
     end
 
-    def auto_install_check
+    def file_import_check
+      begin
         log.debug "--- called #{self.class}.#{__callee__} ---"
-      begin   
-        SapHA::SAPHAAutoInstallation.new(@config).run
-      rescue ConfigValidationException => e
-        log.error e.message
-        return :unknown
+        SapHA::SAPHAUnattendedInstall.new(@config).check_config
       rescue StandardError => e
-        log.error "An error occured during the check for auto installation"
-        log.error e.message
-        log.error e.backtrace.to_s
-        # Let Yast handle the exception
-        raise e
-      end    
+        if @config.unattended
+          # Will be trated by the caller to collect the log.
+          raise e
+        else
+          # Adjust the WF to show the Summary with the problems.
+          return :unknown 
+        end 
+      end
     end  
 
     def scenario_selection
@@ -350,6 +386,25 @@ module Yast
         raise e
       end
     end
+    
+    def run_unattended_install
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      return :next if WFM.Args.include? 'noinst'
+      ui = SapHA::Wizard::GUIInstallationPage.new
+      begin
+        #FIXME: We cannot use the unattended install as the other YaST Modules need
+        # a UI to show the progress bar. Keeping it in separated method to facilitate
+        # the adjustment in the future, if needed. 
+        #SapHA::SAPHAUnattendedInstall.new(@config).run
+        SapHA::SAPHAInstallation.new(@config, ui).run
+      rescue StandardError => e
+        log.error "An error occured during the unattended installation"
+        log.error e.message
+        log.error e.backtrace.to_s
+        # Let the Caller handle the exception
+        raise e
+      end
+    end  
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"

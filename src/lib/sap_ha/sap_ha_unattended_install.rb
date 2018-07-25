@@ -31,10 +31,8 @@ require 'pry'
 # YaST module
 module SapHA
   # Main client class
-  class SAPHAAutoInstallation
+  class SAPHAUnattendedInstall
     attr_reader :sequence
-    #Yast.import 'sap_ha'
-    #Yast.import 'Sequencer'
     include Yast::UIShortcuts
     include Yast::Logger
     include SapHA::Exceptions
@@ -43,30 +41,27 @@ module SapHA
       @config = config   
     end
 
-    def run
+    def check_config
       begin
-        #parse_command_line
         validate_config
         check_ssh
         :next
       rescue UnattendedModeException, ConfigValidationException => e
         puts e.message
         log.error e.message
-        # FIXME: y2start overrides the return code, therefore exit prematurely without
-        # shutting down Yast properly, see bsc#1099871
-        #exit!(1)
+        NodeLogger.fatal "The configuration did not passed on all checks. Please, review the errors and try again."
+        # Raise the error and let the caller resolve how to present it.
         raise e
       end
-      #begin
-      #  SapHA::SAPHAInstallation.new(@config, nil).run
-      #rescue StandardError => e
-      #  log.error "An error occured during the installation"
-      #  log.error e.message
-      #  log.error e.backtrace.to_s
-      #  # Let Yast handle the exception
-      #  raise e
-      #end
     end
+
+    def run
+      begin
+        # Encapsulate the call and pass nil as UI requirement
+        SapHA::SAPHAInstallation.new(@config, nil).run
+        :next
+      end
+    end  
 
     private
 
@@ -97,10 +92,13 @@ module SapHA
           NodeLogger.fatal e
         end
         puts "Please fix the errors in the configuration file and try again"
+        NodeLogger.fatal "Please fix the errors in the configuration file and try again"
         raise ConfigValidationException, "Errors detected in the configuration"
       end
-      raise ConfigValidationException, "Configuration file is not complete"\
-        unless @config.can_install?
+      if ! @config.can_install?
+        NodeLogger.fatal "The Configuration file is not complete."
+        raise ConfigValidationException, "Configuration file is not complete"
+      end  
     end
 
     def check_ssh
@@ -138,12 +136,11 @@ module SapHA
           NodeLogger.fatal "Error connecting to host #{h[:hostname]}: #{e.message}"
         end
       end
-      raise ConfigValidationException,
-        "Error while connecting to the following node(s): #{failed_nodes.join(", ")}"\
-        unless failed_nodes.empty?
+      
+      if ! failed_nodes.empty?
+        NodeLogger.fatal "Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
+        raise ConfigValidationException,"Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
+      end  
     end
-
-    #SAPHA = SAPHAAutoClass.new
-    #SAPHA.main
   end
 end

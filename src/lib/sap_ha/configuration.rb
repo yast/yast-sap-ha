@@ -53,6 +53,7 @@ module SapHA
       :ntp,
       :cluster_finalizer,
       :imported,
+      :unattended,
       :completed
 
     include Yast::Logger
@@ -62,6 +63,7 @@ module SapHA
     def initialize(role = :master)
       @timestamp = Time.now
       @imported = false
+      @unattended = false
       @completed = false
       @role = role
       @debug = false
