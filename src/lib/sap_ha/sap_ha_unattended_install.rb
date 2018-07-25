@@ -65,22 +65,6 @@ module SapHA
 
     private
 
-    def parse_command_line
-      raise UnattendedModeException, "Client called with wrong command line parameters.\n"\
-        "Usage: yast2 sap_ha_unattended <configuration_file>"\
-        if WFM.Args.include?('help') || WFM.Args.length != 1
-      begin
-        @config = YAML.load(File.read(WFM.Args.first))
-      rescue Errno::ENOENT => e
-        raise UnattendedModeException, "Could not locate configuration file "\
-        "'#{WFM.Args.first}': #{e.message}"
-      rescue Psych::SyntaxError => e
-        raise UnattendedModeException, "Malformed configuration file: #{e.message}"
-      end
-      raise UnattendedModeException, "Malformed configuration file"\
-        if !@config.is_a?(SapHA::HAConfiguration)
-    end
-
     def validate_config
       errors = @config.verbose_validate
       unless errors.empty?
