@@ -26,7 +26,7 @@ require 'sap_ha/system/ssh'
 require 'sap_ha/node_logger'
 require 'sap_ha/wizard/gui_installation_page'
 require 'sap_ha/configuration'
-require 'pry'
+
 
 # YaST module
 module SapHA
@@ -49,7 +49,7 @@ module SapHA
       rescue UnattendedModeException, ConfigValidationException => e
         puts e.message
         log.error e.message
-        NodeLogger.fatal "The configuration did not passed on all checks. Please, review the errors and try again."
+        NodeLogger.fatal "The imported configuration file did not pass on all checks. Please, review the errors and try again."
         # Raise the error and let the caller resolve how to present it.
         raise e
       end
