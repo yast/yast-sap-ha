@@ -69,6 +69,10 @@ module Yast
         log.error "Syntax Error on the Config File: #{e.message}"
         @config = SapHA::HAConfiguration.new
         Popup.TimedError("The configuration file could not be loaded because of a Syntax Error. Switching to the manual configuration. Details: #{e.message}", 10)
+      rescue StandardError => e
+        log.error "Unexpected Error reading the config file: #{e.message}"
+        @config = SapHA::HAConfiguration.new
+        Popup.TimedError("The configuration file could not be loaded because of a unexpected error. Switching to the manual configuration. Details: #{e.message}", 10)
       ensure
         @config.debug = WFM.Args.include? 'over'
         @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
@@ -250,7 +254,7 @@ module Yast
         puts "Error Ocurred during the unattended installation: #{e.message}"
       ensure
         Wizard.CloseDialog
-        success = SapHA::Helpers.write_file("/var/log/YaST/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text) if @config.unattended
+        success = SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text) if @config.unattended
       end
     end
 
