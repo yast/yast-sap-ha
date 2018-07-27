@@ -250,7 +250,7 @@ module Yast
         puts "Error Ocurred during the unattended installation: #{e.message}"
       ensure
         Wizard.CloseDialog
-        success = SapHA::Helpers.write_file("./sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text) if @config.unattended
+        success = SapHA::Helpers.write_file("/var/log/YaST/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text) if @config.unattended
       end
     end
 
