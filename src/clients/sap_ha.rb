@@ -36,7 +36,6 @@ require 'sap_ha/wizard/list_selection'
 require 'sap_ha/wizard/rich_text'
 require 'sap_ha/wizard/scenario_selection_page'
 require 'sap_ha/configuration'
-require 'pry'
 
 # YaST module
 module Yast
@@ -251,12 +250,21 @@ module Yast
         # shutting down Yast properly, see bsc#1099871
         # If the error was not catched until here, we know that is a unattended installation.
         # exit!(1)
-        puts "Error Ocurred during the unattended installation: #{e.message}"
+        @unattended_error = "Error Ocurred during the unattended installation: #{e.message}" 
+        log.error @unattended_error 
+        puts @unattended_error
+        Popup.TimedError(@unattended_error, 10)
       ensure
         Wizard.CloseDialog
         if @config.unattended
-          success = SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text) if @config.unattended
-          puts "Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt"
+          if @unattended_error.nil? 
+            success = SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
+            log.info "Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt"
+            # FIXME: yast redirects stdout, therefore the usage of the CommanlineClass is needed to write on the stdout, but as the 
+            # the dependent modules we have (cluster, firewall, ntp) demands UI existence, we cannot call the module without creating the UI object. 
+            # The best option is to presente a Timed Popup to the user.
+            Popup.TimedMessage("Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt", 10)
+          end
         end  
       end
     end
