@@ -11,3 +11,7 @@ yast-sap-ha.sublime-project
 yast-sap-ha.sublime-workspace
 
 package/yast2-sap-ha-*.tar.bz2
+
+.byebug_history
+.vscode/
+sap_ha_unattended_install_log.txt

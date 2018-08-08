@@ -53,6 +53,7 @@ module SapHA
       :ntp,
       :cluster_finalizer,
       :imported,
+      :unattended,
       :completed
 
     include Yast::Logger
@@ -62,6 +63,7 @@ module SapHA
     def initialize(role = :master)
       @timestamp = Time.now
       @imported = false
+      @unattended = false
       @completed = false
       @role = role
       @debug = false
@@ -127,7 +129,7 @@ module SapHA
             screen_name: instance_variable_get(instv).screen_name, # screen name for GUI
             rpc_object:  "sapha.config_#{el}",
             rpc_method:  "sapha.config_#{el}.apply"
-          } 
+          }
         end
       else
         log.error "Scenario #{@scenario} does not set a configuration sequence."
@@ -163,7 +165,7 @@ module SapHA
         flag = config[:object].configured?
         unless flag
           log.warn "Component #{config[:screen_name]} is not configured:" unless flag
-          config[:object].validate(:verbose).each { |e| log.warn e}
+          config[:object].validate(:verbose).each { |e| log.warn e }
         end
         flag
       end.all?

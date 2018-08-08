@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Fri Jul 27 09:00:37 UTC 2018 - dakechi@suse.com
+
+- Version bump to 1.0.3;
+- Enhanced the module to be used in hands-free WF on Bare Metal
+  (fate#325957):
+    + included the parameter "readconfig" to read config files exported
+    on the summary screen. Usage:
+      yast2 sap_ha readconfig <config file path>
+    + included the option "unattended" to start the configuration
+    automatically based on the config file provided. Usage:
+      yast2 sap_ha readconfig <config file path> unattended
+      
+-------------------------------------------------------------------
 Fri Mar 09 13:38:37 UTC 2018 - imanyugin@suse.com
 
 - Version bump to 1.0.2;
