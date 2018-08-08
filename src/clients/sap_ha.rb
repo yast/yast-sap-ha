@@ -250,7 +250,7 @@ module Yast
         # shutting down Yast properly, see bsc#1099871
         # If the error was not catched until here, we know that is a unattended installation.
         # exit!(1)
-        @unattended_error = "Error Ocurred during the unattended installation: #{e.message}" 
+        @unattended_error = "Error occurred during the unattended installation: #{e.message}" 
         log.error @unattended_error 
         puts @unattended_error
         Popup.TimedError(@unattended_error, 10)
@@ -401,32 +401,32 @@ module Yast
       begin
         SapHA::SAPHAInstallation.new(@config, ui).run
       rescue StandardError => e
-        log.error "An error occured during the installation"
+        log.error "An error occurred during the installation"
         log.error e.message
         log.error e.backtrace.to_s
         # Let Yast handle the exception
         raise e
       end
     end
-    
+
     def run_unattended_install
       log.debug "--- called #{self.class}.#{__callee__} ---"
       return :next if WFM.Args.include? 'noinst'
       ui = SapHA::Wizard::GUIInstallationPage.new
       begin
-        #FIXME: We cannot use the unattended install as the other YaST Modules need
+        # FIXME: We cannot use the unattended install as the other YaST Modules need
         # a UI to show the progress bar. Keeping it in separated method to facilitate
-        # the adjustment in the future, if needed. 
-        #SapHA::SAPHAUnattendedInstall.new(@config).run
+        # the adjustment in the future, if needed.
+        # SapHA::SAPHAUnattendedInstall.new(@config).run
         SapHA::SAPHAInstallation.new(@config, ui).run
       rescue StandardError => e
-        log.error "An error occured during the unattended installation"
+        log.error "An error occurred during the unattended installation"
         log.error e.message
         log.error e.backtrace.to_s
         # Let the Caller handle the exception
         raise e
       end
-    end  
+    end
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
