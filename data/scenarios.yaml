@@ -54,6 +54,20 @@
       prerequisites_notice: prereq_hana_su_mt
       additional_instance: false
 
+    - name: "Azure"
+      id: "azur"
+      number_of_nodes: 2
+      fixed_number_of_nodes: true
+      description: |
+        <b>Multi-tier or Chained scenario</b> allows to set up a chained system replication between
+        three nodes: A, B and C, with synchronous replication between A and B and asynchronous
+        between B and C. Note that node C is not managed by the cluster.
+      config_sequence: *id001
+      screen_sequence: *id002
+      prerequisites_notice: prereq_hana_azure
+      additional_instance: false
+      
+
 # - id: NW
 #   string_name: NetWeaver
 #   scenarios:
