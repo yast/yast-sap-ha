@@ -401,6 +401,18 @@ module SapHA
           log.info "No need to copy SSFS keys for HANA version #{hana_version}"
           return
         end
+        # Check if is it possible to create a SSH connection without password in case it is nil
+        if password.nil?
+          begin
+            SapHA::System::SSH.instance.check_ssh(secondary_host_name)
+            # Set the password to "" as the ssh module expects an empty string for the Passwordless connection.
+            password = ""  
+          rescue SSHAuthException => e
+            log.error "Cannot copy HANA SSFS Keys: No SSH password is stored for node #{secondary_host_name} and it isn't accesible without password."
+            return
+          end
+        end    
+
         file_list = [
           "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/data/SSFS_#{system_id}.DAT",
           "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/key/SSFS_#{system_id}.KEY"

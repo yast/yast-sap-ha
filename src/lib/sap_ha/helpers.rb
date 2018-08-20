@@ -46,8 +46,10 @@ module SapHA
         rescue StandardError => e
           log.debug "Cannot create the tmp_dir: #{e.message}"
         end
+        # We get the Y2DIR relative RPC Server location as it is running on dev mode.
+        y2dir_path = File.expand_path("../", __FILE__)
         @rpc_server_cmd = 'systemd-cat /usr/bin/ruby '\
-          '/root/yast-sap-ha/src/lib/sap_ha/rpc_server.rb'
+          "#{y2dir_path}/rpc_server.rb"
       else # production
         @data_path = '/usr/share/YaST2/data/sap_ha'
         @var_path = '/var/lib/YaST2/sap_ha'

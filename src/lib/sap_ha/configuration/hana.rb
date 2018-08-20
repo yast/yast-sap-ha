@@ -250,11 +250,7 @@ module SapHA
             secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
             SapHA::System::Hana.make_backup(@system_id, @backup_user, @backup_file, @instance)
             secondary_password = @global_config.cluster.host_passwords[secondary_host_name]
-            if secondary_password.nil?
-              log.error "Cannot copy HANA SSFS Keys: No SSH password is stored for node #{secondary_host_name}"
-            else
-              SapHA::System::Hana.copy_ssfs_keys(@system_id, secondary_host_name, secondary_password)
-            end
+            SapHA::System::Hana.copy_ssfs_keys(@system_id, secondary_host_name, secondary_password)
           end
           SapHA::System::Hana.enable_primary(@system_id, @site_name_1)
           configure_crm
