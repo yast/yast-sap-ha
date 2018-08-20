@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Mon Aug 20 16:00:00 UTC 2018 - lkrause@suse.com
+
+- Version bump to 1.0.4;
+- Bugfixing (fate#325957):
+  - Fix the rpc server error when Y2DIR variable is set
+  - Fix the copy_ssfs_keys method to not fail when no password is
+    informed but there is passwordless ssh access between the nodes
+    
+-------------------------------------------------------------------
 Fri Jul 27 09:00:37 UTC 2018 - dakechi@suse.com
 
 - Version bump to 1.0.3;
