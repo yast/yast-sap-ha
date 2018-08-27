@@ -22,6 +22,7 @@
 require 'erb'
 require 'tmpdir'
 require 'sap_ha/exceptions'
+require 'net/http'
 
 module SapHA
   # Common routines
@@ -80,9 +81,13 @@ module SapHA
     end
 
     # Load the help file by its name
-    def load_help(basename)
+    def load_help(basename, platform="")
       log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
-      file_name = "help_#{basename}.html"
+      if platform == "bare-metal" || platform.to_s.strip.empty? 
+        file_name = "help_#{basename}.html"
+      else
+        file_name = "help_#{basename}_#{platform}.html"
+      end
       if !@storage.key? file_name
         full_path = File.join(@data_path, file_name)
         # TODO: apply the CSS
@@ -169,6 +174,42 @@ module SapHA
       " current=#{version_current}, cmp=#{cmp}."
       log.error "Gem::Dependency.match? :: #{e.message}"
       return false
+    end
+
+    # Set platform according to it's environment (default is bare-metal) 
+    def platform_check
+      if is_azure?
+        return "azure"
+      else
+        return "bare-metal"
+      end
+    end
+    
+    # Check if environment is running on Microsoft Azure by
+    # looking if instance metadata service is available
+    def is_azure?
+      result = Yast::SCR.Execute(Yast::Path.new(".target.bash_output"), "dmidecode -t system | grep Manufacturer")
+      if result["stdout"].strip.to_s == "Manufacturer: Microsoft Corporation"
+        url_metadata = URI.parse("http://169.254.169.254/metadata/instance?api-version=2017-04-02")
+        meta_service = Net::HTTP.new(url_metadata.host)
+        meta_service.read_timeout = 2
+        meta_service.open_timeout = 2
+        request = Net::HTTP::Get.new(url_metadata.request_uri)
+        request["Metadata"] = "true"
+        begin
+          response = meta_service.request(request)
+          case response
+            when Net::HTTPSuccess then
+              return true
+            else
+              return false
+          end
+        rescue Net::OpenTimeout => e
+          return false
+        end
+      else
+        return false
+      end
     end
 
     private

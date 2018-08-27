@@ -333,7 +333,7 @@ module Yast
       return :next unless notice
       SapHA::Wizard::RichText.new.run(
         'Prerequisites',
-        SapHA::Helpers.load_help(notice),
+        SapHA::Helpers.load_help(notice, @config.platform),
         '',
         true,
         true
