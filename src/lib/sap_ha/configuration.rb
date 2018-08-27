@@ -54,7 +54,8 @@ module SapHA
       :cluster_finalizer,
       :imported,
       :unattended,
-      :completed
+      :completed,
+      :platform
 
     include Yast::Logger
     include Yast::I18n
@@ -82,6 +83,7 @@ module SapHA
       @hana = Configuration::HANA.new(self)
       @ntp = Configuration::NTP.new(self)
       @config_sequence = []
+      @platform = SapHA::Helpers.platform_check
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found

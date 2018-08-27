@@ -277,6 +277,7 @@ module SapHA
           primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
           crm_conf = Helpers.render_template('tmpl_cluster_config_cost_opt.erb', binding)
         else
+        # Here should be implemented the extension of Azure configuration fromt the template tmpl_cluster_config_azure.erb
           crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
         end
         file_path = Helpers.write_var_file('cluster.config', crm_conf)

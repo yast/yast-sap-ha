@@ -54,6 +54,7 @@
       prerequisites_notice: prereq_hana_su_mt
       additional_instance: false
 
+
 # - id: NW
 #   string_name: NetWeaver
 #   scenarios:

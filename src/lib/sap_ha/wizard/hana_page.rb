@@ -30,6 +30,7 @@ module SapHA
       def initialize(model)
         super(model)
         @my_model = model.hana
+        @my_config = model
         @page_validator = @my_model.method(:validate)
         prepare_contents
       end
@@ -43,7 +44,7 @@ module SapHA
             'Set HANA-specific parameters',
             @contents
           ),
-          Helpers.load_help(help_file),
+          Helpers.load_help(help_file, @my_config.platform),
           true,
           true
         )
