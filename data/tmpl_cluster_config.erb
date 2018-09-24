@@ -39,7 +39,7 @@ configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000
 
 configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
-<% if @config.platform == "azure" -%>
+<% if @global_config.platform == "azure" -%>
 
 configure primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
   params binfile="/usr/bin/nc" cmdline_options="-l -k 62503" \
