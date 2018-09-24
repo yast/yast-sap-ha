@@ -44,7 +44,9 @@ module SapHA
             'Set HANA-specific parameters',
             @contents
           ),
-          Helpers.load_help(help_file, @my_config.platform),
+          #Helpers.load_help(help_file, @my_config.platform),
+          # The HANA Page instructions are generic for all the platforms.
+          Helpers.load_help(help_file),
           true,
           true
         )
