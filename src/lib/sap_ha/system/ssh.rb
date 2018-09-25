@@ -252,6 +252,8 @@ module SapHA
           raise SSHException, "Could not connect to #{host}: Connection refused"
         when 55
           raise SSHException, "Could not connect to #{host}: Unknown connection error."
+        when 56
+          raise SSHException, "Could not connect to #{host}: Permission denied (publickey)."  
         else
           log.error "Could not connect to #{host}: check_ssh returned rc=#{stat.exitstatus}"
           raise SSHException, "Could not connect to #{host} (rc=#{stat.exitstatus})."
