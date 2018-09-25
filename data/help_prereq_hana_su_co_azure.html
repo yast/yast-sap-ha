@@ -21,6 +21,9 @@
         There is a firewall configured using the SAP HANA Firewall module in Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and <code>HANA_SYSTEM_REPLICATION</code> services are enabled on <i>all</i> relevant network interfaces.
     </li>
     <li>
+        The master ssh public key is authorized for ssh access in the secondary node, in case the ssh via password access is disabled (default on Microsoft Azure).
+    </li>
+    <li>
         You have created one of the following:
         <ul type="square">
             <li>
