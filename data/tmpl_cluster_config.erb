@@ -35,10 +35,6 @@ configure primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse
 configure ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
     meta clone-max="2" clone-node-max="1" interleave="true"
 
-configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
-
-configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
-
 <% if @global_config.platform == "azure" -%>
 
 configure primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
@@ -56,3 +52,8 @@ configure clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_
     meta is-managed="true" clone-node-max="1" interleave="true"
 
 <% end -%>
+
+configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+
+configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
+
