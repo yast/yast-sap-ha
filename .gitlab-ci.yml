@@ -1,11 +1,12 @@
 stages:
   - validate
   - test
+  - coverage
 
 # To enable SLE 15 testing the test cases have first to be edited to work on
 # SLE 15 (different NTP setup). Until then this stage is commented out.
 #
-#sle15GA:
+# sle15GA:
 #    image: suntorytimed/yast-ci:sle15-ga
 #    stage: validate
 #    script: rake test:unit
@@ -14,29 +15,50 @@ stages:
 #        - sle
 #        - sles15
 
-sle12SP4:
+sle12SP4_validate:
+    stage: validate
     image: suntorytimed/yast-ci:sle12-sp4
+    script: rubocop
+    allow_failure: true
+
+sle12SP3_validate:
     stage: validate
-    script: rake test:unit
-    tags:
-        - docker
-        - sle
-        - sles15
-        
-sle12SP3:
     image: suntorytimed/yast-ci:sle12-sp3
+    script: rubocop
+    allow_failure: true
+
+sle12SP2_validate:
     stage: validate
-    script: rake test:unit
-    tags:
-        - docker
-        - sle
-        - sles15
-        
-sle12SP2:
     image: suntorytimed/yast-ci:sle12-sp2
-    stage: validate
+    script: rubocop
+    allow_failure: true
+
+sle12SP4_test:
+    stage: test
+    image: suntorytimed/yast-ci:sle12-sp4
     script: rake test:unit
-    tags:
-        - docker
-        - sle
-        - sles15
+
+sle12SP3_test:
+    stage: test
+    image: suntorytimed/yast-ci:sle12-sp3
+    script: rake test:unit
+
+sle12SP2_test:
+    stage: test
+    image: suntorytimed/yast-ci:sle12-sp2
+    script: rake test:unit
+        
+sle12SP4_coverage:
+    stage: coverage
+    image: suntorytimed/yast-ci:sle12-sp4
+    script: rake coverage
+
+sle12SP3_coverage:
+    stage: coverage
+    image: suntorytimed/yast-ci:sle12-sp3
+    script: rake coverage
+
+sle12SP2_coverage:
+    stage: coverage
+    image: suntorytimed/yast-ci:sle12-sp2
+    script: rake coverage
