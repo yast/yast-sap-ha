@@ -52,3 +52,6 @@ configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 4000
 
 configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
+# Clean up the HANA resources. The HANA resources might have failed because of a known issue.
+resource cleanup rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
+
