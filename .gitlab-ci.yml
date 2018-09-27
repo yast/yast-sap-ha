@@ -19,16 +19,19 @@ sle12SP4_validate:
     stage: validate
     image: suntorytimed/yast-ci:sle12-sp4
     script: rubocop
+    allow_failure: true
 
 sle12SP3_validate:
     stage: validate
     image: suntorytimed/yast-ci:sle12-sp3
     script: rubocop
+    allow_failure: true
 
 sle12SP2_validate:
     stage: validate
     image: suntorytimed/yast-ci:sle12-sp2
     script: rubocop
+    allow_failure: true
 
 sle12SP4_test:
     stage: test
