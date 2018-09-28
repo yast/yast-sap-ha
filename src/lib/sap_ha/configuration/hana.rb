@@ -293,6 +293,15 @@ module SapHA
         @nlog.log_status(status.exitstatus == 0,
           'Configured necessary cluster resources for HANA System Replication',
           'Could not configure HANA cluster resources', out)
+        # @FIXME: Workaround for Azure-specific issue that needs investigation
+        # https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/sap-hana-high-availability
+        if status.exitstatus == 0 and @global_config.platform == "azure"
+          rsc = "rsc_SAPHana_#{@system_id}_HDB#{@instance}"
+          cleanup_status = exec_status('crm', 'resource', 'cleanup', rsc)
+          @nlog.log_status(cleanup_status.exitstatus == 0,
+                           "Performed resource cleanup for #{rsc}",
+                           "Could not clean up #{rsc}")
+        end
       end
     end
   end

@@ -1,11 +1,11 @@
-configure rsc_default \
+rsc_default \
     resource-stickiness="1000" \
     migration-threshold="5000"
 
-configure op_defaults \
+op_defaults \
     timeout="600"
 
-configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
+primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
     meta target-role="Started" is-managed="true" \
     params \
     ip="<%= @virtual_ip %>" cidr_netmask="<%= @virtual_ip_mask %>" \
@@ -13,7 +13,7 @@ configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat
     op start timeout="20" op stop timeout="20" \
     op monitor interval="10" timeout="20"
 
-configure primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHanaTopology \
+primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHanaTopology \
     params \
     SID="<%= @system_id -%>" \
     InstanceNumber="<%= @instance -%>" \
@@ -22,7 +22,7 @@ configure primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> 
     op start interval="0" timeout="600" \
     op stop interval="0" timeout="300" 
 
-configure primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
+primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
     params \
     SID="<%= @system_id -%>" \
     InstanceNumber="<%= @instance -%>" \
@@ -36,22 +36,19 @@ configure primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse
     op monitor interval="60" role="Master" timeout="700" \
     op monitor interval="61" role="Slave" timeout="700"
 
-configure ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
+ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
     meta clone-max="2" clone-node-max="1" interleave="true"
 
-configure primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
+primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
   params binfile="/usr/bin/nc" cmdline_options="-l -k 62503" \
   op monitor timeout="20" interval="10" depth="0"
 
-configure group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_nc_<%= @system_id -%>_HDB<%= @instance -%>
+group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_nc_<%= @system_id -%>_HDB<%= @instance -%>
 
-configure clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
+clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
     meta is-managed="true" clone-node-max="1" target-role="Started" interleave="true"
 
-configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 4000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 4000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
 
-configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
-
-# Clean up the HANA resources. The HANA resources might have failed because of a known issue.
-resource cleanup rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
+order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
