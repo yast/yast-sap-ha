@@ -205,6 +205,7 @@ module SapHA
               return false
           end
         rescue Net::OpenTimeout => e
+          log.error("Network timeout checking Azure metadata service: #{e.message}.")
           return false
         end
       else
