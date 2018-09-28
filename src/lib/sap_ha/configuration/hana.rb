@@ -289,7 +289,7 @@ module SapHA
           end  
         end 
         file_path = Helpers.write_var_file('cluster.config', crm_conf)
-        out, status = exec_outerr_status('crm', '--file', file_path)
+        out, status = exec_outerr_status('crm', 'configure', 'load', 'update', file_path)
         @nlog.log_status(status.exitstatus == 0,
           'Configured necessary cluster resources for HANA System Replication',
           'Could not configure HANA cluster resources', out)
