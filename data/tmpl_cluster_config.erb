@@ -1,9 +1,17 @@
+#
+# defaults
+#
+
 rsc_default \
     resource-stickiness="1000" \
     migration-threshold="5000"
 
 op_defaults \
     timeout="600"
+
+#
+# production HANA
+#
 
 primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
     params \
@@ -35,6 +43,16 @@ primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
 ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
     meta clone-max="2" clone-node-max="1" interleave="true"
 
+<% if @global_config.platform == "azure" -%>
+
+primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
+  params binfile="/usr/bin/nc" cmdline_options="-l -k 62503" \
+  op monitor timeout="20" interval="10" depth="0"
+
+group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_nc_<%= @system_id -%>_HDB<%= @instance -%>
+
+<% endif %>
+
 clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
     meta is-managed="true" clone-node-max="1" interleave="true"
 
@@ -42,3 +60,32 @@ colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<
 
 order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
+
+<% if @additional_instance %>
+
+#
+# non-production HANA and constraints
+#
+
+primitive rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> ocf:heartbeat:SAPDatabase \
+    params DBTYPE="HDB" SID="<%= @np_system_id -%>" \
+    MONITOR_SERVICES="hdbindexserver|hdbnameserver" \
+    op start interval="0" timeout="600" \
+    op monitor interval="120" timeout="700" \
+    op stop interval="0" timeout="300" \
+    meta priority="100"
+
+location loc_<%= @np_system_id -%>_never_<%= primary_host_name -%> \
+    rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> -inf: <%= primary_host_name -%>
+
+
+colocation col_<%= @np_system_id -%>_never_with_PRDip \
+    -inf: rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:Started \
+    rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>
+
+
+order ord_<%= @np_system_id -%>_stop_before_PRDpromote inf: \
+    rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
+    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote
+
+<% endif %>

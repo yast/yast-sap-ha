@@ -273,21 +273,8 @@ module SapHA
 
       def configure_crm
         # TODO: move this to SapHA::System::Local.configure_crm
-        if @additional_instance
-          primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
-          # Select the crm template accordingly with the platform.
-          if @global_config.platform == "bare-metal" || @global_config.platform.to_s.strip.empty?
-            crm_conf = Helpers.render_template('tmpl_cluster_config_cost_opt.erb', binding)
-          else 
-            crm_conf = Helpers.render_template("tmpl_cluster_config_cost_opt_#{@global_config.platform}.erb", binding)
-          end
-        else
-          if @global_config.platform == "bare-metal" || @global_config.platform.to_s.strip.empty?
-            crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
-          else 
-            crm_conf = Helpers.render_template("tmpl_cluster_config_#{@global_config.platform}.erb", binding)
-          end  
-        end 
+        primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+        crm_conf = Helpers.render_template('tmpl_cluster_config.erb', binding)
         file_path = Helpers.write_var_file('cluster.config', crm_conf)
         out, status = exec_outerr_status('crm', 'configure', 'load', 'update', file_path)
         @nlog.log_status(status.exitstatus == 0,
