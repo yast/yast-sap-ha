@@ -36,7 +36,7 @@ module SapHA
       include Singleton
       include Yast::Logger
       include ShellCommands
-      
+
       MODULES_PATH = "/lib/modules/#{`uname -r`.strip}/kernel/drivers/watchdog".freeze
 
       # Add the watchdog with the given name to the /etc/modules-load.d

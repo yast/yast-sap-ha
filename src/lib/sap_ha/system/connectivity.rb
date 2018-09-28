@@ -246,10 +246,10 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__}(#{host_name}) ---"
         raise RPCFatalException, "Could not find the host #{host_name}."\
           " Known hosts are: #{@nodes.keys}." unless @nodes[host_name]
-        begin  
+        begin
           yield @nodes[host_name]
         rescue
-          
+
         end
       end
 

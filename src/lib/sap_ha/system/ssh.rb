@@ -211,7 +211,7 @@ module SapHA
       def run_command(host, *cmd)
         exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
       end
-      
+
       private
 
       def authorize_own_keys
@@ -253,7 +253,7 @@ module SapHA
         when 55
           raise SSHException, "Could not connect to #{host}: Unknown connection error."
         when 56
-          raise SSHException, "Could not connect to #{host}: Permission denied (publickey)."  
+          raise SSHException, "Could not connect to #{host}: Permission denied (publickey)."
         else
           log.error "Could not connect to #{host}: check_ssh returned rc=#{stat.exitstatus}"
           raise SSHException, "Could not connect to #{host} (rc=#{stat.exitstatus})."

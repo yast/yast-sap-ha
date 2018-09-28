@@ -381,10 +381,10 @@ module SapHA
           errors = validate_comm_layer(:verbose)
         when :nodes
           errors = validate_nodes(:verbose)
-        else 
+        else
           errors = validate(:verbose)
         end
-                  
+
         tmpl = "<ul>
         <% errors.each do |error| %>
           <li> <%= error %> </li>
