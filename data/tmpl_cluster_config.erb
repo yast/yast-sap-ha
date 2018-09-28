@@ -43,7 +43,7 @@ primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
 ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
     meta clone-max="2" clone-node-max="1" interleave="true"
 
-<% if @global_config.platform == "azure" -%>
+<% if @global_config.platform == "azure" %>
 
 primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
   params binfile="/usr/bin/nc" cmdline_options="-l -k 62503" \
@@ -51,7 +51,7 @@ primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
 
 group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_nc_<%= @system_id -%>_HDB<%= @instance -%>
 
-<% endif %>
+<% end %>
 
 clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
     meta is-managed="true" clone-node-max="1" interleave="true"
@@ -88,4 +88,4 @@ order ord_<%= @np_system_id -%>_stop_before_PRDpromote inf: \
     rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
     msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote
 
-<% endif %>
+<% end %>
