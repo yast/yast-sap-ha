@@ -159,6 +159,9 @@ while {1} {
         "Connection refused" {
             exit 54
         }
+        "Permission denied" {
+            exit 56
+        }
         eof {
             if {$action eq "copy" || $action eq "check" || $action eq "copy-id" || $action eq "copy-file"} {
                 exit 0

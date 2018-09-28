@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Sep 28 10:13:00 UTC 2018 - dakechi@suse.com
+
+- Version bump to 1.0.5;
+- Enhanced the module to be used on Azure with unattended mode
+  support (fate#324542, fate#325956).
+    + Supports the SBD fencing based options documented on the 
+    Azure best practices guide.
+
+-------------------------------------------------------------------
 Mon Aug 20 16:00:00 UTC 2018 - lkrause@suse.com
 
 - Version bump to 1.0.4;

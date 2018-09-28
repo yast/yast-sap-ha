@@ -1,6 +1,7 @@
 <h3>SAP HANA System Replication Scale Up: Cost-Optimized in Microsoft&reg; Azure&reg;</h3>
 
-<p>Please note: The Azure and SAP HANA setup needs to be done by the user in front. This wizard will only take care about the cluster and  HANA system replication configuration. For more information, please visit the link below:</p>
+<p>Please note: The Azure and SAP HANA setup needs to be done by the user upfront. This wizard configures SBD fencing, and therefore it requires that iSCSI is also configured.</p>
+<p>This wizard will only take care of the cluster and  HANA system replication configuration. For more information, please visit the link below:</p>
 <ul>
   <li><a href="https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/high-availability-guide-suse-pacemaker">Setting up Pacemaker on SUSE Linux Enterprise Server in Azure</a>
 </ul>
@@ -19,6 +20,12 @@
     </li>
     <li>
         There is a firewall configured using the SAP HANA Firewall module in Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and <code>HANA_SYSTEM_REPLICATION</code> services are enabled on <i>all</i> relevant network interfaces.
+    </li>
+    <li>
+        The master node SSH public key is authorized for SSH access to the secondary node. This is needed when SSH password access is disabled, which is the default on Microsoft Azure.
+    </li>
+    <li>
+        The package yast2-sap-ha must be installed on all nodes before this module is executed. It is not installed by default on Microsoft Azure.
     </li>
     <li>
         You have created one of the following:
