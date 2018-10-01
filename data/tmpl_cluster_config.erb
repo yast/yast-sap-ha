@@ -47,16 +47,21 @@ ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_i
 
 primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
   params binfile="/usr/bin/nc" cmdline_options="-l -k 62503" \
+  meta resource-stickiness=0 \
   op monitor timeout="20" interval="10" depth="0"
 
 group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_nc_<%= @system_id -%>_HDB<%= @instance -%>
+
+colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: g_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+
+<% else %>
+
+colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
 
 <% end %>
 
 clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
     meta is-managed="true" clone-node-max="1" interleave="true"
-
-colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
 
 order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
