@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Oct 10 17:19:50 UTC 2018 - kgronlund@suse.com
+
+- Lower stickiness of IP group to match non-Azure configuration
+- Log network timeout accessing Azure metadata
+- Use crm configure load to replace the cluster configuration (#43)
+
+-------------------------------------------------------------------
 Fri Sep 28 10:13:00 UTC 2018 - dakechi@suse.com
 
 - Version bump to 1.0.5;
