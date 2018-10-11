@@ -388,7 +388,7 @@ module SapHA
 
       # Copy PKI SSFS key files from primary to secondary
       # @param system_id [String] HANA System ID
-      # @param user_name [String] HANA user name 
+      # @param user_name [String] HANA user name
       def copy_ssfs_keys(system_id, secondary_host_name, password)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secondary_host_name} ---"
         # TODO: check the paths, ideally taking them from the ENV
@@ -406,12 +406,12 @@ module SapHA
           begin
             SapHA::System::SSH.instance.check_ssh(secondary_host_name)
             # Set the password to "" as the ssh module expects an empty string for the Passwordless connection.
-            password = ""  
+            password = ""
           rescue SSHAuthException => e
             log.error "Cannot copy HANA SSFS Keys: No SSH password is stored for node #{secondary_host_name} and it isn't accesible without password."
             return
           end
-        end    
+        end
 
         file_list = [
           "/usr/sap/#{system_id}/SYS/global/security/rsecssfs/data/SSFS_#{system_id}.DAT",
@@ -425,7 +425,7 @@ module SapHA
             NodeLogger.output e.message
           else
             NodeLogger.info "Copied HANA PKI SSFS file #{file_path} to node #{secondary_host_name}"
-          end          
+          end
         end
       end
     end # HanaClass

@@ -37,7 +37,7 @@ module SapHA
         help = @model.scenarios_help
         base_list_selection("Scenario selection for #{@model.product_name}",
           "An #{@model.product_name} installation was detected. "\
-          "Select one of the high-avaliability scenarios from the list below:",
+          "Please select an High Availability scenario:",
           choices, help, false, true)
       end
 

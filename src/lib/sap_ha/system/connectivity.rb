@@ -101,14 +101,12 @@ module SapHA
           log.info "RPC Server appears to be running on node #{self[:host_name]}"
           log.info "Will restart"
           stop_rpc_server
-          self[:rpc_server_recovered] = true
-          run_rpc_server
         else
           log.info "RPC Server appears to be not running on node #{self[:host_name]}"
           log.info "Will try to start it"
-          self[:rpc_server_recovered] = true
-          run_rpc_server
         end
+        self[:rpc_server_recovered] = true
+        run_rpc_server
       end
 
       def ping?
@@ -246,10 +244,10 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__}(#{host_name}) ---"
         raise RPCFatalException, "Could not find the host #{host_name}."\
           " Known hosts are: #{@nodes.keys}." unless @nodes[host_name]
-        begin  
+        begin
           yield @nodes[host_name]
         rescue
-          
+
         end
       end
 

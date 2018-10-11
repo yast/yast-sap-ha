@@ -83,7 +83,7 @@ module SapHA
     # Load the help file by its name
     def load_help(basename, platform="")
       log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
-      if platform == "bare-metal" || platform.to_s.strip.empty? 
+      if platform == "bare-metal" || platform.to_s.strip.empty?
         file_name = "help_#{basename}.html"
       else
         file_name = "help_#{basename}_#{platform}.html"
@@ -176,7 +176,7 @@ module SapHA
       return false
     end
 
-    # Set platform according to it's environment (default is bare-metal) 
+    # Set platform according to it's environment (default is bare-metal)
     def platform_check
       if is_azure?
         return "azure"
@@ -184,7 +184,7 @@ module SapHA
         return "bare-metal"
       end
     end
-    
+
     # Check if environment is running on Microsoft Azure by
     # looking if instance metadata service is available
     def is_azure?
@@ -205,6 +205,7 @@ module SapHA
               return false
           end
         rescue Net::OpenTimeout => e
+          log.error("Network timeout checking Azure metadata service: #{e.message}.")
           return false
         end
       else

@@ -38,7 +38,7 @@ module SapHA
     include SapHA::Exceptions
 
     def initialize(config)
-      @config = config   
+      @config = config
     end
 
     def check_config
@@ -61,7 +61,7 @@ module SapHA
         SapHA::SAPHAInstallation.new(@config, nil).run
         :next
       end
-    end  
+    end
 
     private
 
@@ -82,7 +82,7 @@ module SapHA
       if ! @config.can_install?
         NodeLogger.fatal "The Configuration file is not complete."
         raise ConfigValidationException, "Configuration file is not complete"
-      end  
+      end
     end
 
     def check_ssh
@@ -99,7 +99,7 @@ module SapHA
             log.error "Host #{h[:hostname]} requires password, but no password "\
               "is provided in the configuration file"
             NodeLogger.fatal "Host #{h[:hostname]} requires password, but no password "\
-            "is provided in the configuration file"  
+            "is provided in the configuration file"
             next
           end
           begin
@@ -120,11 +120,11 @@ module SapHA
           NodeLogger.fatal "Error connecting to host #{h[:hostname]}: #{e.message}"
         end
       end
-      
+
       if ! failed_nodes.empty?
         NodeLogger.fatal "Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
         raise ConfigValidationException,"Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
-      end  
+      end
     end
   end
 end

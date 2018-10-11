@@ -1,17 +1,25 @@
-configure rsc_default \
+#
+# defaults
+#
+
+rsc_defaults \
     resource-stickiness="1000" \
     migration-threshold="5000"
 
-configure op_defaults \
+op_defaults \
     timeout="600"
 
-configure primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
+#
+# production HANA
+#
+
+primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
     params \
     ip="<%= @virtual_ip %>" cidr_netmask="<%= @virtual_ip_mask %>" \
     op start timeout="20" op stop timeout="20" \
     op monitor interval="10" timeout="20"
 
-configure primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHanaTopology \
+primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHanaTopology \
     params \
     SID="<%= @system_id -%>" \
     InstanceNumber="<%= @instance -%>" \
@@ -19,7 +27,7 @@ configure primitive rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> 
     op start interval="0" timeout="600" \
     op stop interval="0" timeout="300" 
 
-configure primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
+primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
     params \
     SID="<%= @system_id -%>" \
     InstanceNumber="<%= @instance -%>" \
@@ -32,13 +40,57 @@ configure primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse
     op monitor interval="60" role="Master" timeout="700" \
     op monitor interval="61" role="Slave" timeout="700"
 
-configure ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
+ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
     meta clone-max="2" clone-node-max="1" interleave="true"
 
-configure clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
+<% if @global_config.platform == "azure" %>
+
+primitive rsc_nc_<%= @system_id -%>_HDB<%= @instance -%> anything \
+  params binfile="/usr/bin/nc" cmdline_options="-l -k 62503" \
+  meta resource-stickiness=0 \
+  op monitor timeout="20" interval="10" depth="0"
+
+group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_nc_<%= @system_id -%>_HDB<%= @instance -%>
+
+colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: g_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+
+<% else %>
+
+colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+
+<% end %>
+
+clone cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> \
     meta is-managed="true" clone-node-max="1" interleave="true"
 
-configure colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> 2000: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
-configure order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTopology_<%= @system_id -%>_HDB<%= @instance -%> msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
 
+<% if @additional_instance %>
+
+#
+# non-production HANA and constraints
+#
+
+primitive rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> ocf:heartbeat:SAPDatabase \
+    params DBTYPE="HDB" SID="<%= @np_system_id -%>" \
+    MONITOR_SERVICES="hdbindexserver|hdbnameserver" \
+    op start interval="0" timeout="600" \
+    op monitor interval="120" timeout="700" \
+    op stop interval="0" timeout="300" \
+    meta priority="100"
+
+location loc_<%= @np_system_id -%>_never_<%= primary_host_name -%> \
+    rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%> -inf: <%= primary_host_name -%>
+
+
+colocation col_<%= @np_system_id -%>_never_with_PRDip \
+    -inf: rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:Started \
+    rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>
+
+
+order ord_<%= @np_system_id -%>_stop_before_PRDpromote inf: \
+    rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
+    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote
+
+<% end %>

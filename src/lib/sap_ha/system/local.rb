@@ -43,7 +43,7 @@ module SapHA
 
       COROSYNC_KEY_PATH = '/etc/corosync/authkey'.freeze
       CSYNC2_KEY_PATH = '/etc/csync2/key_hagroup'.freeze
-      
+
       # List all block devices on the system
       def block_devices
         devices = {}

@@ -48,7 +48,7 @@ module SapHA
   # - Polled calls:
   #   + sapha.config_#{component}.apply(role)
   #
-  # Polled calls return immediately, 
+  # Polled calls return immediately,
   class RPCServer
     include System::ShellCommands
 
@@ -196,7 +196,7 @@ module SapHA
       _out, rc  = exec_output_status('/usr/sbin/iptables', '-I',
                                      'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
       @port_opened = true
-      rc.exitstatus == 0      
+      rc.exitstatus == 0
     end
 
     # close the RPC Server port by manipulating the iptables directly
