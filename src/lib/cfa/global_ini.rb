@@ -36,7 +36,7 @@ module CFA
   class GlobalIni < BaseModel
 
     def initialize(path,file_handler: nil)
-      super(AugeasParser.new("Sapini.lns"), path.freeze, file_handler: file_handler)
+      super(AugeasParser.new("Sapini.lns"), path, file_handler: file_handler)
     end
 
     # Replaces or adds a config Tree and subtree.

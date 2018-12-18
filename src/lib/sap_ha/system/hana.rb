@@ -25,6 +25,7 @@ require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
 require 'sap_ha/system/ssh'
 require_relative 'shell_commands'
+require "cfa/global_ini"
 
 module SapHA
   module System
@@ -247,16 +248,6 @@ module SapHA
       # @param options [Hash] production system options
       def adjust_production_system(system_id, options = {})
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
-        begin
-          require 'cfa/augeas_parser'
-          require 'cfa/base_model'
-          require 'cfa/matcher'
-        rescue LoadError => e
-          log.error "Error loading the CFA parser: #{e.message}"
-          NodeLogger.error "Could not adjust global.ini for the production system:"
-          NodeLogger.output e.message
-          return false
-        end
         # Change the global.ini
         global_ini_path = HANA_GLOBAL_INI % system_id.upcase
         unless File.exist?(global_ini_path)
@@ -265,17 +256,14 @@ module SapHA
           return false
         end
         begin
-          parser = CFA::AugeasParser.new('sapini.lns')
-          bm = CFA::BaseModel.new(parser, global_ini_path)
-          bm.load
-          bm.generic_set('ha_dr_provider_srTakeover/provider', 'srTakeover')
-          bm.generic_set('ha_dr_provider_srTakeover/path',
-            "/hana/shared/#{system_id.upcase}/srHook/srTakeover.py")
-          bm.generic_set('ha_dr_provider_srTakeover/execution_order', options[:execution_order])
-          bm.generic_set('memorymanager/global_allocation_limit', options[:global_alloc_limit])
-          bm.generic_set('system_replication/preload_column_tables',
-            options[:preload_column_tables])
-          bm.save
+          global_ini = CFA::GlobalIni.new(global_ini_path)
+          global_ini.load
+          global_ini.set_config('ha_dr_provider_srTakeover', 'provider', 'srTakeover')
+          global_ini.set_config('ha_dr_provider_srTakeover', 'path', "/hana/shared/#{system_id.upcase}/srHook/srTakeover.py")
+          global_ini.set_config('ha_dr_provider_srTakeover', 'execution_order', options[:execution_order])
+          global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
+          global_ini.set_config('system_replication', 'preload_column_tables', options[:preload_column_tables])
+          global_ini.save
         rescue StandardError => e
           NodeLogger.error "Could not adjust global.ini for the production system:"
           NodeLogger.output e.message
@@ -291,16 +279,6 @@ module SapHA
       # @param options [Hash] production system options
       def adjust_non_production_system(system_id, options = {})
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
-        begin
-          require 'cfa/augeas_parser'
-          require 'cfa/base_model'
-          require 'cfa/matcher'
-        rescue LoadError => e
-          log.error "Error loading the CFA parser: #{e.message}"
-          NodeLogger.error "Could not adjust global.ini for the non-production system:"
-          NodeLogger.output e.message
-          return false
-        end
         # Change the global.ini
         global_ini_path = HANA_GLOBAL_INI % system_id.upcase
         unless File.exist?(global_ini_path)
@@ -309,11 +287,10 @@ module SapHA
           return false
         end
         begin
-          parser = CFA::AugeasParser.new('sapini.lns')
-          bm = CFA::BaseModel.new(parser, global_ini_path)
-          bm.load
-          bm.generic_set('memorymanager/global_allocation_limit', options[:global_alloc_limit])
-          bm.save
+          global_ini = CFA::GlobalIni.new(global_ini_path)
+          global_ini.load
+          global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
+          global_ini.save
         rescue StandardError => e
           NodeLogger.error "Could not adjust global.ini for the non-production system:"
           NodeLogger.output e.message
