@@ -34,7 +34,7 @@ module CFA
   # @see http://www.rubydoc.info/github/config-files-api/config_files_api/CFA/AugeasParser
   class GlobalIni < BaseModel
     def initialize(path, file_handler: nil)
-      super(AugeasParser.new("Sapini.lns"), path, file_handler: file_handler)
+      super(AugeasParser.new("sapini.lns"), path, file_handler: file_handler)
     end
 
     # Replaces or adds a config Tree and subtree.
