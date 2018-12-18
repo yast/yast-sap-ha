@@ -19,7 +19,6 @@
 # Summary: SUSE High Availability Setup for SAP Products: HANA configuration
 # Authors: Ayoub Belarbi <ayoub.belarbi@suse.com>
 
-
 require "yast"
 require "yast2/target_file"
 
@@ -27,15 +26,14 @@ require "cfa/base_model"
 require "cfa/matcher"
 require "cfa/augeas_parser"
 
-
 module CFA
   # class representing HANA global.ini config file model.
-  # It provides helper to manipulate with the global.ini file. It uses CFA framework and Augeas parser.
+  # It provides helper to manipulate with the global.ini file.
+  # It uses CFA framework and Augeas parser.
   # @see http://www.rubydoc.info/github/config-files-api/config_files_api/CFA/BaseModel
   # @see http://www.rubydoc.info/github/config-files-api/config_files_api/CFA/AugeasParser
   class GlobalIni < BaseModel
-
-    def initialize(path,file_handler: nil)
+    def initialize(path, file_handler: nil)
       super(AugeasParser.new("Sapini.lns"), path, file_handler: file_handler)
     end
 
@@ -45,7 +43,6 @@ module CFA
     # @param [String] subtree_value
     # @return [void]
     def set_config(tree_key, subtree_key, subtree_value)
-
       entries = data.select(key_matcher(tree_key))
       if entries.empty?
         entry = AugeasTree.new
@@ -63,7 +60,6 @@ module CFA
           end
         end
       end
-
     end
 
     # Removes all occurrences of a given tree or subtree.
@@ -97,7 +93,7 @@ module CFA
 
     # Returns matcher for cfa to find entries with given key
     def key_matcher(key)
-      Matcher.new { |k, v| k == key }
+      Matcher.new { |k, _v| k == key }
     end
 
   end
