@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Dec 18 14:45:01 UTC 2018 - abelarbi@suse.de
+
+- Version bump to 1.0.6
+- Fix bug (bsc#1117765)
+
+-------------------------------------------------------------------
 Wed Oct 10 17:19:50 UTC 2018 - kgronlund@suse.com
 
 - Lower stickiness of IP group to match non-Azure configuration
