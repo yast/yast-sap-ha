@@ -26,8 +26,16 @@ require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
 require_relative 'shell_commands'
 
-Yast.import 'SystemdService'
-Yast.import 'SystemdSocket'
+# In yast2 4.1.3 a reorganization of the YaST systemd library was introduced. When running on an
+# older version, just fall back to the old SystemdService module (bsc#1146220).
+begin
+  require 'yast2/systemd/service'
+  require 'yast2/systemd/socket'
+rescue LoadError
+  Yast.import 'SystemdService'
+  Yast.import 'SystemdSocket'
+end
+
 Yast.import 'SuSEFirewallServices'
 Yast.import 'SuSEFirewall'
 Yast.import 'Cluster'
@@ -72,9 +80,9 @@ module SapHA
           raise LocalSystemException, "Unknown action #{action} on systemd #{unit_type}"
         end
         unit = if unit_type == :service
-                 Yast::SystemdService.find(unit_name)
+                 find_service(unit_name)
                else
-                 Yast::SystemdSocket.find(unit_name)
+                 find_socket(unit_name)
                end
         if unit.nil?
           NodeLogger.error "Could not #{action} #{unit_type} "\
@@ -271,5 +279,17 @@ module SapHA
       end
     end
     Local = LocalClass.instance
+
+    private
+
+    def find_service(name)
+      service_api = defined?(Yast2::Systemd::Service) ? Yast2::Systemd::Service : Yast::SystemdService
+      service_api.find!(name)
+    end
+
+    def find_socket(name)
+      socket_api = defined?(Yast2::Systemd::Socket) ? Yast2::Systemd::Socket : Yast::SystemdSocket
+      socket_api.find!(name)
+    end
   end
 end
