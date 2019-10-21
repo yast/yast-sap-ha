@@ -277,19 +277,20 @@ module SapHA
         end
         flag
       end
-    end
-    Local = LocalClass.instance
 
     private
 
-    def find_service(name)
-      service_api = defined?(Yast2::Systemd::Service) ? Yast2::Systemd::Service : Yast::SystemdService
-      service_api.find!(name)
-    end
+      def find_service(name)
+        service_api = defined?(Yast2::Systemd::Service) ? Yast2::Systemd::Service : Yast::SystemdService
+        service_api.find!(name)
+      end
 
-    def find_socket(name)
-      socket_api = defined?(Yast2::Systemd::Socket) ? Yast2::Systemd::Socket : Yast::SystemdSocket
-      socket_api.find!(name)
+      def find_socket(name)
+        socket_api = defined?(Yast2::Systemd::Socket) ? Yast2::Systemd::Socket : Yast::SystemdSocket
+        socket_api.find!(name)
+      end
+
     end
+    Local = LocalClass.instance
   end
 end
