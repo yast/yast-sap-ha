@@ -18,7 +18,9 @@
 #
 # Summary: SUSE High Availability Setup for SAP Products: Page for joining an existing cluster
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
+require "yast/i18n"
 require 'sap_ha/wizard/base_wizard_page'
 require 'sap_ha/system/ssh'
 require 'sap_ha/system/local'
@@ -28,6 +30,11 @@ module SapHA
   module Wizard
     # Page for joining an existing cluster
     class JoinClusterPage < BaseWizardPage
+
+      def initialize
+           texdomain "hana-ha"
+      end	      
+
       def set_contents
         super
         Yast::Wizard.SetContents(
