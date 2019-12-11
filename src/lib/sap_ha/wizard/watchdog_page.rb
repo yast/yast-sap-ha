@@ -18,8 +18,10 @@
 #
 # Summary: SUSE High Availability Setup for SAP Products: Watchdog Configuration Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
 require 'yast'
+require "yast/i18n"
 require 'sap_ha/helpers'
 require 'sap_ha/wizard/base_wizard_page'
 
@@ -29,6 +31,7 @@ module SapHA
     class WatchdogConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
+	textdomain "hana-ha"
         @my_model = model.watchdog
         @page_validator = @my_model.method(:validate)
       end

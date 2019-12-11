@@ -18,7 +18,9 @@
 #
 # Summary: SUSE High Availability Setup for SAP Products: common routines
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
+require "yast/i18n"
 require 'erb'
 require 'tmpdir'
 require 'sap_ha/exceptions'
@@ -38,6 +40,7 @@ module SapHA
     FILE_DATE_TIME_FORMAT = '%Y%m%d_%H%M%S'.freeze
 
     def initialize
+      textdomain "hana-ha"
       @storage = {}
       if ENV['Y2DIR'] # tests/local run
         @data_path = 'data/'

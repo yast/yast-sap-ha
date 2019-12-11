@@ -18,8 +18,10 @@
 #
 # Summary: SUSE High Availability Setup for SAP Products: Communication Layer Configuration Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+# Authors: Peter Varkoly <varkoly@suse.com>
 
 require 'yast'
+require "yast/i18n"
 require 'sap_ha/helpers'
 require 'sap_ha/wizard/base_wizard_page'
 
@@ -31,6 +33,7 @@ module SapHA
       # putting X.X.0.0 as the bind IP address
       def initialize(model)
         super(model)
+	textdomain "storage"
         @my_model = model.cluster
         @page_validator = @my_model.method(:validate_comm_layer)
         @recreate_table = true
