@@ -1,97 +1,86 @@
-################################################################################
-#
-# This part contains the shared Rubocop configuration for SUSE projects. It is
-# maintained at https://github.com/SUSE/style-guides/blob/master/rubocop-suse.yml
-#
-# NOTE: some rules have been commented out, see the YaST specific changes
-#       at the end of the file!
-#
-################################################################################
+# use the shared Yast defaults
+inherit_from:
+  /usr/share/YaST2/data/devtools/data/rubocop-0.71.0_yast_style.yml
 
-# Disabled, would require too many changes in the current code
-#Lint/EndAlignment:
-# StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#lintendalignment
-#  AlignWith: variable
-
+# Offense count: 221
 Metrics/AbcSize:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricsabcsize
-  Max: 30
+  Max: 312
 
-Metrics/LineLength:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricslinelength
-  Max: 100
-  # To make it possible to copy or click on URIs in the code, we allow lines
-  # contaning a URI to be longer than Max.
-  AllowURI: true
-  URISchemes:
-    - http
-    - https
+# Offense count: 14
+Metrics/BlockNesting:
+  Max: 5
 
-Style/AlignHash:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylealignhash
-  EnforcedHashRocketStyle: table
-  EnforcedColonStyle: table
+Metrics/BlockLength:
+  Max: 86
+  Exclude:
+    - "test/**/*"
 
-# Disabled, see the YaST default at the end of the file
-#Style/AlignParameters:
-#  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylealignparameters
-#  Enabled: false
-
-Style/CollectionMethods:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylecollectionmethods
-  Enabled: false
-
-Style/EmptyLinesAroundBlockBody:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#styleemptylinesaroundblockbody
-  Enabled: false
-
-Style/MultilineOperationIndentation:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylemultilineoperationindentation
-  EnforcedStyle: indented
-
-Style/StringLiterals:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylestringliterals
-  EnforcedStyle: double_quotes
-  Enabled: false
-
-Style/StringLiteralsInInterpolation:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylestringliteralsininterpolation
-  EnforcedStyle: double_quotes
-
-Style/WordArray:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#deviations-from-the-upstream-style-guide
-  Enabled: false
-
-Style/RegexpLiteral:
-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#deviations-from-the-upstream-style-guide
-  Enabled: false
-
-Style/SignalException:
-  StyleGuide: https://github.com/bbatsov/ruby-style-guide#fail-method
-  EnforcedStyle: only_raise
-
-
-################################################################################
-#
-# This part contains the YaST specific changes to the shared SUSE configuration
-#
-################################################################################
-
-# no extra indentation for multiline function calls
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
-# no extra indentation for case
-Style/CaseIndentation:
-  IndentWhenRelativeTo: end
-
-# "unless" has a different connotation than "if not"
-Style/NegatedIf:
-  Enabled: false
-
-# allow more than 10 lines for methods
-Metrics/MethodLength:
-  Max: 30
-
+# Offense count: 5
+# Configuration parameters: CountComments.
 Metrics/ClassLength:
-  Max: 250
+  Max: 2000
+
+# some includes are really long
+Metrics/ModuleLength:
+  Max: 1500
+
+# Offense count: 81
+Metrics/CyclomaticComplexity:
+  Max: 50
+
+# Offense count: 321
+# Configuration parameters: CountComments.
+Metrics/MethodLength:
+  Max: 501
+
+# Offense count: 1
+# Configuration parameters: CountKeywordArgs.
+Metrics/ParameterLists:
+  Max: 6
+
+# Offense count: 74
+Metrics/PerceivedComplexity:
+  Max: 59
+
+# Offense count: 436
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+Naming/MethodName:
+  Enabled: false
+
+# very inconsistent params in old API
+Naming/UncommunicativeMethodParamName:
+  Enabled: false
+
+# very inconsistent params in old API
+Naming/UncommunicativeBlockParamName:
+  Enabled: false
+
+
+# Offense count: 94
+Style/Documentation:
+  Enabled: false
+
+# Offense count: 97
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+Naming/VariableName:
+  Enabled: false
+
+# Offense count: 1
+Style/ClassVars:
+  Enabled: false
+
+# Offense count: 20
+# Configuration parameters: Exclude.
+Naming/FileName:
+  Exclude:
+    - "src/modules/*"
+
+# Offense count: 7
+# Cop supports --auto-correct.
+# Configuration parameters: ExactNameMatch, AllowPredicates, AllowDSLWriters, Whitelist.
+Style/TrivialAccessors:
+  Enabled: false
+
+# this needs more testing if we can have frozen string literals
+Style/FrozenStringLiteralComment:
+  Enabled: false
