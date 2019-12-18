@@ -33,7 +33,7 @@ module SapHA
       # putting X.X.0.0 as the bind IP address
       def initialize(model)
         super(model)
-	textdomain "storage"
+	textdomain "hana-ha"
         @my_model = model.cluster
         @page_validator = @my_model.method(:validate_comm_layer)
         @recreate_table = true

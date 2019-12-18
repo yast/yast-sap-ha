@@ -234,7 +234,7 @@ module Yast
     end
 
     def main
-      textdomain 'sap-ha'
+      textdomain 'hana-ha'
       @sequence["ws_start"] = "debug_run" if @config.debug
       @sequence["product_check"][:hana] = "file_import_check" if @config.imported
       Wizard.CreateDialog
