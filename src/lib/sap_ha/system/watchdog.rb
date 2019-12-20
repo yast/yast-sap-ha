@@ -80,7 +80,7 @@ module SapHA
       end
 
       # Check if the watchdog with the given name is added to the /etc/modules-load.d
-      # @param watchdog [String]
+      # @param module_name [String]
       # @return [Boolean]
       def installed?(module_name)
         if watchdog? module_name
@@ -91,7 +91,7 @@ module SapHA
       end
 
       # Check if the given kernel module a known watchdog module
-      # @param watchdog [String]
+      # @param module_name [String]
       # @return [Boolean]
       def watchdog?(module_name)
         if ([module_name] & list_watchdogs).empty?

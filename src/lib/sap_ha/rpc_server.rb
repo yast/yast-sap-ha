@@ -39,14 +39,14 @@ module SapHA
   #
   # Exposes the following functions in the sapha.* namespace:
   # - Non-polled calls (block and return the value)
-  #   + sapha.import_config(yaml_string) : recreates the marshalled config on the RPC Server's side
-  #   + sapha.config.start_setup() : notify the node
-  #   + sapha.config.end_setup() : notify the node
-  #   + sapha.config.collect_log() : get the log
-  #   + sapha.busy() : true if the node is busy with configuration
-  #   + sapha.shutdown() : shut down the RPC server
+  #   + `sapha.import_config(yaml_string)` : recreates the marshalled config on the RPC Server's side
+  #   + `sapha.config.start_setup()` : notify the node
+  #   + `sapha.config.end_setup()` : notify the node
+  #   + `sapha.config.collect_log()` : get the log
+  #   + `sapha.busy()` : true if the node is busy with configuration
+  #   + `sapha.shutdown()` : shut down the RPC server
   # - Polled calls:
-  #   + sapha.config_#{component}.apply(role)
+  #   + `sapha.config_#{component}.apply(role)`
   #
   # Polled calls return immediately,
   class RPCServer

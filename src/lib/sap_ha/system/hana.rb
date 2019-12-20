@@ -50,12 +50,12 @@ module SapHA
 
       # Make initial HANA backup for the system replication
       # @param system_id [String] SAP SID of the HANA instance
-      # @param user_name [String] Secure user storage username to perform the backup on behalf of
+      # @param secstore_user [String] Secure user storage username to perform the backup on behalf of
       # @param file_name [String] HANA backup file
       # @param instance_number [String] HANA instance number
-      def make_backup(system_id, secstore_user, file_name, _instance_number)
+      def make_backup(system_id, secstore_user, file_name, instance_number)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secstore_user},"\
-          " #{file_name}, #{_instance_number}) ---"
+          " #{file_name}, #{instance_number}) ---"
         user_name = "#{system_id.downcase}adm"
         # do backup differently for HANA 2.0
         version = version(system_id)
@@ -304,7 +304,7 @@ module SapHA
 
       # Create a user for monitoring the non-production HANA on the secondary node
       # @param system_id [String] HANA System ID (production)
-      # @param options [Hash] production system options
+      # @param instance_number [#to_s] 
       def create_monitoring_user(system_id, instance_number)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{instance_number}) ---"
         user_name = "#{system_id.downcase}adm"
@@ -340,7 +340,7 @@ module SapHA
       # Execute an HDBSQL command
       # @param system_id [String] HANA System ID
       # @param user_name [String] HANA user name
-      # @param instance number [String] HANA instance number
+      # @param instance_number [String] HANA instance number
       # @param password [String] HANA password
       # @param environment [String] HANA host:port specification (can be empty)
       # @param statement [String] SQL statement
@@ -365,7 +365,6 @@ module SapHA
 
       # Copy PKI SSFS key files from primary to secondary
       # @param system_id [String] HANA System ID
-      # @param user_name [String] HANA user name
       def copy_ssfs_keys(system_id, secondary_host_name, password)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secondary_host_name} ---"
         # TODO: check the paths, ideally taking them from the ENV
