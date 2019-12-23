@@ -38,29 +38,3 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /test/
   conf.exclude_files << /aux/
 end
-
-desc "Run unit tests with coverage."
-task "coverage" do
-  files = Dir["**/test/**/*_{spec,test}.rb"]
-  sh "export COVERAGE=1; rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-  #sh "xdg-open coverage/index.html"
-end
-
-Packaging.configuration do |conf|
-  conf.obs_project = "home:imanyugin:sap-ha"
-  conf.package_name = "yast2-sap-ha"
-  conf.obs_api = "https://api.suse.de/"
-  # conf.obs_target = "SLE_12_SP1"
-  #conf.obs_target = "SLE_12_SP2"
-  conf.obs_target = "SLE_15"
-end
-
-Rake::Task["check:committed"].clear
-
-# namespace :test do
-#   desc "Runs unit tests."
-#   task "unit" do
-#     files = Dir["**/test/**/*_{spec,test}.rb"]
-#     sh "rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-#   end
-# end
