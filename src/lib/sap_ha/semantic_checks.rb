@@ -89,7 +89,7 @@ module SapHA
 
     # Check if the provided IPs belong to the network
     # @param ips [Array[String]]
-    # @param net [String]
+    # @param network [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
     def ipsv4_in_network_cidr(ips, network, message = '', field_name = '')
