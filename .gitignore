@@ -16,3 +16,6 @@ package/yast2-sap-ha-*.tar.bz2
 .vscode/
 .vs/
 sap_ha_unattended_install_log.txt
+
+/doc/autodocs
+/.yardoc
