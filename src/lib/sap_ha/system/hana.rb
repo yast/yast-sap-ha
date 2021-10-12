@@ -263,6 +263,10 @@ module SapHA
           global_ini.set_config('ha_dr_provider_srTakeover', 'execution_order', options[:execution_order])
           global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
           global_ini.set_config('system_replication', 'preload_column_tables', options[:preload_column_tables])
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'provider', 'SAPHanaSR')
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'path', '/usr/share/SAPHanaSR')
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'execution_order', '1')
+          global_ini.set_config('trace', 'ha_dr_saphanasr', 'info')
           global_ini.save
         rescue StandardError => e
           NodeLogger.error "Could not adjust global.ini for the production system:"
@@ -290,6 +294,10 @@ module SapHA
           global_ini = CFA::GlobalIni.new(global_ini_path)
           global_ini.load
           global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'provider', 'SAPHanaSR')
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'path', '/usr/share/SAPHanaSR')
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'execution_order', '1')
+          global_ini.set_config('trace', 'ha_dr_saphanasr', 'info')
           global_ini.save
         rescue StandardError => e
           NodeLogger.error "Could not adjust global.ini for the non-production system:"
