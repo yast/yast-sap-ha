@@ -213,35 +213,6 @@ module SapHA
         )
       end
 
-      # Write the takeover hook script
-      # @param system_id [String] HANA System ID (production)
-      # @param hook_script [String] HANA takeover hook script
-      def write_sr_hook(system_id, hook_script)
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{hook_script.inspect}) ---"
-        hook_dir = "/hana/shared/#{system_id.upcase}/srHook"
-        begin
-          Dir.mkdir(hook_dir) unless Dir.exist?(hook_dir)
-        rescue StandardError => e
-          log.error "Error creating directory #{hook_dir}: #{e.message}"
-          NodeLogger.error("Could not create directory #{hook_dir}")
-          NodeLogger.output(e.message)
-          return false
-        end
-        begin
-          hook_path = File.join(hook_dir, 'srTakeover.py')
-          File.open(hook_path, 'wb') do |fh|
-            fh.write(hook_script)
-          end
-        rescue StandardError => e
-          log.error "Error writing file #{hook_path}: #{e.message}"
-          NodeLogger.error("Could not write the system replication hook script to #{hook_path}")
-          NodeLogger.output(e.message)
-          return false
-        end
-        NodeLogger.info("Wrote system replication hook script to #{hook_path}")
-        true
-      end
-
       # Implement adjustments to the production system, so that a non-production
       # HANA could be run along it
       # @param system_id [String] HANA System ID (production)
@@ -258,9 +229,6 @@ module SapHA
         begin
           global_ini = CFA::GlobalIni.new(global_ini_path)
           global_ini.load
-          global_ini.set_config('ha_dr_provider_srTakeover', 'provider', 'srTakeover')
-          global_ini.set_config('ha_dr_provider_srTakeover', 'path', "/hana/shared/#{system_id.upcase}/srHook/srTakeover.py")
-          global_ini.set_config('ha_dr_provider_srTakeover', 'execution_order', options[:execution_order])
           global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
           global_ini.set_config('system_replication', 'preload_column_tables', options[:preload_column_tables])
           global_ini.set_config('ha_dr_provider_SAPHanaSR', 'provider', 'SAPHanaSR')

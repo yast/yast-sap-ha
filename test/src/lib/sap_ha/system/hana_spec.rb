@@ -346,39 +346,6 @@ USER: uname
     end
   end
 
-  describe '#write_sr_hook' do
-    context 'given all prerequisites are satisfied' do
-      it 'works' do
-        io = StringIO.new
-        expect(Dir).to receive(:mkdir).with('/hana/shared/XXX/srHook').and_return(0)
-        expect(File).to receive(:open)
-          .with('/hana/shared/XXX/srHook/srTakeover.py', 'wb')
-          .and_yield(io)
-        flag = SapHA::System::Hana.write_sr_hook('XXX', 'hook string')
-        expect(flag).to eq(true), SapHA::NodeLogger.text
-        expect(io.string).to eq 'hook string'
-      end
-    end
-
-    context 'given the directory cannot be created' do
-      it 'fails to write the hook file' do
-        expect(Dir).to receive(:mkdir).with('/hana/shared/XXX/srHook').and_raise(Errno::ENOENT)
-        flag = SapHA::System::Hana.write_sr_hook('XXX', 'hook string')
-        expect(flag).to eq(false)
-      end
-    end
-
-    context 'given that the file could not be opened' do
-      it 'fails to write the hook file' do
-        expect(Dir).to receive(:mkdir).with('/hana/shared/XXX/srHook').and_return(0)
-        expect(File).to receive(:open).with('/hana/shared/XXX/srHook/srTakeover.py', 'wb')
-          .and_raise(Errno::ENOENT)
-        flag = SapHA::System::Hana.write_sr_hook('XXX', 'hook string')
-        expect(flag).to eq(false)
-      end
-    end
-  end
-
   # # TODO:
   # describe '#adjust_production_system' do
   #   context 'all is good' do
