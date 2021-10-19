@@ -261,7 +261,6 @@ module SapHA
             primary_host_name, @instance, @replication_mode, @operation_mode)
           if @additional_instance # cost-optimized scenario
             SapHA::System::Hana.hdb_stop(@np_system_id)
-            SapHA::System::Hana.write_sr_hook(@system_id, @hook_script)
             SapHA::System::Hana.adjust_production_system(@system_id,
               @hook_script_parameters.merge(@production_constraints))
             # SapHA::System::Hana.adjust_non_production_system(@np_system_id)
