@@ -5,6 +5,7 @@ Tue Oct 12 16:08:26 UTC 2021 - Peter Varkoly <varkoly@suse.com>
   (bsc#1190774)
   Add SAPHanaSR via global.ini as proposed in
   https://documentation.suse.com/sbp/all/html/SLES4SAP-hana-sr-guide-PerfOpt-15/index.html#id-1.10.6.6"
+- Remove HANA takeover hook script. This is not necessary for HANA 2 any more.
 - 1.0.10
 
 -------------------------------------------------------------------
