@@ -38,7 +38,7 @@ Requires:       yast2-ntp-client
 Requires:       util-linux
 # lsmod, modprobe
 Requires:       SAPHanaSR
-Requires:       kmod-compat
+Requires:       kmod
 # configuration parser
 Requires:       augeas-lenses
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
