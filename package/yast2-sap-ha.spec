@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        1.0.10
+Version:        1.0.11
 Release:        0
 
 BuildArch:      noarch
@@ -46,7 +46,7 @@ Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 Requires:       sysvinit-tools
 
 BuildRequires:  augeas-lenses
-BuildRequires:  kmod-compat
+BuildRequires:  kmod
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
 BuildRequires:  util-linux

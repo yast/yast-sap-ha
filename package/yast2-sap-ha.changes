@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Dec  7 15:12:47 UTC 2021 - Peter Varkoly <varkoly@suse.com>
+
+- kmod-compat has broken dependencies (bsc#1186618)
+  Update requirement
+- 1.0.11
+
+-------------------------------------------------------------------
 Tue Oct 12 16:08:26 UTC 2021 - Peter Varkoly <varkoly@suse.com>
 
 - "SUSE SAP HA Yast wizard for HANA doesn´t configure the HANA hooks.
