@@ -129,20 +129,18 @@ def _make_basic_ha_config(config, product_id, scenario_name, options = {})
     backup_file:     options.fetch(:backup_file, 'mybackupfile2'),
     perform_backup:  options.fetch(:perform_backup, false)
   )
-  ntp_cfg = { "synchronize_time" => false,
-              "sync_interval"    => 5,
-              "start_at_boot"    => true,
-              "start_in_chroot"  => false,
-              "ntp_policy"       => "auto",
-              "peers"            => [{ "type"    => "server",
-                                       "address" => "ntp.local",
-                                       "options" => " iburst",
-                                       "comment" => "# key (6) for accessing server variables\n" }],
-              "restricts"        => []
-            }
+  ntp_cfg = {
+	  "ntp_sync"=>"systemd",
+	  "ntp_policy"=>"auto",
+	  "ntp_servers"=>[
+		  {"address"=>"0.suse.pool.ntp.org", "iburst"=>true, "offline"=>false},
+		  {"address"=>"1.suse.pool.ntp.org", "iburst"=>true, "offline"=>false},
+		  {"address"=>"2.suse.pool.ntp.org", "iburst"=>true, "offline"=>false},
+		  {"address"=>"3.suse.pool.ntp.org", "iburst"=>true, "offline"=>false}]
+  }
   config.ntp.import(
     config:       ntp_cfg,
-    used_servers: ['ntp.local']
+    used_servers: ['2.suse.pool.ntp.org']
   )
   config
 end
