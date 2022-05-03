@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May  3 13:58:15 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- softdog missing in Yast while configuring HA for SAP Products
+  (bsc#1199029)
+- 1.0.12
+
+-------------------------------------------------------------------
 Tue Dec  7 15:12:47 UTC 2021 - Peter Varkoly <varkoly@suse.com>
 
 - kmod-compat has broken dependencies (bsc#1186618)
