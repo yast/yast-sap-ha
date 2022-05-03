@@ -60,7 +60,7 @@ BuildRequires:  yast2-ruby-bindings
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
-
+BuildRequires:	ruby-xmlrpc
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0
 Group:          System/YaST
