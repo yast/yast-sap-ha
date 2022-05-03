@@ -42,7 +42,7 @@ Requires:       kmod
 # configuration parser
 Requires:       augeas-lenses
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
-Requires:	ruby-xmlrpc
+Requires:       rubygem(%{rb_default_ruby_abi}:xmlrpc)
 # for pidof
 Requires:       sysvinit-tools
 
@@ -60,7 +60,7 @@ BuildRequires:  yast2-ruby-bindings
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
-BuildRequires:	ruby-xmlrpc
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0
 Group:          System/YaST
