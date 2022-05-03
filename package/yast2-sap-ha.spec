@@ -42,6 +42,7 @@ Requires:       kmod
 # configuration parser
 Requires:       augeas-lenses
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
+Requires:	ruby-xmlrpc
 # for pidof
 Requires:       sysvinit-tools
 
