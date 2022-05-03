@@ -1,12 +1,17 @@
 -------------------------------------------------------------------
 Tue May  3 13:56:48 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
-- kmod-compat has broken dependencies (bsc#1186618)
 - ruby-xmlrpc is not part of stdlib anymore
   Update requirement
 - Adapt ntp tests
 - (bsc#1199029)
   softdog missing in Yast while configuring HA for SAP Products
+- 1.0.12
+
+-------------------------------------------------------------------
+Tue Dec  7 15:12:47 UTC 2021 - Peter Varkoly <varkoly@suse.com>
+
+- kmod-compat has broken dependencies (bsc#1186618)
 - 1.0.11
 
 -------------------------------------------------------------------
