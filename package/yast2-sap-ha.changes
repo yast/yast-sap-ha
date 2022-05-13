@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri May 13 12:09:33 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- system/watchdog.rb searches watchdog modules with .ko extension
+  but we ship .ko.xz  (bsc#1197290)
+- 1.0.13
+
+-------------------------------------------------------------------
 Tue May  3 13:58:15 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - softdog missing in Yast while configuring HA for SAP Products
