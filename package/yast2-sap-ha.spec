@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        1.0.11
+Version:        4.5.0
 Release:        0
 
 BuildArch:      noarch
@@ -44,6 +44,11 @@ Requires:       augeas-lenses
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
 Requires:       sysvinit-tools
+# xmlrpc was removed from stdlib
+%if 0%{?suse_version} >= 1540
+Requires:       rubygem(xmlrpc)
+BuildRequires:  rubygem(xmlrpc)
+%endif
 
 BuildRequires:  augeas-lenses
 BuildRequires:  kmod

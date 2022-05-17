@@ -1,8 +1,14 @@
 -------------------------------------------------------------------
-Tue May  3 13:56:48 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Tue May 17 11:24:23 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - ruby-xmlrpc is not part of stdlib anymore
   Update requirement
+- Adapt version to normal yast2 version
+- 4.5.0
+
+-------------------------------------------------------------------
+Tue May  3 13:56:48 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
 - Adapt ntp tests
 - (bsc#1199029)
   softdog missing in Yast while configuring HA for SAP Products
