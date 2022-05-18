@@ -46,8 +46,8 @@ Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 Requires:       sysvinit-tools
 # xmlrpc was removed from stdlib
 %if 0%{?suse_version} >= 1540
-Requires:       rubygem(xmlrpc)
-BuildRequires:  rubygem(xmlrpc)
+Requires:       rubygem(%{rb_default_ruby_abi}:xmlrpc)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
 %endif
 
 BuildRequires:  augeas-lenses
