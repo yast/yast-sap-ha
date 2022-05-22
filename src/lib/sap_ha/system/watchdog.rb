@@ -108,13 +108,12 @@ module SapHA
 
       # Get the list of all watchdog available in the system
       def list_watchdogs
-	wmods = []
+        wmods = []
         unless Dir.exist?(MODULES_PATH)
           log.error "Could not find the kernel modules source directory #{MODULES_PATH}"
           return []
         end
-	wmods = Dir.glob(MODULES_PATH + '/*.ko').map { |path| File.basename(path, '.ko') }
-        wmods += Dir.glob(MODULES_PATH + '/*.ko.xz').map { |path| File.basename(path, '.ko.xz') }
+        wmods = Dir.glob(MODULES_PATH + '/*.ko*').map { |path| File.basename(path).gsub(/\.ko[\.\S+]*$/,'') }
         wmods
       end
 
