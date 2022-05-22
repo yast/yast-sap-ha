@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Sun May 22 18:09:27 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- Introduce a new function refresh_all_proposals.
+  This reads the proposal for the modules watchdog and fence.
+  This is neccessary when reading an earlier configuration.
+- Use .gsub instead of File.basename to find all modules files.
+  Replace tab with spaces.
+- 1.0.14 
+
+-------------------------------------------------------------------
 Fri May 13 12:09:33 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - system/watchdog.rb searches watchdog modules with .ko extension
