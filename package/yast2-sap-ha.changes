@@ -6,6 +6,7 @@ Sun May 22 18:09:27 UTC 2022 - Peter Varkoly <varkoly@suse.com>
   This is neccessary when reading an earlier configuration.
 - Use .gsub instead of File.basename to find all modules files.
   Replace tab with spaces.
+  (bsc#1197290)
 - 1.0.14 
 
 -------------------------------------------------------------------
