@@ -1,10 +1,28 @@
 -------------------------------------------------------------------
-Tue May 17 11:24:23 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Tue Jun  7 07:37:53 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - ruby-xmlrpc is not part of stdlib anymore
   Update requirement
 - Adapt version to normal yast2 version
 - 4.5.0
+
+-------------------------------------------------------------------
+Sun May 22 18:09:27 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- Introduce a new function refresh_all_proposals.
+  This reads the proposal for the modules watchdog and fence.
+  This is neccessary when reading an earlier configuration.
+- Use .gsub instead of File.basename to find all modules files.
+  Replace tab with spaces.
+  (bsc#1197290)
+- 1.0.14
+
+-------------------------------------------------------------------
+Fri May 13 12:09:33 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- system/watchdog.rb searches watchdog modules with .ko extension
+  but we ship .ko.xz  (bsc#1197290)
+- 1.0.13
 
 -------------------------------------------------------------------
 Tue May  3 13:56:48 UTC 2022 - Peter Varkoly <varkoly@suse.com>
