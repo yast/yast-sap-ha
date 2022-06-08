@@ -130,7 +130,11 @@ module SapHA
     def get_configuration_files(product_id = nil, scenario_name = nil)
       log.debug "--- called #{self.class}.#{__callee__}(#{product_id}, #{scenario_name}) ---"
       files = Dir.chdir(@var_path) { Dir.glob('configuration_*.yml') }
-      configs = files.map { |fn| Psych.unsafe_load(read_file(var_file_path(fn))) }
+      begin
+        configs = files.map { |fn| Psych.unsafe_load(read_file(var_file_path(fn))) }
+      rescue NoMethodError
+        configs = files.map { |fn| Psych.load(read_file(var_file_path(fn))) }
+      end
       selected = configs.select do |c|
         (product_id.nil? || c.product_id == product_id) &&
           (scenario_name.nil? || c.scenario_name == scenario_name) &&

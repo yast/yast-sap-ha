@@ -102,7 +102,11 @@ module SapHA
         @logger.info "RPC sapha.import_config ---"
         begin
           SapHA::Helpers.write_var_file('sapha_config.yaml', yaml_string)
-          @config = Psych.unsafe_load(yaml_string)
+	  begin
+            @config = Psych.unsafe_load(yaml_string)
+	  rescue NoMethodError
+            @config = Psych.load(yaml_string)
+	  end
           @server.add_handler('sapha.config', @config)
 
           # for every component, expose sapha.config_{component}.apply method

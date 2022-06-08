@@ -57,7 +57,11 @@ module Yast
       begin 
         if WFM.Args.include?('readconfig')
           ix = WFM.Args.index('readconfig') + 1
-          @config = Psych.unsafe_load(File.read(WFM.Args[ix]))
+	  begin
+            @config = Psych.unsafe_load(File.read(WFM.Args[ix]))
+	  rescue NoMethodError
+            @config = Psych.load(File.read(WFM.Args[ix]))
+	  end
           @config.imported = true
           if WFM.Args.include?('unattended')
             @config.unattended = true
