@@ -26,7 +26,6 @@ require_relative 'base_config'
 
 Yast.import 'NtpClient'
 Yast.import 'Progress'
-Yast.import 'OSRelease'
 
 module SapHA
   module Configuration
@@ -73,11 +72,7 @@ module SapHA
       end
 
       def start_at_boot?
-        if Yast::OSRelease.ReleaseVersion.start_with?('15') # if we are running on SLE 15
-          @config["ntp_sync"] == 'systemd'
-        else # on SLE 12
-          @config["start_at_boot"]
-        end
+        @config["ntp_sync"] == 'systemd'
       end
 
       def apply(role)

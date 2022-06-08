@@ -20,6 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
+require 'psych'
 require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
 require 'sap_ha/wizard/cluster_nodes_page'
@@ -56,7 +57,7 @@ module Yast
       begin 
         if WFM.Args.include?('readconfig')
           ix = WFM.Args.index('readconfig') + 1
-          @config = YAML.load(File.read(WFM.Args[ix]))
+          @config = Psych.unsafe_load(File.read(WFM.Args[ix]))
           @config.imported = true
           if WFM.Args.include?('unattended')
             @config.unattended = true
