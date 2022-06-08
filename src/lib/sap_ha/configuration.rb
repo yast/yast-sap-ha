@@ -233,7 +233,8 @@ module SapHA
     # Load scenarios from the YAML configuration file
     def load_scenarios
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      Psych.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'), aliases: true)
+      #Psych.unsafe_load_file(SapHA::Helpers.data_file_path('scenarios.yaml'), aliases: true)
+      Psych.unsafe_load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
     end
   end # class Configuration
 end # module Yast
