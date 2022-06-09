@@ -20,6 +20,7 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require 'yast'
+require 'psych'
 require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
 require 'sap_ha/wizard/cluster_nodes_page'
@@ -56,7 +57,11 @@ module Yast
       begin 
         if WFM.Args.include?('readconfig')
           ix = WFM.Args.index('readconfig') + 1
-          @config = YAML.load(File.read(WFM.Args[ix]))
+	  begin
+            @config = Psych.unsafe_load(File.read(WFM.Args[ix]))
+	  rescue NoMethodError
+            @config = Psych.load(File.read(WFM.Args[ix]))
+	  end
           @config.imported = true
           if WFM.Args.include?('unattended')
             @config.unattended = true
@@ -309,6 +314,7 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__}:: ret is #{selection.class} ---"
       if selection.is_a?(SapHA::HAConfiguration)
         @config = selection
+        @config.refresh_all_proposals
         return :next
       end
       selection

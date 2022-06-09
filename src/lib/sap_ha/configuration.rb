@@ -21,7 +21,7 @@
 
 require 'yast'
 require 'erb'
-require 'yaml'
+require 'psych'
 
 require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
@@ -84,6 +84,13 @@ module SapHA
       @ntp = Configuration::NTP.new(self)
       @config_sequence = []
       @platform = SapHA::Helpers.platform_check
+    end
+
+    # Funktion to refresh the proposals of some modules. This is neccessary when
+    # loading an old configuration to detect new hardware.
+    def refresh_all_proposals
+        @watchdog.refresh_proposals
+        @fencing.read_system
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -189,7 +196,7 @@ module SapHA
       # TODO: the proposals are also kept in this way of duplicating...
       old_role = @role
       @role = :slave if slave
-      repr = YAML.dump self
+      repr = Psych.dump self
       @role = old_role
       repr
     end
@@ -226,7 +233,11 @@ module SapHA
     # Load scenarios from the YAML configuration file
     def load_scenarios
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      YAML.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
+      begin
+        Psych.unsafe_load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
+      rescue NoMethodError
+        Psych.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
+      end
     end
   end # class Configuration
 end # module Yast

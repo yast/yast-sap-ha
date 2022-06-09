@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        1.0.9
+Version:        4.5.0
 Release:        0
 
 BuildArch:      noarch
@@ -38,15 +38,20 @@ Requires:       yast2-ntp-client
 Requires:       util-linux
 # lsmod, modprobe
 Requires:       SAPHanaSR
-Requires:       kmod-compat
+Requires:       kmod
 # configuration parser
 Requires:       augeas-lenses
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
 Requires:       sysvinit-tools
+# xmlrpc was removed from stdlib
+%if 0%{?suse_version} >= 1540
+Requires:       rubygem(%{rb_default_ruby_abi}:xmlrpc)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
+%endif
 
 BuildRequires:  augeas-lenses
-BuildRequires:  kmod-compat
+BuildRequires:  kmod
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
 BuildRequires:  util-linux
@@ -59,7 +64,6 @@ BuildRequires:  yast2-ruby-bindings
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
-
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0
 Group:          System/YaST

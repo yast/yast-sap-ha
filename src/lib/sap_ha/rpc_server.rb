@@ -26,13 +26,12 @@ require "xmlrpc/server"
 require "sap_ha/configuration"
 require "sap_ha/helpers"
 require "sap_ha/system/shell_commands"
-require 'yaml'
+require 'psych'
 require 'logger'
 require 'socket'
 
 Yast.import 'SuSEFirewall'
 Yast.import 'Service'
-Yast.import 'OSRelease'
 
 module SapHA
   # RPC Server for inter-node communication
@@ -64,7 +63,7 @@ module SapHA
       end
       @port_opened = false
       # Do not alter the firewall settings on SLE-15
-      open_port unless options[:local] or Yast::OSRelease.ReleaseVersion.start_with?('15')
+      #open_port unless options[:local] or Yast::OSRelease.ReleaseVersion.start_with?('15')
       install_handlers(options[:test])
       # Mutex for 'busy'
       @mutex = Mutex.new
@@ -103,7 +102,11 @@ module SapHA
         @logger.info "RPC sapha.import_config ---"
         begin
           SapHA::Helpers.write_var_file('sapha_config.yaml', yaml_string)
-          @config = YAML.load(yaml_string)
+	  begin
+            @config = Psych.unsafe_load(yaml_string)
+	  rescue NoMethodError
+            @config = Psych.load(yaml_string)
+	  end
           @server.add_handler('sapha.config', @config)
 
           # for every component, expose sapha.config_{component}.apply method
