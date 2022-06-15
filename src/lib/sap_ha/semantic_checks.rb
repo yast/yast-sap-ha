@@ -35,7 +35,7 @@ module SapHA
     attr_accessor :silent
     attr_reader :checks_passed
 
-    IDENTIFIER_REGEXP = Regexp.new('^[a-zA-Z0-9][_\-a-zA-Z0-9]{0,28}[a-zA-Z0-9]$')
+    IDENTIFIER_REGEXP = Regexp.new('[\x22-\x29\x2B-\x2E\x30-\x7E]{1,256}')
     SAP_SID_REGEXP = Regexp.new('^[A-Z][A-Z0-9]{2}$')
     RESERVED_SAP_SIDS = %w(ADD ALL AND ANY ASC COM DBA END EPS FOR GID IBM INT KEY LOG MON NIX
                            NOT OFF OMS RAW ROW SAP SET SGA SHG SID SQL SYS TMP UID USR VAR).freeze
