@@ -37,7 +37,6 @@ module SapHA
 
     #Site identifier regexp. That is what SAP allows. All ASCII charactest from 33 until 125
     #expect of '*' and '/'. The identifier can be 256 character long
-    #IDENTIFIER_REGEXP = Regexp.new('^[\x22-\x29\x2B-\x2E\x30-\x7E]{1,256}$')
     #However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
     #The identifier must not be longer than 30 characters and it must be minimum 2 long.
     IDENTIFIER_REGEXP = Regexp.new('^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$')
