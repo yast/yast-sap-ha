@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        1.0.15
+Version:        4.4.0
 Release:        0
 
 BuildArch:      noarch
@@ -27,6 +27,7 @@ Source1:        yast2-sap-ha-rpmlintrc
 
 Requires:       yast2
 Requires:       yast2-ruby-bindings
+Requires:	corosync
 # for opening URLs
 Requires:       xdg-utils
 # for handling the SSH client
