@@ -1,8 +1,7 @@
 -------------------------------------------------------------------
 Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
-- yast2-sap-ha: S:M:24423:276258: csync2 configuration not enabled
-  (bsc#1202112)
+- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
 - 4.4.0
 
 -------------------------------------------------------------------
