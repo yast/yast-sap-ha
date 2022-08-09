@@ -86,6 +86,13 @@ module SapHA
       @platform = SapHA::Helpers.platform_check
     end
 
+    # Funktion to refresh the proposals of some modules. This is neccessary when
+    # loading an old configuration to detect new hardware.
+    def refresh_all_proposals
+        @watchdog.refresh_proposals
+        @fencing.read_system
+    end
+
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
     # @param [String] value product ID
     def set_product_id(value)

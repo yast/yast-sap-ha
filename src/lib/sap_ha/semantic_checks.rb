@@ -35,7 +35,12 @@ module SapHA
     attr_accessor :silent
     attr_reader :checks_passed
 
-    IDENTIFIER_REGEXP = Regexp.new('^[_a-zA-Z][_a-zA-Z0-9]{0,30}$')
+    #Site identifier regexp. That is what SAP allows. All ASCII charactest from 33 until 125
+    #expect of '*' and '/'. The identifier can be 256 character long
+    #IDENTIFIER_REGEXP = Regexp.new('^[\x22-\x29\x2B-\x2E\x30-\x7E]{1,256}$')
+    #However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
+    #The identifier must not be longer than 30 characters and it must be minimum 2 long.
+    IDENTIFIER_REGEXP = Regexp.new('^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$')
     SAP_SID_REGEXP = Regexp.new('^[A-Z][A-Z0-9]{2}$')
     RESERVED_SAP_SIDS = %w(ADD ALL AND ANY ASC COM DBA END EPS FOR GID IBM INT KEY LOG MON NIX
                            NOT OFF OMS RAW ROW SAP SET SGA SHG SID SQL SYS TMP UID USR VAR).freeze
@@ -235,8 +240,7 @@ module SapHA
     def sap_sid(value, message = '', field_name = '')
       message = "A valid SAP System ID consists of three characters, starts with a letter, and "\
       " must not collide with one of the reserved IDs" if message.nil? || message.empty?
-      flag = !SAP_SID_REGEXP.match(value).nil?
-      flag &= !RESERVED_SAP_SIDS.include?(value)
+      flag = !SAP_SID_REGEXP.match(value).nil? && !RESERVED_SAP_SIDS.include?(value)
       report_error(flag, message, field_name, value)
     end
 

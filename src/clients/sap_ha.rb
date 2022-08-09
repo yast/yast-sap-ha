@@ -309,6 +309,7 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__}:: ret is #{selection.class} ---"
       if selection.is_a?(SapHA::HAConfiguration)
         @config = selection
+        @config.refresh_all_proposals
         return :next
       end
       selection
