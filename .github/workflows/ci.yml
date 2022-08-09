@@ -8,7 +8,12 @@ on: [push, pull_request]
 jobs:
   Tests:
     runs-on: ubuntu-latest
-    container: registry.opensuse.org/yast/sle-15/sp3/containers/yast-ruby:latest
+
+    strategy:
+      fail-fast: false
+
+    container:
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
@@ -30,13 +35,20 @@ jobs:
 
     # send the coverage report to coveralls.io
     - name: Coveralls Report
+      # send it only from the TW build to avoid duplicate submits
+      if: ${{ matrix.distro == 'tumbleweed' }}
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
   Package:
     runs-on: ubuntu-latest
-    container: registry.opensuse.org/yast/sle-15/sp3/containers/yast-ruby:latest
+
+    strategy:
+      fail-fast: false
+
+    container:
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
@@ -51,7 +63,12 @@ jobs:
 
   Yardoc:
     runs-on: ubuntu-latest
-    container: registry.opensuse.org/yast/sle-15/sp3/containers/yast-ruby:latest
+
+    strategy:
+      fail-fast: false
+
+    container:
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
@@ -65,7 +82,12 @@ jobs:
   # checks into one job avoids that overhead
   Checks:
     runs-on: ubuntu-latest
-    container: registry.opensuse.org/yast/sle-15/sp3/containers/yast-ruby:latest
+
+    strategy:
+      fail-fast: false
+
+    container:
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
