@@ -37,6 +37,7 @@ require 'sap_ha/wizard/list_selection'
 require 'sap_ha/wizard/rich_text'
 require 'sap_ha/wizard/scenario_selection_page'
 require 'sap_ha/configuration'
+require 'yast2/systemd/service'
 
 # YaST module
 module Yast
@@ -54,6 +55,10 @@ module Yast
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
+      #Take care that corosync is enabled and running
+      corosync = Yast2::Systemd::Service.find('corosync')
+      corosync.enable if !corosync.enabled?
+      corosync.start  if !corosync.running?
       begin 
         if WFM.Args.include?('readconfig')
           ix = WFM.Args.index('readconfig') + 1

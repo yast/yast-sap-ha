@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha: S:M:24423:276258: csync2 configuration not enabled
+  (bsc#1202112)
+- 4.5.2
+
+-------------------------------------------------------------------
 Mon Jun 13 14:32:45 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 sap_ha tool does not allow digits at the beginning of site names
