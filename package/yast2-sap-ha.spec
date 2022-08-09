@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        1.0.9
+Version:        1.0.11
 Release:        0
 
 BuildArch:      noarch
@@ -38,7 +38,7 @@ Requires:       yast2-ntp-client
 Requires:       util-linux
 # lsmod, modprobe
 Requires:       SAPHanaSR
-Requires:       kmod-compat
+Requires:       kmod
 # configuration parser
 Requires:       augeas-lenses
 Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
@@ -46,7 +46,7 @@ Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 Requires:       sysvinit-tools
 
 BuildRequires:  augeas-lenses
-BuildRequires:  kmod-compat
+BuildRequires:  kmod
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
 BuildRequires:  util-linux

@@ -17,7 +17,11 @@
 
 require "yast/rake"
 
+<<<<<<< HEAD
 Yast::Tasks.submit_to :sle15sp4
+=======
+Yast::Tasks.submit_to :sle15sp3
+>>>>>>> upstream/SLE-15-SP3
 require "packaging"
 
 Yast::Tasks.configuration do |conf|
