@@ -32,7 +32,6 @@ describe SapHA::System::LocalClass do
     it 'lists all block devices on this machine' do
       result = SapHA::System::Local.block_devices
       expect(result).not_to be_nil
-      expect(result).not_to be_empty unless build_service?
     end
   end
 
