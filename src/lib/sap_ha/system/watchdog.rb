@@ -108,7 +108,6 @@ module SapHA
 
       # Get the list of all watchdog available in the system
       def list_watchdogs
-        wmods = []
         unless Dir.exist?(MODULES_PATH)
           log.error "Could not find the kernel modules source directory #{MODULES_PATH}"
           return []
