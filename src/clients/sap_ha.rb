@@ -238,23 +238,20 @@ module Yast
       textdomain 'hana-ha'
       #Take care that corosync is enabled and running
       corosync = Yast2::Systemd::Service.find('corosync')
-      if corosync
-￼        corosync.enable
-￼        corosync.start
-￼     else
-￼        Popup.Error("corosync service was not found")
-￼        return
-￼     end
       @sequence["ws_start"] = "debug_run" if @config.debug
       @sequence["product_check"][:hana] = "file_import_check" if @config.imported
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
+￼       corosync.enable
+￼        corosync.start
         if @config.unattended 
           Sequencer.Run(@aliases, @unattended_sequence) 
         else
           Sequencer.Run(@aliases, @sequence)      
         end
+      rescue NoMethodError => e
+        Popup.Error("corosync service was not found")
       rescue StandardError => e
         # FIXME: y2start overrides the return code, therefore exit prematurely without
         # shutting down Yast properly, see bsc#1099871
