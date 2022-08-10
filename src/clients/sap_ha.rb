@@ -56,8 +56,13 @@ module Yast
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
       #Take care that corosync is enabled and running
       corosync = Yast2::Systemd::Service.find('corosync')
-      corosync.enable if !corosync.enabled?
-      corosync.start  if !corosync.running?
+      if corosync
+￼        corosync.enable
+￼        corosync.start
+￼     else
+￼        Popup.Error("corosync service was not found")
+￼        return nil
+￼     end
       begin 
         if WFM.Args.include?('readconfig')
           ix = WFM.Args.index('readconfig') + 1

@@ -86,7 +86,7 @@ module SapHA
       @platform = SapHA::Helpers.platform_check
     end
 
-    # Funktion to refresh the proposals of some modules. This is neccessary when
+    # Function to refresh the proposals of some modules. This is neccessary when
     # loading an old configuration to detect new hardware.
     def refresh_all_proposals
         @watchdog.refresh_proposals
