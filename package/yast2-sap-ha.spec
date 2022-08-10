@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-sap-ha
 #
-# Copyright (c) 2018 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2022 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -12,12 +12,12 @@
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
 
-# Please submit bugfixes or comments via http://bugs.opensuse.org/
+# Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
 
 Name:           yast2-sap-ha
-Version:        1.0.11
+Version:        1.0.15
 Release:        0
 
 BuildArch:      noarch
@@ -61,9 +61,9 @@ BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 
 Summary:        SUSE High Availability Setup for SAP Products
-License:        GPL-2.0
+License:        GPL-2.0-only
 Group:          System/YaST
-Url:            http://www.suse.com
+URL:            http://www.suse.com
 
 %description
 A YaST2 module to enable high availability for SAP HANA and SAP NetWeaver installations.
