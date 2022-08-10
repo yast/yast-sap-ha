@@ -239,7 +239,7 @@ module SapHA
     def sap_sid(value, message = '', field_name = '')
       message = "A valid SAP System ID consists of three characters, starts with a letter, and "\
       " must not collide with one of the reserved IDs" if message.nil? || message.empty?
-      flag = SAP_SID_REGEXP.match?(value) && !RESERVED_SAP_SIDS.include?(value)
+      flag = !SAP_SID_REGEXP.match?(value).nil? && !RESERVED_SAP_SIDS.include?(value)
       report_error(flag, message, field_name, value)
     end
 
