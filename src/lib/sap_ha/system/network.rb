@@ -41,7 +41,7 @@ module SapHA
       # Get local machine's IPv4 addresses excluding the loopback iface
       def ip_addresses
         interfaces = Socket.getifaddrs.select do |iface|
-          !iface.addr.nil? && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
+          iface.addr && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
         end
         interfaces.map { |iface| iface.addr.ip_address }
       end
@@ -49,7 +49,7 @@ module SapHA
       # Get a list of network addresses on the local node's interface
       def network_addresses
         interfaces = Socket.getifaddrs.select do |iface|
-	  !iface.addr.nil? && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
+	  iface.addr && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
         end
         interfaces.map do |iface|
           IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s
@@ -59,7 +59,7 @@ module SapHA
       # Get a list of network addresses along with the CIDR mask
       def network_addresses_cidr
         interfaces = Socket.getifaddrs.select do |iface|
-          !iface.addr.nil? && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
+          iface.addr && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
         end
         interfaces.map do |iface|
           IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s + '/' +
