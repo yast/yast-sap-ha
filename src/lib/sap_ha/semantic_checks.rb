@@ -41,6 +41,7 @@ module SapHA
     #The identifier must not be longer than 30 characters and it must be minimum 2 long.
     IDENTIFIER_REGEXP = Regexp.new('^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$')
     SAP_SID_REGEXP = Regexp.new('^[A-Z][A-Z0-9]{2}$')
+    SAP_INST_NUM_REGEX = Regexp.new('^[0-9]{2}$')
     RESERVED_SAP_SIDS = %w(ADD ALL AND ANY ASC COM DBA END EPS FOR GID IBM INT KEY LOG MON NIX
                            NOT OFF OMS RAW ROW SAP SET SGA SHG SID SQL SYS TMP UID USR VAR).freeze
 
@@ -247,10 +248,10 @@ module SapHA
     # @param value [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def sap_instance_number(value, message, field_name)
-      return report_error(false, 'The SAP Instance number must be a string of exactly two digits',
-        field_name, value) unless value.is_a?(::String) && value.length == 2
-      integer_in_range(value, 0, 99, message, field_name)
+    def sap_instance_number(value, message = '', field_name = 'Instant Number')
+      message = "The SAP Instance number must be a string of exactly two digits " if message.nil? || message.empty?
+      flag = SAP_INST_NUM_REGEX.match?(value)
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the provided value is a non-empty string

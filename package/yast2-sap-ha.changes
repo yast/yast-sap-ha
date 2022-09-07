@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- YaST2 HA Setup for SAP Products - cannot input several instance numbers
+  (bsc#1202979)
+- 1.0.16
+
+-------------------------------------------------------------------
 Mon Jun 13 14:32:45 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 sap_ha tool does not allow digits at the beginning of site names
