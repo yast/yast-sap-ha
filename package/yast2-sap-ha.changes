@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- YaST2 HA Setup for SAP Products - cannot input several instance numbers
+  (bsc#1202979)
+- 4.4.1
+
+-------------------------------------------------------------------
 Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)

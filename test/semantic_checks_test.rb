@@ -138,5 +138,17 @@ describe SapHA::SemanticChecks do
       expect(subject.ipv4_in_network_cidr('192.168.100.14', '192.168.100.0/28')).to eq true
       expect(subject.ipv4_in_network_cidr('192.168.100.16', '192.168.100.0/28')).to eq false
     end
+    it 'reports if valid instance number will be allowed' do
+      subject.silent = true
+      expect(subject.sap_instance_number('01')).to eq true
+      expect(subject.sap_instance_number('10')).to eq true
+      expect(subject.sap_instance_number('99')).to eq true
+    end
+    it 'reports if invalid instance number will be found' do
+      subject.silent = true
+      expect(subject.sap_instance_number('1')).to eq false
+      expect(subject.sap_instance_number('1A')).to eq false
+      expect(subject.sap_instance_number('999')).to eq false
+    end
   end
 end
