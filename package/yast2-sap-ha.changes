@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Sep  8 07:01:42 UTC 2022 - Michal Filka <mfilka@suse.com>
+
+- bsc#1203227
+  - replaced fgrep by grep -F
+- 4.5.3 
+
+-------------------------------------------------------------------
 Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
