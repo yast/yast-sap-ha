@@ -7,6 +7,6 @@ fi
 
 FILEPATH=$1
 NEW_PATH=${FILEPATH}_ruby
-fgrep '[Ruby]' $FILEPATH | fgrep -v 'Yast.cc' > $NEW_PATH
+grep -F '[Ruby]' $FILEPATH | grep -F -v 'Yast.cc' > $NEW_PATH
 
 echo "Cleaned log was written to $NEW_PATH"
