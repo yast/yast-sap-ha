@@ -1,9 +1,16 @@
 -------------------------------------------------------------------
-Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Tue Sep  9 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 HA Setup for SAP Products - cannot input several instance numbers
   (bsc#1202979)
-- 4.5.3
+- 4.5.4
+
+-------------------------------------------------------------------
+Thu Sep  8 07:01:42 UTC 2022 - Michal Filka <mfilka@suse.com>
+
+- bsc#1203227
+  - replaced fgrep by grep -F
+- 4.5.3 
 
 -------------------------------------------------------------------
 Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
