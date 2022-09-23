@@ -241,15 +241,11 @@ module Yast
 
     def main
       textdomain 'hana-ha'
-      #Take care that corosync is enabled and running
-      corosync = Yast2::Systemd::Service.find('corosync')
       @sequence["ws_start"] = "debug_run" if @config.debug
       @sequence["product_check"][:hana] = "file_import_check" if @config.imported
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
-        corosync.enable
-        corosync.start
         if @config.unattended 
           Sequencer.Run(@aliases, @unattended_sequence) 
         else
