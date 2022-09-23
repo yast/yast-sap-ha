@@ -28,6 +28,7 @@ Source1:        yast2-sap-ha-rpmlintrc
 Requires:       yast2
 Requires:       yast2-ruby-bindings
 Requires:       corosync
+Requires:       csync2
 # for opening URLs
 Requires:       xdg-utils
 # for handling the SSH client
@@ -47,6 +48,7 @@ Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 Requires:       sysvinit-tools
 
 BuildRequires:  augeas-lenses
+BuildRequires:  csync2
 BuildRequires:  kmod
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
