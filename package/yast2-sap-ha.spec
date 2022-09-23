@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.4.1
+Version:        4.4.2
 Release:        0
 
 BuildArch:      noarch
@@ -27,7 +27,7 @@ Source1:        yast2-sap-ha-rpmlintrc
 
 Requires:       yast2
 Requires:       yast2-ruby-bindings
-Requires:	corosync
+Requires:       corosync
 # for opening URLs
 Requires:       xdg-utils
 # for handling the SSH client
@@ -95,6 +95,10 @@ install -m 644 data/scenarios.yaml %{buildroot}%{yast_dir}/data/sap_ha/
 install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 # Augeas lens for SAP INI files
 install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
+
+%post
+/usr/bin/systemctl enable csync2.socket
+/usr/bin/systemctl start  csync2.socket
 
 %files
 %defattr(-,root,root)
