@@ -141,6 +141,7 @@ describe SapHA::SemanticChecks do
     it 'reports if valid instance number will be allowed' do
       subject.silent = true
       expect(subject.sap_instance_number('01')).to eq true
+      expect(subject.sap_instance_number('09')).to eq true
       expect(subject.sap_instance_number('10')).to eq true
       expect(subject.sap_instance_number('99')).to eq true
     end
