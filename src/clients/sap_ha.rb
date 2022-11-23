@@ -37,7 +37,6 @@ require 'sap_ha/wizard/list_selection'
 require 'sap_ha/wizard/rich_text'
 require 'sap_ha/wizard/scenario_selection_page'
 require 'sap_ha/configuration'
-require 'yast2/systemd/service'
 
 # YaST module
 module Yast
@@ -250,10 +249,6 @@ module Yast
           Sequencer.Run(@aliases, @unattended_sequence) 
         else
           Sequencer.Run(@aliases, @sequence)      
-        end
-      rescue NoMethodError => e
-        if corosync.nil?
-          Popup.Error("corosync service was not found")
         end
       rescue StandardError => e
         # FIXME: y2start overrides the return code, therefore exit prematurely without
