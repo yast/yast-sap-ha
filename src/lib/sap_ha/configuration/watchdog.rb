@@ -42,6 +42,10 @@ module SapHA
         @proposals = System::Watchdog.list_watchdogs
       end
 
+      def refresh_proposals
+        @proposals = System::Watchdog.list_watchdogs
+      end
+
       def configured?
         !@loaded.empty? || !@configured.empty? || !@to_install.empty?
       end
