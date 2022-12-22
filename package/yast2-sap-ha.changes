@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Dec 22 09:47:04 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- Use ruby base64 to replace uuencode/uudecode
+  (bsc#1206601)
+- 4.4.3
+
+-------------------------------------------------------------------
 Fri Sep 23 15:33:13 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)

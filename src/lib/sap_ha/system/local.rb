@@ -18,12 +18,14 @@
 #
 # Summary: SUSE High Availability Setup for SAP Products: Local system configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
+#          Peter Varkoly <varkoly@suse.com>
 
 require 'yast'
 require 'socket'
 require 'sap_ha/exceptions'
 require 'sap_ha/helpers'
 require 'sap_ha/node_logger'
+require "base64"
 require_relative 'shell_commands'
 
 # In yast2 4.1.3 a reorganization of the YaST systemd library was introduced. When running on an
@@ -131,10 +133,11 @@ module SapHA
       end
 
       def read_csync2_key
-        out, status = exec_outerr_status('uuencode', '-m', CSYNC2_KEY_PATH, '/dev/stdout')
-        return out if status.exitstatus == 0
+        if File.exist?(CSYNC2_KEY_PATH)
+          data = File.read(CSYNC2_KEY_PATH)
+          return Base64.encode64(data)
+        end
         NodeLogger.error "Could not read the csync2 authentication key"
-        NodeLogger.output out
         nil
       end
 
@@ -144,10 +147,12 @@ module SapHA
             "but the key data is empty"
           return false
         end
-        status = pipe(['echo', data], ['uudecode', '-o', CSYNC2_KEY_PATH])
-        NodeLogger.log_status(status,
-          "Wrote the shared csync2 authentication key",
-          "Could not write the shared csync2 authentication key")
+        begin
+          File.write(CSYNC2_KEY_PATH, Base64.decode64(data))
+          NodeLogger.info("Wrote the shared csync2 authentication key")
+        rescue
+          NodeLogger.error("Could not write the shared csync2 authentication key")
+        end
       end
 
       def generate_corosync_key
@@ -159,10 +164,11 @@ module SapHA
       end
 
       def read_corosync_key
-        out, status = exec_outerr_status('uuencode', '-m', COROSYNC_KEY_PATH, '/dev/stdout')
-        return out if status.exitstatus == 0
+        if File.exist?(COROSYNC_KEY_PATH)
+          data = File.read(COROSYNC_KEY_PATH)
+          return Base64.encode64(data)
+        end
         NodeLogger.error "Could not read the corosync authentication key"
-        NodeLogger.output out
         nil
       end
 
@@ -172,10 +178,12 @@ module SapHA
             "but the key data is empty. Key is not written."
           return false
         end
-        status = pipe(['echo', data], ['uudecode', '-o', COROSYNC_KEY_PATH])
-        NodeLogger.log_status(status,
-          "Wrote the shared corosync secure authentication key",
-          "Could not write the shared corosync secure authentication key")
+        begin
+          File.write(COROSYNC_KEY_PATH, Base64.decode64(data))
+          NodeLogger.info("Wrote the shared corosync secure authentication key")
+        rescue
+          NodeLogger.error("Could not write the shared corosync secure authentication key")
+        end
       end
 
       # join an existing cluster
