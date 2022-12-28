@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Dec 22 09:47:04 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- Use ruby base64 to replace uuencode/uudecode
+  (bsc#1206601)
+- 1.0.17
+
+-------------------------------------------------------------------
 Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 HA Setup for SAP Products - cannot input several instance numbers
