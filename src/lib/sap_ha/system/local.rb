@@ -150,8 +150,8 @@ module SapHA
         begin
           File.write(CSYNC2_KEY_PATH, Base64.decode64(data))
           NodeLogger.info("Wrote the shared csync2 authentication key")
-        rescue
-          NodeLogger.error("Could not write the shared csync2 authentication key")
+        rescue => error
+          NodeLogger.error("Could not write the shared csync2 authentication key. Error: #{error}")
         end
       end
 
@@ -181,8 +181,8 @@ module SapHA
         begin
           File.write(COROSYNC_KEY_PATH, Base64.decode64(data))
           NodeLogger.info("Wrote the shared corosync secure authentication key")
-        rescue
-          NodeLogger.error("Could not write the shared corosync secure authentication key")
+        rescue => error
+          NodeLogger.error("Could not write the shared corosync secure authentication key. Error: #{error}")
         end
       end
 
