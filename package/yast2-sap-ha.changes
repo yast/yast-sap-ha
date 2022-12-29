@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Dec 29 10:28:37 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- Clean up Rakefile
+- 1.0.18
+
+-------------------------------------------------------------------
 Thu Dec 22 09:47:04 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - Use ruby base64 to replace uuencode/uudecode
