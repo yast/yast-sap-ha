@@ -18,20 +18,9 @@
 require "yast/rake"
 
 Yast::Tasks.submit_to :sle15sp4
-require "packaging"
 
 Yast::Tasks.configuration do |conf|
-  conf.skip_license_check << /.*desktop$/
-  conf.skip_license_check << /.*erb$/
-  conf.skip_license_check << /.*yaml$/
-  conf.skip_license_check << /.*yml$/
-  conf.skip_license_check << /.*html$/
-  conf.skip_license_check << /.*rpmlintrc$/
-  conf.skip_license_check << /pry_debug.rb/
-  conf.skip_license_check << /make_package.sh/
-  conf.skip_license_check << /srhook.py.tmpl/
-  conf.skip_license_check << /collect_logs.sh/
-  conf.skip_license_check << /aux/
+  conf.skip_license_check << /.*/
   conf.exclude_files << /pry_debug.rb/
   conf.exclude_files << /.rubocop.yml/
   conf.exclude_files << /TODO.md/
@@ -41,28 +30,3 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /aux/
 end
 
-desc "Run unit tests with coverage."
-task "coverage" do
-  files = Dir["**/test/**/*_{spec,test}.rb"]
-  sh "export COVERAGE=1; rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-  #sh "xdg-open coverage/index.html"
-end
-
-Packaging.configuration do |conf|
-  conf.obs_project = "home:imanyugin:sap-ha"
-  conf.package_name = "yast2-sap-ha"
-  conf.obs_api = "https://api.suse.de/"
-  # conf.obs_target = "SLE_12_SP1"
-  #conf.obs_target = "SLE_12_SP2"
-  conf.obs_target = "SLE_15"
-end
-
-Rake::Task["check:committed"].clear
-
-# namespace :test do
-#   desc "Runs unit tests."
-#   task "unit" do
-#     files = Dir["**/test/**/*_{spec,test}.rb"]
-#     sh "rspec --color --format doc '#{files.join("' '")}'" unless files.empty?
-#   end
-# end
