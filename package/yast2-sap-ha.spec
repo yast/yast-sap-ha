@@ -99,8 +99,6 @@ install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
 
 %post
-/usr/bin/systemctl enable csync2.socket
-/usr/bin/systemctl start  csync2.socket
 
 %files
 %defattr(-,root,root)
