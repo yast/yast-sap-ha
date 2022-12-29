@@ -224,10 +224,11 @@ module SapHA
         success = true
         success &= systemd_unit(:enable, :service, 'sbd')
         success &= systemd_unit(:enable, :socket, 'csync2')
+        success &= systemd_unit(:start,  :socket, 'csync2')
         success &= systemd_unit(:enable, :service, 'pacemaker')
-        success &= systemd_unit(:start, :service, 'pacemaker')
+        success &= systemd_unit(:start,  :service, 'pacemaker')
         success &= systemd_unit(:enable, :service, 'hawk')
-        success &= systemd_unit(:start, :service, 'hawk')
+        success &= systemd_unit(:start,  :service, 'hawk')
         NodeLogger.log_status(
           success,
           'Enabled and started cluster-required systemd units',
