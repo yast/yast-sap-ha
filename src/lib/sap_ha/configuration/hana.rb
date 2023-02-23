@@ -55,6 +55,7 @@ module SapHA
 
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
+      include Yast::Logger
 
       def initialize(global_config)
         super

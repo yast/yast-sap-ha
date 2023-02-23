@@ -39,6 +39,7 @@ module SapHA
 
       include Yast::UIShortcuts
       include SapHA::Exceptions
+      include Yast::Logger
 
       CSYNC2_INCLUDED_FILES = [
         '/etc/corosync/corosync.conf',

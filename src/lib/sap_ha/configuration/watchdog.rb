@@ -31,6 +31,7 @@ module SapHA
       attr_reader :to_install, :configured, :proposals, :loaded
 
       include Yast::UIShortcuts
+      include Yast::Logger
 
       def initialize(global_config)
         super
