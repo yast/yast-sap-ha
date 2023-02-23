@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Feb 23 11:19:22 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- L3: yast2-sap-ha error - Could not adjust global.ini for the production system
+  (bsc#1207740)
+- 1.0.16
+
+-------------------------------------------------------------------
 Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 HA Setup for SAP Products - cannot input several instance numbers
