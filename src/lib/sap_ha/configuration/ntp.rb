@@ -33,6 +33,7 @@ module SapHA
     # Cluster members configuration
     class NTP < BaseConfig
       attr_reader :used_servers
+      include Yast::Logger
 
       def initialize(global_config)
         super

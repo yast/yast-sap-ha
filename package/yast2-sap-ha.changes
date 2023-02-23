@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Feb 23 11:21:43 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- L3: yast2-sap-ha error - Could not adjust global.ini for the production system
+  (bsc#1207740)
+- 4.4.3 
+
+-------------------------------------------------------------------
 Thu Dec 29 11:03:00 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - Use ruby base64 to replace uuencode/uudecode
