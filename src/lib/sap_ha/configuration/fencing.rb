@@ -30,6 +30,7 @@ module SapHA
       attr_reader :proposals, :sysconfig
       attr_accessor :sbd_options, :sbd_delayed_start
       include Yast::UIShortcuts
+      include Yast::Logger
 
       def initialize(global_config)
         super
