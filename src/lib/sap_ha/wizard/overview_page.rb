@@ -26,6 +26,7 @@ module SapHA
   module Wizard
     # Configuration Overview page
     class ConfigurationOverviewPage < BaseWizardPage
+      include Yast::Logger
       attr_accessor :model
 
       def initialize(model)
