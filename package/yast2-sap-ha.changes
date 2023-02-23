@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Feb 23 11:20:54 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- L3: yast2-sap-ha error - Could not adjust global.ini for the production system
+  (bsc#1207740)
+- 1.0.19
+
+-------------------------------------------------------------------
 Thu Dec 29 10:28:37 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - Clean up Rakefile
