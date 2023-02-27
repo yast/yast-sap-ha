@@ -3,6 +3,7 @@ Thu Feb 23 11:22:27 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - L3: yast2-sap-ha error - Could not adjust global.ini for the production system
   (bsc#1207740)
+- Add csync2 to buildrequires
 - 4.5.6 
 
 -------------------------------------------------------------------

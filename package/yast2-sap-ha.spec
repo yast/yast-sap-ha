@@ -53,6 +53,7 @@ BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
 %endif
 
 BuildRequires:  augeas-lenses
+BuildRequires:  csync2
 BuildRequires:  kmod
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
