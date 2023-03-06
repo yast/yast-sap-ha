@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.5.6
+Version:        4.5.1
 Release:        0
 
 BuildArch:      noarch
