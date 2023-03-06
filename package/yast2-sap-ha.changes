@@ -1,6 +1,8 @@
 -------------------------------------------------------------------
-Mon Mar  6 12:29:20 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+Mon Mar  6 12:44:10 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
+- Bump version to 4.5.1
+- Remove not used files .solargraph.yml .yardopts
 - bsc#1203227
   - replaced fgrep by grep -F
 - Clean up Rakefile
