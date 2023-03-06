@@ -3,29 +3,28 @@ Thu Feb 23 11:21:43 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - L3: yast2-sap-ha error - Could not adjust global.ini for the production system
   (bsc#1207740)
-- 4.4.3 
+- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
+- 4.4.1
 
 -------------------------------------------------------------------
-Thu Dec 29 11:03:00 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Thu Dec 29 10:28:37 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- Clean up Rakefile
+- 1.0.18
+
+-------------------------------------------------------------------
+Thu Dec 22 09:47:04 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - Use ruby base64 to replace uuencode/uudecode
   (bsc#1206601)
-- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
-  Enable csync2 by installing the package.
-- 4.4.2
+- 1.0.17
 
 -------------------------------------------------------------------
 Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 HA Setup for SAP Products - cannot input several instance numbers
   (bsc#1202979)
-- 4.4.1
-
--------------------------------------------------------------------
-Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
-
-- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
-- 4.4.0
+- 1.0.16
 
 -------------------------------------------------------------------
 Mon Jun 13 14:32:45 UTC 2022 - Peter Varkoly <varkoly@suse.com>
