@@ -102,11 +102,11 @@ module SapHA
         @logger.info "RPC sapha.import_config ---"
         begin
           SapHA::Helpers.write_var_file('sapha_config.yaml', yaml_string)
-	  begin
-            @config = Psych.unsafe_load(yaml_string)
-	  rescue NoMethodError
-            @config = Psych.load(yaml_string)
-	  end
+          begin
+                  @config = Psych.unsafe_load(yaml_string)
+          rescue NoMethodError
+                  @config = Psych.load(yaml_string)
+          end
           @server.add_handler('sapha.config', @config)
 
           # for every component, expose sapha.config_{component}.apply method
@@ -194,10 +194,7 @@ module SapHA
     # open the RPC Server port by manipulating the iptables directly
     def open_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
-      rule_no = get_rule_number
-      return if rule_no
-      _out, rc  = exec_output_status('/usr/sbin/iptables', '-I',
-                                     'INPUT', '1', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT')
+      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--add-port', '8080', '8080/tcp')
       @port_opened = true
       rc.exitstatus == 0
     end
@@ -206,23 +203,12 @@ module SapHA
     def close_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
       return unless @port_opened
-      rule_no = get_rule_number
-      puts "close_port: rule_no=#{rule_no} #{!!rule_no}"
-      return unless rule_no
-      out, rc = exec_output_status('/usr/sbin/iptables', '-D', 'INPUT', rule_no.to_s)
+      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--remove-port', '8080', '8080/tcp')
       puts "close_port: rc=#{rc}, out=#{out}"
       @port_opened = false
       rc.exitstatus == 0
     end
 
-    # get iptables rule number for the RPC Server port
-    def get_rule_number
-      @logger.info "--- #{self.class}.#{__callee__} ---"
-      out = pipeline(['/usr/sbin/iptables', '-L', 'INPUT', '-n', '-v', '--line-number'],
-        ['/usr/bin/awk', '$11 == "tcp" && $12 == "dpt:8080" && $4 == "ACCEPT" { print $1 }'])
-      return nil if out.empty?
-      Integer(out.strip)
-    end
   end
 end
 

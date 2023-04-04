@@ -31,7 +31,7 @@ module SapHA
     class HANAConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = model.hana
         @my_config = model
         @page_validator = @my_model.method(:validate)
