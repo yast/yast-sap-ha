@@ -464,6 +464,7 @@ module SapHA
         end
         cluster_configuration["csync2key"] = @keys[:csync2] if @keys[:csync2]
         cluster_configuration["corokey"] = @keys[:corosync] if @keys[:corosync]
+        log.info "--- generate_cluster_export.#{cluster_configuration} ---"
         if @number_of_rings == 2
           # TODO: rrp mode
           cluster_configuration['rrpmode'] = 'passive'
