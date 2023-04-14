@@ -36,7 +36,6 @@ module Yast
       @server.start
       # when .shutdown is called
       @server.close_port
-      Yast::SuSEFirewall.ActivateConfiguration
     end
   end
 

@@ -364,15 +364,7 @@ module SapHA
         flag &= SapHA::System::Local.start_cluster_services
         flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
-        # Do not touch firewalld settings on SLE-15, yast2-cluster will do it
-        if Yast::OSRelease.ReleaseVersion.start_with?('15')
-          @nlog.info('Please enable the cluster firewalld service manually')
-        else
-          status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
-          flag &= status
-          @nlog.log_status(status, 'Opened necessary communication ports',
-            'Could not open necessary communication ports')
-        end
+        SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
         flag
       end
 
