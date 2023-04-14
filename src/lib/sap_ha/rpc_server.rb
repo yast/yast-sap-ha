@@ -30,7 +30,6 @@ require 'psych'
 require 'logger'
 require 'socket'
 
-Yast.import 'SuSEFirewall'
 Yast.import 'Service'
 
 module SapHA
@@ -62,8 +61,7 @@ module SapHA
         @server = XMLRPC::Server.new(8080, '0.0.0.0', 50, @fh)
       end
       @port_opened = false
-      # Do not alter the firewall settings on SLE-15
-      #open_port unless options[:local] or Yast::OSRelease.ReleaseVersion.start_with?('15')
+      open_port
       install_handlers(options[:test])
       # Mutex for 'busy'
       @mutex = Mutex.new
@@ -194,7 +192,9 @@ module SapHA
     # open the RPC Server port by manipulating the iptables directly
     def open_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
-      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--add-port', '8080', '8080/tcp')
+      out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
+      return if status.exitstatus != 0
+      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--add-port', '8080/tcp')
       @port_opened = true
       rc.exitstatus == 0
     end
@@ -202,8 +202,9 @@ module SapHA
     # close the RPC Server port by manipulating the iptables directly
     def close_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
-      return unless @port_opened
-      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--remove-port', '8080', '8080/tcp')
+      out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
+      return if status.exitstatus != 0
+      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--remove-port', '8080/tcp')
       puts "close_port: rc=#{rc}, out=#{out}"
       @port_opened = false
       rc.exitstatus == 0
@@ -217,6 +218,5 @@ if __FILE__ == $PROGRAM_NAME
   at_exit { server.shutdown }
   server.start
   server.close_port
-  Yast::SuSEFirewall.ActivateConfiguration
   # TODO: what if we demonize the process, by returning 0 at a successful server start?
 end

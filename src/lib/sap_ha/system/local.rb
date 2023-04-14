@@ -38,8 +38,6 @@ rescue LoadError
   Yast.import 'SystemdSocket'
 end
 
-Yast.import 'SuSEFirewallServices'
-Yast.import 'SuSEFirewall'
 Yast.import 'Cluster'
 
 module SapHA
@@ -192,23 +190,23 @@ module SapHA
       end
 
       def open_ports(role, rings, number_of_rings)
-        # 30865 for csync2
-        # 5560 for mgmtd
-        # 7630 for hawk2
-        # 21064 for dlm
-        tcp_ports = ["30865", "5560", "7630", "21064"]
-        udp_ports = rings.map { |_, r| r[:port].to_s }[0...number_of_rings].uniq
-        Yast::SuSEFirewallServices.SetNeededPortsAndProtocols(
-          "service:cluster", "tcp_ports" => tcp_ports, "udp_ports" => udp_ports)
-        Yast::SuSEFirewall.ResetReadFlag
-        Yast::SuSEFirewall.Read
-        Yast::SuSEFirewall.SetServicesForZones(["service:cluster", "service:sshd"], ["EXT"], true)
-        written = Yast::SuSEFirewall.Write
-        if role == :master
-          Yast::SuSEFirewall.ActivateConfiguration
-        else
-          written
-        end
+        #TODO Take care about rings and nubmer_of_rings
+        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
+        return if status.exitstatus != 0
+        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--add-service', 'cluster')
+        NodeLogger.log_status(
+          status.exitstatus == 0,
+          "Open cluster service in firewall",
+          "Could not open cluster service in firewall",
+          out
+        )
+        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--permanent', '--add-service', 'cluster')
+        NodeLogger.log_status(
+          status.exitstatus == 0,
+          "Open cluster service permanent in firewall",
+          "Could not open cluster service permanent in firewall",
+          out
+        )
       end
 
       def change_password(user_name, password)
