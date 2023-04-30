@@ -112,8 +112,7 @@ module SapHA
           log.error "Could not find the kernel modules source directory #{MODULES_PATH}"
           return []
         end
-        wmods = Dir.glob(MODULES_PATH + '/*.ko*').map { |path| File.basename(path).gsub(/\.ko[\.\S+]*$/,'') }
-        wmods
+        Dir.glob(MODULES_PATH + '/*.ko*').map { |path| File.basename(path).gsub(/\.ko[\.\S+]*$/,'') }
       end
 
       # Look into the /etc/modules-load.d and list all of the modules

@@ -19,12 +19,12 @@
 # Summary: SUSE High Availability Setup for SAP Products: Input validators and checks
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'sap_ha/exceptions'
-require 'yast'
-require 'erb'
+require "sap_ha/exceptions"
+require "yast"
+require "erb"
 
-Yast.import 'IP'
-Yast.import 'Hostname'
+Yast.import "IP"
+Yast.import "Hostname"
 
 module SapHA
   # Input validators and checks
@@ -39,9 +39,9 @@ module SapHA
     #expect of '*' and '/'. The identifier can be 256 character long
     #However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
     #The identifier must not be longer than 30 characters and it must be minimum 2 long.
-    IDENTIFIER_REGEXP = Regexp.new('^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$')
-    SAP_SID_REGEXP = Regexp.new('^[A-Z][A-Z0-9]{2}$')
-    SAP_INST_NUM_REGEX = Regexp.new('^[0-9]{2}$')
+    IDENTIFIER_REGEXP = Regexp.new("^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$")
+    SAP_SID_REGEXP = Regexp.new("^[A-Z][A-Z0-9]{2}$")
+    SAP_INST_NUM_REGEX = Regexp.new("^[0-9]{2}$")
     RESERVED_SAP_SIDS = %w(ADD ALL AND ANY ASC COM DBA END EPS FOR GID IBM INT KEY LOG MON NIX
                            NOT OFF OMS RAW ROW SAP SET SGA SHG SID SQL SYS TMP UID USR VAR).freeze
 
@@ -55,7 +55,7 @@ module SapHA
     # Check if the string is a valid IPv4 address
     # @param value [String] IP address
     # @param field_name [String] name of the field in the form
-    def ipv4(value, field_name = '')
+    def ipv4(value, field_name = "")
       flag = Yast::IP.Check4(value)
       report_error(flag, Yast::IP.Valid4, field_name, value)
     end
@@ -63,18 +63,18 @@ module SapHA
     # Check if the string is a valid IPv4 netmask
     # @param value [String] network mask
     # @param field_name [String] name of the field in the form
-    def ipv4_netmask(value, field_name = '')
+    def ipv4_netmask(value, field_name = "")
       flag = Yast::Netmask.Check4(value)
-      report_error(flag, 'A valid network mask consists of 4 octets separated by dots.',
+      report_error(flag, "A valid network mask consists of 4 octets separated by dots.",
         field_name, value)
     end
 
     # Check if the string is a valid IPv4 multicast address
     # @param value [String] IP address
     # @param field_name [String] name of the field in the form
-    def ipv4_multicast(value, field_name = '')
-      flag = Yast::IP.Check4(value) && value.start_with?('239.')
-      msg = 'A valid IPv4 multicast address should belong to the 239.* network.'
+    def ipv4_multicast(value, field_name = "")
+      flag = Yast::IP.Check4(value) && value.start_with?("239.")
+      msg = "A valid IPv4 multicast address should belong to the 239.* network."
       report_error(flag, msg, field_name, value)
     end
 
@@ -82,7 +82,7 @@ module SapHA
     # @param ip [String] IP address
     # @param network [String] IP address
     # @param field_name [String] name of the field in the form
-    def ipv4_in_network_cidr(ip, network, field_name = '')
+    def ipv4_in_network_cidr(ip, network, field_name = "")
       begin
         flag = IPAddr.new(network).include?(ip)
       rescue StandardError
@@ -97,7 +97,7 @@ module SapHA
     # @param network [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def ipsv4_in_network_cidr(ips, network, message = '', field_name = '')
+    def ipsv4_in_network_cidr(ips, network, message = "", field_name = "")
       message = "IP addresses have to belong to the network #{network}" \
         if message.nil? || message.empty?
       begin
@@ -106,13 +106,13 @@ module SapHA
         return
       end
       flag = ips.map { |ip| net.include?(ip) }.all?
-      report_error(flag, message, field_name, '')
+      report_error(flag, message, field_name, "")
     end
 
     # Check if the provided value is a valid hostname
     # @param value [String] hostname to check
     # @param field_name [String] name of the field in the form
-    def hostname(value, field_name = '')
+    def hostname(value, field_name = "")
       flag = Yast::Hostname.Check(value)
       report_error(flag, Yast::Hostname.ValidHost, field_name, value)
     end
@@ -120,7 +120,7 @@ module SapHA
     # Check if the provided value is a valid port number
     # @param value [String] port number to check
     # @param field_name [String] name of the field in the form
-    def port(value, field_name = '')
+    def port(value, field_name = "")
       max_port_number = 65_535
       msg = "The port number must be in between 1 and #{max_port_number}."
       begin
@@ -135,7 +135,7 @@ module SapHA
     # Check if the provided value is a non-negative integer
     # @param value [Integer] value to check
     # @param field_name [String] name of the field in the form
-    def nonneg_integer(value, field_name = '')
+    def nonneg_integer(value, field_name = "")
       flag = true
       begin
         int_ = Integer(value)
@@ -143,7 +143,7 @@ module SapHA
       rescue ArgumentError
         flag = false
       end
-      report_error(flag, 'The value must be a non-negative integer.', field_name, value)
+      report_error(flag, "The value must be a non-negative integer.", field_name, value)
     end
 
     # Check if the element belongs to the set
@@ -151,7 +151,7 @@ module SapHA
     # @param set [Array[Any]]
     # @param message [String] custom error message
     # @param field_name [String] name of the field in the form
-    def element_in_set(element, set, message = '', field_name = '')
+    def element_in_set(element, set, message = "", field_name = "")
       flag = set.include? element
       message = "The value must be in the set [#{set.join(', ')}]" if message.nil? || message.empty?
       report_error(flag, message, field_name, element)
@@ -162,9 +162,9 @@ module SapHA
     # @param set2 [Array]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def intersection_not_empty(set1, set2, message = '', field_name = '')
+    def intersection_not_empty(set1, set2, message = "", field_name = "")
       flag = !(set1 & set2).empty?
-      report_error(flag, message, field_name, '')
+      report_error(flag, message, field_name, "")
     end
 
     # Check if the values match
@@ -172,7 +172,7 @@ module SapHA
     # @param lvalue [Any]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def equal(rvalue, lvalue, message = '', field_name = '')
+    def equal(rvalue, lvalue, message = "", field_name = "")
       eq = rvalue == lvalue
       report_error(eq, message, field_name, nil)
     end
@@ -182,7 +182,7 @@ module SapHA
     # @param lvalue [Any]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def not_equal(rvalue, lvalue, message = '', field_name = '')
+    def not_equal(rvalue, lvalue, message = "", field_name = "")
       neq = rvalue != lvalue
       report_error(neq, message, field_name, nil)
     end
@@ -191,7 +191,7 @@ module SapHA
     # @param set [Array]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def unique(set, message = '', field_name = '')
+    def unique(set, message = "", field_name = "")
       uniq = (set == (set & set))
       report_error(uniq, message, field_name, nil)
     end
@@ -200,7 +200,7 @@ module SapHA
     # @param set [Array]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def not_unique(set, message = '', field_name = '')
+    def not_unique(set, message = "", field_name = "")
       uniq = (set != (set & set))
       report_error(uniq, message, field_name, nil)
     end
@@ -209,9 +209,9 @@ module SapHA
     # @param value [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def identifier(value, message = '', field_name = '')
+    def identifier(value, message = "", field_name = "")
       flag = !IDENTIFIER_REGEXP.match(value).nil?
-      message = 'The value should be a valid identifier' if message.nil? || message.empty?
+      message = "The value should be a valid identifier" if message.nil? || message.empty?
       report_error(flag, message, field_name, value)
     end
 
@@ -221,7 +221,7 @@ module SapHA
     # @param high [Integer]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def integer_in_range(value, low, high, message = '', field_name = '')
+    def integer_in_range(value, low, high, message = "", field_name = "")
       message = "The value must be in the range between #{low} and #{high}." \
         if message.nil? || message.empty?
       begin
@@ -237,7 +237,7 @@ module SapHA
     # @param value [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def sap_sid(value, message = '', field_name = '')
+    def sap_sid(value, message = "", field_name = "")
       message = "A valid SAP System ID consists of three characters, starts with a letter, and "\
       " must not collide with one of the reserved IDs" if message.nil? || message.empty?
       flag = SAP_SID_REGEXP.match?(value) && !RESERVED_SAP_SIDS.include?(value)
@@ -248,8 +248,8 @@ module SapHA
     # @param value [String]
     # @param message [String] custom error message
     # @param field_name [String] name of the related field in the form
-    def sap_instance_number(value, message = '', field_name = 'Instant Number')
-      message = "The SAP Instance number must be a string of exactly two digits " if message.nil? || message.empty?
+    def sap_instance_number(value, message = "", field_name = "Instant Number")
+      message = "The SAP Instance number must be a string of exactly two digits" if message.nil? || message.empty?
       flag = SAP_INST_NUM_REGEX.match?(value)
       report_error(flag, message, field_name, value)
     end
@@ -260,7 +260,7 @@ module SapHA
     # @param field_name [String] name of the related field in the form
     def non_empty_string(value, message, field_name, hide_value = false)
       flag = value.is_a?(::String) && !value.empty?
-      shown_value = hide_value ? '' : value
+      shown_value = hide_value ? "" : value
       report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
     end
 
@@ -340,7 +340,7 @@ module SapHA
     def error_string(field_name, explanation, value = nil)
       field_name = field_name.strip
       explanation = explanation.strip
-      explanation = explanation[0..-2] if explanation.end_with? '.'
+      explanation = explanation[0..-2] if explanation.end_with? "."
       explanation = explanation
       if field_name.empty?
         "Invalid input: #{explanation}"

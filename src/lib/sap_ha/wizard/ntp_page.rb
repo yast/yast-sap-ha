@@ -31,7 +31,7 @@ module SapHA
     class NTPConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = model.ntp
         @page_validator = @my_model.method(:validate)
       end

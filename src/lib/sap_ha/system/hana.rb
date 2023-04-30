@@ -213,68 +213,22 @@ module SapHA
         )
       end
 
+      # Implement adjustments to the non-production system
+      # @param system_id [String] HANA System ID (production)
+      # @param options [Hash] production system options
+      def adjust_non_production_system(system_id, options = {})
+        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
+        adjust_system(system_id, options, 'non-production')
+      end
+
       # Implement adjustments to the production system, so that a non-production
       # HANA could be run along it
       # @param system_id [String] HANA System ID (production)
       # @param options [Hash] production system options
       def adjust_production_system(system_id, options = {})
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
-        # Change the global.ini
-        global_ini_path = HANA_GLOBAL_INI % system_id.upcase
-        unless File.exist?(global_ini_path)
-          NodeLogger.error "Could not adjust global.ini for the production system:"
-          NodeLogger.output "File #{global_ini_path} does not exist"
-          return false
-        end
-        begin
-          global_ini = CFA::GlobalIni.new(global_ini_path)
-          global_ini.load
-          global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
-          global_ini.set_config('system_replication', 'preload_column_tables', options[:preload_column_tables])
-          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'provider', 'SAPHanaSR')
-          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'path', '/usr/share/SAPHanaSR')
-          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'execution_order', '1')
-          global_ini.set_config('trace', 'ha_dr_saphanasr', 'info')
-          global_ini.save
-        rescue StandardError => e
-          NodeLogger.error "Could not adjust global.ini for the production system:"
-          NodeLogger.output e.message
-          return false
-        else
-          NodeLogger.info "Successfully adjusted global.ini for the production system #{system_id}"
-          true
-        end
-      end
-
-      # Implement adjustments to the non-production system
-      # @param system_id [String] HANA System ID (production)
-      # @param options [Hash] production system options
-      def adjust_non_production_system(system_id, options = {})
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
-        # Change the global.ini
-        global_ini_path = HANA_GLOBAL_INI % system_id.upcase
-        unless File.exist?(global_ini_path)
-          NodeLogger.error "Could not adjust global.ini for the non-production system:"
-          NodeLogger.output "File #{global_ini_path} does not exist"
-          return false
-        end
-        begin
-          global_ini = CFA::GlobalIni.new(global_ini_path)
-          global_ini.load
-          global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
-          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'provider', 'SAPHanaSR')
-          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'path', '/usr/share/SAPHanaSR')
-          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'execution_order', '1')
-          global_ini.set_config('trace', 'ha_dr_saphanasr', 'info')
-          global_ini.save
-        rescue StandardError => e
-          NodeLogger.error "Could not adjust global.ini for the non-production system:"
-          NodeLogger.output e.message
-          return false
-        else
-          NodeLogger.info "Successfully adjusted global.ini"\
-          " for the non-production system #{system_id}"
-          true
+        adjust_system(system_id, options, 'production') do |ini|
+          ini.set_config('system_replication', 'preload_column_tables', options[:preload_column_tables])
         end
       end
 
@@ -380,6 +334,40 @@ module SapHA
           end
         end
       end
+
+    private
+
+      # Implement adjustment of the system
+      def adjust_system(system_id, options = {}, system_type = "", &block)
+        # Change the global.ini
+        global_ini_path = HANA_GLOBAL_INI % system_id.upcase
+        unless File.exist?(global_ini_path)
+          NodeLogger.error "Could not adjust global.ini for the #{system_type} system:"
+          NodeLogger.output "File #{global_ini_path} does not exist"
+          return false
+        end
+        begin
+          global_ini = CFA::GlobalIni.new(global_ini_path)
+          global_ini.load
+          global_ini.set_config('memorymanager', 'global_allocation_limit', options[:global_alloc_limit])
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'provider', 'SAPHanaSR')
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'path', '/usr/share/SAPHanaSR')
+          global_ini.set_config('ha_dr_provider_SAPHanaSR', 'execution_order', '1')
+          global_ini.set_config('trace', 'ha_dr_saphanasr', 'info')
+
+          block.call(global_ini) if block_given?
+
+          global_ini.save
+        rescue StandardError => e
+          NodeLogger.error "Could not adjust global.ini for the #{system_type} system:"
+          NodeLogger.output e.message
+          return false
+        else
+          NodeLogger.info "Successfully adjusted global.ini for the #{system_type} system #{system_id}"
+          true
+        end
+      end
+
     end # HanaClass
     Hana = HanaClass.instance
   end # namespace System

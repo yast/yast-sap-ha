@@ -62,7 +62,6 @@ BuildRequires:  yast2-ruby-bindings
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
-
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0-only
 Group:          System/YaST
@@ -99,6 +98,8 @@ install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
 
 %post
+/usr/bin/systemctl enable csync2.socket
+/usr/bin/systemctl start  csync2.socket
 
 %files
 %defattr(-,root,root)

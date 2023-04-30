@@ -31,7 +31,7 @@ module SapHA
     class ClusterNodesConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = @model.cluster
         @page_validator = @my_model.method(:validate_nodes)
         @show_errors = true

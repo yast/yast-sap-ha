@@ -26,7 +26,7 @@ require "xmlrpc/server"
 require "sap_ha/configuration"
 require "sap_ha/helpers"
 require "sap_ha/system/shell_commands"
-require 'yaml'
+require 'psych'
 require 'logger'
 require 'socket'
 
@@ -98,7 +98,11 @@ module SapHA
         @logger.info "RPC sapha.import_config ---"
         begin
           SapHA::Helpers.write_var_file('sapha_config.yaml', yaml_string)
-          @config = YAML.load(yaml_string)
+          begin
+                  @config = Psych.unsafe_load(yaml_string)
+          rescue NoMethodError
+                  @config = Psych.load(yaml_string)
+          end
           @server.add_handler('sapha.config', @config)
 
           # for every component, expose sapha.config_{component}.apply method
@@ -188,9 +192,10 @@ module SapHA
       @logger.info "--- #{self.class}.#{__callee__} ---"
       out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
       return if status.exitstatus != 0
-      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--add-port', '8080/tcp')
+      out, status  = exec_output_status('/usr/bin/firewall-cmd', '--add-port', '8080/tcp')
+      puts "open_port: status=#{status}, out=#{out}"
       @port_opened = true
-      rc.exitstatus == 0
+      status.exitstatus == 0
     end
 
     # close the RPC Server port by manipulating the iptables directly
@@ -198,9 +203,10 @@ module SapHA
       @logger.info "--- #{self.class}.#{__callee__} ---"
       out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
       return if status.exitstatus != 0
-      _out, rc  = exec_output_status('/usr/bin/firewall-cmd', '--remove-port', '8080/tcp')
+      out, status  = exec_output_status('/usr/bin/firewall-cmd', '--remove-port', '8080/tcp')
+      puts "close_port: status=#{status}, out=#{out}"
       @port_opened = false
-      rc.exitstatus == 0
+      status.exitstatus == 0
     end
 
   end
