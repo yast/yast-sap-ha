@@ -49,7 +49,7 @@ module SapHA
       # Get a list of network addresses on the local node's interface
       def network_addresses
         interfaces = Socket.getifaddrs.select do |iface|
-	  iface.addr && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
+        iface.addr && iface.addr.ipv4? && !iface.addr.ipv4_loopback?
         end
         interfaces.map do |iface|
           IPAddr.new(iface.addr.ip_address).mask(iface.netmask.ip_address).to_s

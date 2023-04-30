@@ -32,8 +32,8 @@ module SapHA
     class JoinClusterPage < BaseWizardPage
 
       def initialize
-	  textdomain "hana-ha"
-      end	      
+          textdomain "hana-ha"
+      end
 
       def set_contents
         super

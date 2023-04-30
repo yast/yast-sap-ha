@@ -31,7 +31,7 @@ module SapHA
     class WatchdogConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = model.watchdog
         @page_validator = @my_model.method(:validate)
       end

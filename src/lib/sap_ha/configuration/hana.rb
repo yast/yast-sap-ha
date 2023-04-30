@@ -61,18 +61,19 @@ module SapHA
         super
         log.debug "--- #{self.class}.#{__callee__} ---"
         @screen_name = "HANA Configuration"
-        @system_id = 'NDB'
-        @instance = '00'
+        @system_id = ''
+        @instance = ''
         @virtual_ip = ''
         @virtual_ip_mask = '24'
         @replication_mode = HANA_REPLICATION_MODES.first
         @operation_mode = HANA_OPERATION_MODES.first
         @prefer_takeover = true
         @auto_register = false
-        @site_name_1 = 'WALLDORF'
-        @site_name_2 = 'ROT'
+        @site_name_1 = ''
+        @site_name_2 = ''
         @backup_user = 'system'
         @backup_file = 'backup'
+        #TODO check if backup is already created
         @perform_backup = true
         # Extended configuration for Cost-Optimized scenario
         @additional_instance = false
