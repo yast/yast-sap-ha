@@ -52,6 +52,17 @@ module SapHA
 
       HANA_REPLICATION_MODES = ['sync', 'syncmem', 'async'].freeze
       HANA_OPERATION_MODES = ['delta_datashipping', 'logreplay'].freeze
+      HANA_FW_SERVICES = [
+                  "hana-cockpit",
+                  "hana-database-client",
+                  "hana-data-provisioning",
+                  "hana-http-web-access",
+                  "hana-internal-distributed-communication",
+                  "hana-internal-system-replication",
+                  "hana-lifecycle-manager",
+                  "sap-software-provisioning-manager",
+                  "sap-special-support"
+                ].freeze
 
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
@@ -246,6 +257,7 @@ module SapHA
       def apply(role)
         return false unless configured?
         @nlog.info('Appying HANA Configuration')
+        config_firewall(@instance)
         if role == :master
           SapHA::System::Hana.hdb_start(@system_id)
           if @perform_backup
@@ -283,7 +295,7 @@ module SapHA
                            "Performed resource cleanup for #{rsc}",
                            "Could not clean up #{rsc}")
         end
-      end  
+      end
 
       def configure_crm
         # TODO: move this to SapHA::System::Local.configure_crm
@@ -294,6 +306,19 @@ module SapHA
         @nlog.log_status(status.exitstatus == 0,
           'Configured necessary cluster resources for HANA System Replication',
           'Could not configure HANA cluster resources', out)
+      end
+
+      def config_firewall(instance)
+        instances = SCR.Read(path("sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
+        instances << instance
+        SCR.Write(path("sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"),instances)
+        SCR.Write(path("sysconfig.hana-firewall"),nil)
+        status = exec_status("generate-firewalld-services","generate-firewalld-services")
+        status = exec_status("/usr/bin/firewall-cmd","--reload")
+        HANA_FW_SERVICES.each do |service|
+          status = exec_status("/usr/bin/firewall-cmd","--add-service",service)
+          status = exec_status("/usr/bin/firewall-cmd","--permanent","--add-service",service)
+        end
       end
     end
   end
