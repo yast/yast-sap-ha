@@ -234,7 +234,7 @@ module SapHA
 
       # Create a user for monitoring the non-production HANA on the secondary node
       # @param system_id [String] HANA System ID (production)
-      # @param instance_number [#to_s] 
+      # @param instance_number [#to_s]
       def create_monitoring_user(system_id, instance_number)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{instance_number}) ---"
         user_name = "#{system_id.downcase}adm"

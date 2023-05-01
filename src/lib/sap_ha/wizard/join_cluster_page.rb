@@ -33,7 +33,7 @@ module SapHA
 
       def initialize
           textdomain "hana-ha"
-      end   
+      end
 
       def set_contents
         super

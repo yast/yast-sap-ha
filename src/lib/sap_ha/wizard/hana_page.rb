@@ -208,9 +208,9 @@ module SapHA
             InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')
           ),
           two_widget_hbox(
-            @my_model.additional_instance ? 
+            @my_model.additional_instance ?
             PushButton(Id(:production_constraints), Opt(:hstretch),
-              'Production system constraints...') : CheckBox(Id(:create_backup), 
+              'Production system constraints...') : CheckBox(Id(:create_backup),
               Opt(:hstretch, :notify), 'Create initial backup'),
             PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')
           )

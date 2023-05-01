@@ -111,11 +111,11 @@ module SapHA
           VBox(
             Label(Opt(:boldFont), 'SBD Device Configuration'),
             ComboBox(Id(:sbd_combo), Opt(:notify, :hstretch), 'Type:', items),
-            MinSize(55, 11, 
+            MinSize(55, 11,
               SelectionBox(Id(:sbd_ids), Opt(:notify, :immediate), 'Identifiers:', [])),
             TextEntry(Id(:dev_path), Opt(:hstretch), 'Device path:', ''),
             Yast::Wizard.CancelOKButtonBox
-          ) 
+          )
         )
         handle_combo
         loop do

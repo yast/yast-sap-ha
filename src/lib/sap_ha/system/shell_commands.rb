@@ -27,7 +27,7 @@ module SapHA
   module System
     # Shell commands proxy mix-in
     module ShellCommands
-      
+
       include Yast::Logger
 
       class FakeProcessStatus
