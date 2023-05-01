@@ -190,7 +190,7 @@ module SapHA
     # open the RPC Server port by manipulating the iptables directly
     def open_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
-      out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
+      out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--state')
       return if status.exitstatus != 0
       out, status  = exec_output_status('/usr/bin/firewall-cmd', '--add-port', '8080/tcp')
       puts "open_port: status=#{status}, out=#{out}"
@@ -201,7 +201,7 @@ module SapHA
     # close the RPC Server port by manipulating the iptables directly
     def close_port
       @logger.info "--- #{self.class}.#{__callee__} ---"
-      out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
+      out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--state')
       return if status.exitstatus != 0
       out, status  = exec_output_status('/usr/bin/firewall-cmd', '--remove-port', '8080/tcp')
       puts "close_port: status=#{status}, out=#{out}"

@@ -191,7 +191,7 @@ module SapHA
 
       def open_ports(role, rings, number_of_rings)
         #TODO Take care about rings and nubmer_of_rings
-        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--status')
+        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--state')
         return if status.exitstatus != 0
         out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--add-service', 'cluster')
         NodeLogger.log_status(
