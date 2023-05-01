@@ -313,7 +313,7 @@ module SapHA
         instances << instance
         SCR.Write(path("sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
         SCR.Write(path("sysconfig.hana-firewall"), nil)
-        status = exec_status("generate-firewalld-services","generate-firewalld-services")
+        status = exec_status("/usr/sbin/hana-firewall","generate-firewalld-services")
         status = exec_status("/usr/bin/firewall-cmd", "--reload")
         HANA_FW_SERVICES.each do |service|
           status = exec_status("/usr/bin/firewall-cmd", "--add-service", service)
