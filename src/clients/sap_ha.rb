@@ -263,7 +263,7 @@ module Yast
         Wizard.CloseDialog
         if @config.unattended
           if @unattended_error.nil? 
-            success = SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
+            SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
             log.info "Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt"
             # FIXME: yast redirects stdout, therefore the usage of the CommanlineClass is needed to write on the stdout, but as the 
             # the dependent modules we have (cluster, firewall, ntp) demands UI existence, we cannot call the module without creating the UI object. 
