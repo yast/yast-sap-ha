@@ -19,10 +19,6 @@
         <br> Note that the machine you run the wizard on becomes the primary node in the cluster.
     </li>
     <li>
-        There is a firewall configured using the SAP HANA Firewall module in Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and
-        <code>HANA_SYSTEM_REPLICATION</code> services are enabled on <i>all</i> relevant network interfaces.
-    </li>
-    <li>
         The master node SSH public key is authorized for SSH access to the secondary node. This is needed when SSH password access is disabled, which is the default on Microsoft Azure.
     </li>
     <li>
@@ -48,8 +44,5 @@
         <code>hdbnsutil -sr_register --remoteHost=$(secondary_host_name)
             --remoteInstance=$(instance_number) --replicationMode=async 
             --name=$(site_name)</code>.
-    </li>
-    <li>
-        <i>For SUSE Linux Enterprise Server version 15 and later:</i> please ensure that during the HA setup procedure the TCP port <code>8080</code> is open on the secondary node. After the HA setup is complete, please enable the <code>cluster</code> service in <code>firewalld</code> on both nodes.
     </li>
 </ul>

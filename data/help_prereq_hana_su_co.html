@@ -6,9 +6,6 @@
         <br/> Note that the machine you run the wizard on becomes the primary node in the cluster.
     </li>
     <li>
-        There is a firewall configured using the SAP HANA Firewall module in Administrator Settings, and <code>HANA_HIGH_AVAILABILITY</code> and <code>HANA_SYSTEM_REPLICATION</code> services are enabled on <i>all</i> relevant network interfaces.
-    </li>
-    <li>
         You have created one of the following:
         <ul type="square">
             <li>
@@ -28,8 +25,5 @@
     </li>
     <li>
         You've created a HANA Secure User Store key <code>QASSAPDBCTRL</code> for monitoring purposes (please refer to the <i>SUSE SAP HANA SR Cost Optimized Scenario</i> best practice guide, section 4.2.7).
-    </li>
-    <li>
-        <i>For SUSE Linux Enterprise Server version 15 and later:</i> please ensure that during the HA setup procedure the TCP port <code>8080</code> is open on the secondary node. After the HA setup is complete, please enable the <code>cluster</code> service in <code>firewalld</code> on both nodes.
     </li>
 </ul>
