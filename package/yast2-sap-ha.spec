@@ -41,9 +41,9 @@ Requires:       xdg-utils
 # for handling the SSH client
 Requires:       expect
 Requires:       openssh
-# for lsblk
+
+Requires:       HANA-Firewall >= 2.0.3
 Requires:       util-linux
-# lsmod, modprobe
 Requires:       SAPHanaSR
 Requires:       kmod
 # configuration parser

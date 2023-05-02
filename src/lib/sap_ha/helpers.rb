@@ -44,7 +44,7 @@ module SapHA
       textdomain "hana-ha"
       @storage = {}
       if ENV["Y2DIR"] # tests/local run
-        @data_path = "data/"
+        @data_path = "src/data/sap_ha/"
         @var_path = File.join(Dir.tmpdir, "yast-sap-ha-tmp")
         begin
           Dir.mkdir(@var_path)
