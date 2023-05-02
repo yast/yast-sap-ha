@@ -20,10 +20,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 # Authors: Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
+require "yast"
 require "yast/i18n"
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
 
 module SapHA
   module Wizard
@@ -42,30 +42,30 @@ module SapHA
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Communication Layer'),
+          _("Communication Layer"),
           base_layout_with_label(
             'Define communication layer\'s configuration',
             VBox(
               VBox(
                 two_widget_hbox(
-                  ComboBox(Id(:transport_mode), Opt(:notify, :hstretch), 'Transport mode:',
-                    ['Unicast', 'Multicast']),
+                  ComboBox(Id(:transport_mode), Opt(:notify, :hstretch), "Transport mode:",
+                    ["Unicast", "Multicast"]),
                   ComboBox(Id(:number_of_rings), Opt(:notify, :hstretch),
-                    'Number of rings:', ['1', '2'])
+                    "Number of rings:", ["1", "2"])
                 ),
-                InputField(Id(:cluster_name), Opt(:hstretch), _('C&luster name:'), ''),
+                InputField(Id(:cluster_name), Opt(:hstretch), _("C&luster name:"), ""),
                 VBox(
                   MinHeight(4, ReplacePoint(Id(:rp_table), Empty())),
-                  PushButton(Id(:edit_ring), _('Edit selected'))
+                  PushButton(Id(:edit_ring), _("Edit selected"))
                 )
               ),
-              CheckBox(Id(:enable_csync2), Opt(:hstretch), 'Enable c&sync2', false),
+              CheckBox(Id(:enable_csync2), Opt(:hstretch), "Enable c&sync2", false),
               CheckBox(Id(:enable_secauth), Opt(:hstretch),
-                'Enable &corosync secure authentication', false)
-            # PushButton(Id(:join_cluster), 'Join existing cluster'),
+                "Enable &corosync secure authentication", false)
+              # PushButton(Id(:join_cluster), 'Join existing cluster'),
             )
           ),
-          Helpers.load_help('comm_layer'), true, true
+          Helpers.load_help("comm_layer"), true, true
         )
       end
 
@@ -100,8 +100,8 @@ module SapHA
           Id(:ring_definition_table),
           Opt(:keepSorting, :notify, :immediate, :hstretch),
           multicast? ?
-            Header(_('Ring'), _('Address'), _('Port'), _('Multicast Address'))
-            : Header(_('Ring'), _('Address'), _('Port')),
+            Header(_("Ring"), _("Address"), _("Port"), _("Multicast Address"))
+            : Header(_("Ring"), _("Address"), _("Port")),
           []
         )
       end
@@ -117,7 +117,7 @@ module SapHA
           edit_ring
         when :ring_definition_table
           update_model
-          edit_ring if event['EventReason'] == 'Activated'
+          edit_ring if event["EventReason"] == "Activated"
         when :number_of_rings
           update_model
           number = Integer(value(:number_of_rings))
@@ -151,11 +151,11 @@ module SapHA
         base_popup(
           "Configuration for ring #{ring[:id]}",
           @my_model.method(:ring_validator),
-          MinWidth(15, ComboBox(Id(:address), 'IP address:',
+          MinWidth(15, ComboBox(Id(:address), "IP address:",
             [ring[:address]] | @my_model.ring_addresses)),
-          MinWidth(5, InputField(Id(:port), 'Port number:', ring[:port].to_s)),
+          MinWidth(5, InputField(Id(:port), "Port number:", ring[:port].to_s)),
           multicast? ?
-            MinWidth(15, InputField(Id(:mcast), 'Multicast address', ring[:mcast]))
+            MinWidth(15, InputField(Id(:mcast), "Multicast address", ring[:mcast]))
             : Empty()
         )
       end

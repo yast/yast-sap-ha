@@ -21,34 +21,33 @@
 # Authors: Peter Varkoly <varkoly@suse.com>
 
 require "yast/i18n"
-require 'sap_ha/wizard/base_wizard_page'
-require 'sap_ha/system/ssh'
-require 'sap_ha/system/local'
-require 'sap_ha/system/network'
+require "sap_ha/wizard/base_wizard_page"
+require "sap_ha/system/ssh"
+require "sap_ha/system/local"
+require "sap_ha/system/network"
 
 module SapHA
   module Wizard
     # Page for joining an existing cluster
     class JoinClusterPage < BaseWizardPage
-
       def initialize
-          textdomain "hana-ha"
+        textdomain "hana-ha"
       end
 
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Join an Existing Cluster'),
+          _("Join an Existing Cluster"),
           base_layout_with_label(
             _("Please provide the IP address of the existing cluster"),
             VBox(
-              InputField(Id(:ip_address), 'IP Address', ''),
-              ComboBox(Id(:interface), 'Local Network Interface',
+              InputField(Id(:ip_address), "IP Address", ""),
+              ComboBox(Id(:interface), "Local Network Interface",
                 SapHA::System::Network.interfaces),
-              PushButton(Id(:join), 'Join Cluster')
+              PushButton(Id(:join), "Join Cluster")
             )
           ),
-          SapHA::Helpers.load_help('join_cluster'),
+          SapHA::Helpers.load_help("join_cluster"),
           true,
           true
         )

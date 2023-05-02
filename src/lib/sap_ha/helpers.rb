@@ -21,11 +21,11 @@
 # Authors: Peter Varkoly <varkoly@suse.com>
 
 require "yast/i18n"
-require 'erb'
-require 'tmpdir'
-require 'sap_ha/exceptions'
-require 'net/http'
-require 'psych'
+require "erb"
+require "tmpdir"
+require "sap_ha/exceptions"
+require "net/http"
+require "psych"
 
 module SapHA
   # Common routines
@@ -38,14 +38,14 @@ module SapHA
 
     attr_reader :rpc_server_cmd
 
-    FILE_DATE_TIME_FORMAT = '%Y%m%d_%H%M%S'.freeze
+    FILE_DATE_TIME_FORMAT = "%Y%m%d_%H%M%S".freeze
 
     def initialize
       textdomain "hana-ha"
       @storage = {}
-      if ENV['Y2DIR'] # tests/local run
-        @data_path = 'data/'
-        @var_path = File.join(Dir.tmpdir, 'yast-sap-ha-tmp')
+      if ENV["Y2DIR"] # tests/local run
+        @data_path = "data/"
+        @var_path = File.join(Dir.tmpdir, "yast-sap-ha-tmp")
         begin
           Dir.mkdir(@var_path)
         rescue StandardError => e
@@ -53,16 +53,16 @@ module SapHA
         end
         # We get the Y2DIR relative RPC Server location as it is running on dev mode.
         y2dir_path = File.expand_path("../", __FILE__)
-        @rpc_server_cmd = 'systemd-cat /usr/bin/ruby '\
+        @rpc_server_cmd = "systemd-cat /usr/bin/ruby "\
           "#{y2dir_path}/rpc_server.rb"
       else # production
-        @data_path = '/usr/share/YaST2/data/sap_ha'
-        @var_path = '/var/lib/YaST2/sap_ha'
+        @data_path = "/usr/share/YaST2/data/sap_ha"
+        @var_path = "/var/lib/YaST2/sap_ha"
         # /sbin/yast in SLES, /usr/sbin/yast in OpenSuse
         # @rpc_server_cmd = 'yast sap_ha_rpc'
         # TODO: fix it
-        @rpc_server_cmd = 'systemd-cat /usr/bin/ruby '\
-          '/usr/share/YaST2/lib/sap_ha/rpc_server.rb'
+        @rpc_server_cmd = "systemd-cat /usr/bin/ruby "\
+          "/usr/share/YaST2/lib/sap_ha/rpc_server.rb"
       end
     end
 
@@ -71,7 +71,7 @@ module SapHA
       log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
       full_path = data_file_path(basename)
       if !@storage.key? basename
-        template = ERB.new(read_file(full_path), nil, '-')
+        template = ERB.new(read_file(full_path), nil, "-")
         @storage[basename] = template
       end
       begin
@@ -85,12 +85,12 @@ module SapHA
     end
 
     # Load the help file by its name
-    def load_help(basename, platform="")
+    def load_help(basename, platform = "")
       log.debug "--- called #{self.class}.#{__callee__}(#{basename}) ---"
-      if platform == "bare-metal" || platform.to_s.strip.empty?
-        file_name = "help_#{basename}.html"
+      file_name = if platform == "bare-metal" || platform.to_s.strip.empty?
+        "help_#{basename}.html"
       else
-        file_name = "help_#{basename}_#{platform}.html"
+        "help_#{basename}_#{platform}.html"
       end
       if !@storage.key? file_name
         full_path = File.join(@data_path, file_name)
@@ -129,7 +129,7 @@ module SapHA
     # @param scenario_name [String]
     def get_configuration_files(product_id = nil, scenario_name = nil)
       log.debug "--- called #{self.class}.#{__callee__}(#{product_id}, #{scenario_name}) ---"
-      files = Dir.chdir(@var_path) { Dir.glob('configuration_*.yml') }
+      files = Dir.chdir(@var_path) { Dir.glob("configuration_*.yml") }
       begin
         configs = files.map { |fn| Psych.unsafe_load(read_file(var_file_path(fn))) }
       rescue NoMethodError
@@ -146,7 +146,7 @@ module SapHA
     def write_file(path, data)
       log.debug "--- called #{self.class}.#{__callee__}(#{path}, #{data}) ---"
       begin
-        File.open(path, 'wb') do |fh|
+        File.open(path, "wb") do |fh|
           fh.write(data)
         end
       rescue RuntimeError => e
@@ -158,8 +158,8 @@ module SapHA
 
     def open_url(url)
       log.debug "--- called #{self.class}.#{__callee__}(#{url}) ---"
-      require 'yast'
-      Yast.import 'UI'
+      require "yast"
+      Yast.import "UI"
       Yast::UI.BusyCursor
       system("xdg-open #{url}")
       sleep 5
@@ -171,12 +171,12 @@ module SapHA
       return basename if timestamp.nil?
       ext = File.extname(basename)
       name = File.basename(basename, ext)
-      basename = "#{name}_#{Time.now.strftime('%Y%m%d_%H%M%S')}#{ext}"
+      basename = "#{name}_#{Time.now.strftime("%Y%m%d_%H%M%S")}#{ext}"
     end
 
-    def version_comparison(version_target, version_current, cmp = '>=')
+    def version_comparison(version_target, version_current, cmp = ">=")
       log.debug "--- called #{self.class}.#{__callee__}(#{version_target}, #{version_current}, #{cmp}) ---"
-      Gem::Dependency.new('', cmp + version_target).match?('', version_current)
+      Gem::Dependency.new("", cmp + version_target).match?("", version_current)
     rescue StandardError => e
       log.error "HANA version comparison failed: target=#{version_target},"\
       " current=#{version_current}, cmp=#{cmp}."
@@ -207,10 +207,10 @@ module SapHA
         begin
           response = meta_service.request(request)
           case response
-            when Net::HTTPSuccess then
-              return true
-            else
-              return false
+          when Net::HTTPSuccess then
+            return true
+          else
+            return false
           end
         rescue Net::OpenTimeout => e
           log.error("Network timeout checking Azure metadata service: #{e.message}.")
@@ -221,7 +221,7 @@ module SapHA
       end
     end
 
-    private
+  private
 
     # Read file's contents
     def read_file(path)

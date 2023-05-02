@@ -19,14 +19,13 @@
 # Summary: SUSE High Availability Setup for SAP Products: unattended installation
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/exceptions'
-require 'sap_ha/system/ssh'
-require 'sap_ha/node_logger'
-require 'sap_ha/wizard/gui_installation_page'
-require 'sap_ha/configuration'
-
+require "yast"
+require "sap_ha/helpers"
+require "sap_ha/exceptions"
+require "sap_ha/system/ssh"
+require "sap_ha/node_logger"
+require "sap_ha/wizard/gui_installation_page"
+require "sap_ha/configuration"
 
 # YaST module
 module SapHA
@@ -42,28 +41,24 @@ module SapHA
     end
 
     def check_config
-      begin
-        validate_config
-        check_ssh
-        :next
-      rescue UnattendedModeException, ConfigValidationException => e
-        puts e.message
-        log.error e.message
-        NodeLogger.fatal "The imported configuration file did not pass on all checks. Please, review the errors and try again."
-        # Raise the error and let the caller resolve how to present it.
-        raise e
-      end
+      validate_config
+      check_ssh
+      :next
+    rescue UnattendedModeException, ConfigValidationException => e
+      puts e.message
+      log.error e.message
+      NodeLogger.fatal "The imported configuration file did not pass on all checks. Please, review the errors and try again."
+      # Raise the error and let the caller resolve how to present it.
+      raise e
     end
 
     def run
-      begin
-        # Encapsulate the call and pass nil as UI requirement
-        SapHA::SAPHAInstallation.new(@config, nil).run
-        :next
-      end
+      # Encapsulate the call and pass nil as UI requirement
+      SapHA::SAPHAInstallation.new(@config, nil).run
+      :next
     end
 
-    private
+  private
 
     def validate_config
       errors = @config.verbose_validate
@@ -79,7 +74,7 @@ module SapHA
         NodeLogger.fatal "Please fix the errors in the configuration file and try again"
         raise ConfigValidationException, "Errors detected in the configuration"
       end
-      if ! @config.can_install?
+      if !@config.can_install?
         NodeLogger.fatal "The Configuration file is not complete."
         raise ConfigValidationException, "Configuration file is not complete"
       end
@@ -110,8 +105,8 @@ module SapHA
             log.error e.message
             log.error "Could not SSH to host #{h[:hostname]}: password provided in the "\
               "configuration file is incorrect"
-              NodeLogger.fatal "Could not SSH to host #{h[:hostname]}: password provided in the "\
-              "configuration file is incorrect"
+            NodeLogger.fatal "Could not SSH to host #{h[:hostname]}: password provided in the "\
+            "configuration file is incorrect"
             next
           end
         rescue SSHException => e
@@ -121,9 +116,9 @@ module SapHA
         end
       end
 
-      if ! failed_nodes.empty?
+      if !failed_nodes.empty?
         NodeLogger.fatal "Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
-        raise ConfigValidationException,"Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
+        raise ConfigValidationException, "Error while connecting to the following node(s): #{failed_nodes.join(", ")}"
       end
     end
   end

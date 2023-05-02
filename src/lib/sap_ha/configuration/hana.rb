@@ -53,16 +53,16 @@ module SapHA
       HANA_REPLICATION_MODES = ["sync", "syncmem", "async"].freeze
       HANA_OPERATION_MODES = ["delta_datashipping", "logreplay"].freeze
       HANA_FW_SERVICES = [
-                  "hana-cockpit",
-                  "hana-database-client",
-                  "hana-data-provisioning",
-                  "hana-http-web-access",
-                  "hana-internal-distributed-communication",
-                  "hana-internal-system-replication",
-                  "hana-lifecycle-manager",
-                  "sap-software-provisioning-manager",
-                  "sap-special-support"
-                ].freeze
+        "hana-cockpit",
+        "hana-database-client",
+        "hana-data-provisioning",
+        "hana-http-web-access",
+        "hana-internal-distributed-communication",
+        "hana-internal-system-replication",
+        "hana-lifecycle-manager",
+        "sap-software-provisioning-manager",
+        "sap-special-support"
+      ].freeze
 
       include Yast::UIShortcuts
       include SapHA::System::ShellCommands
@@ -84,7 +84,7 @@ module SapHA
         @site_name_2 = ""
         @backup_user = "system"
         @backup_file = "backup"
-        #TODO check if backup is already created
+        # TODO: check if backup is already created
         @perform_backup = true
         # Extended configuration for Cost-Optimized scenario
         @additional_instance = false
@@ -134,8 +134,7 @@ module SapHA
           check.sap_sid(@system_id, nil, "System ID")
           check.element_in_set(@replication_mode, HANA_REPLICATION_MODES,
             "Value should be one of the following: #{HANA_REPLICATION_MODES.join(",")}.",
-            "Replication mode"
-          )
+            "Replication mode")
           if @operation_mode == "logreplay"
             # Logreplay is only available for SPS11+
             version = SapHA::System::Hana.version(@system_id)
@@ -143,7 +142,7 @@ module SapHA
             flag = SapHA::Helpers.version_comparison("1.00.110", version, ">=")
             check.report_error(flag,
               "Operation mode 'logreplay' is only available for HANA SPS11+"\
-              " (detected version #{version || 'Unknown' }).", "Operation mode", @operation_mode)
+              " (detected version #{version || "Unknown"}).", "Operation mode", @operation_mode)
           end
           check.identifier(@site_name_1, nil, "Site name 1")
           check.identifier(@site_name_2, nil, "Site name 2")
@@ -292,8 +291,8 @@ module SapHA
           rsc = "rsc_SAPHana_#{@system_id}_HDB#{@instance}"
           cleanup_status = exec_status("crm", "resource", "cleanup", rsc)
           @nlog.log_status(cleanup_status.exitstatus == 0,
-                           "Performed resource cleanup for #{rsc}",
-                           "Could not clean up #{rsc}")
+            "Performed resource cleanup for #{rsc}",
+            "Could not clean up #{rsc}")
         end
       end
 
@@ -313,7 +312,7 @@ module SapHA
         instances << instance
         SCR.Write(path("sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
         SCR.Write(path("sysconfig.hana-firewall"), nil)
-        status = exec_status("/usr/sbin/hana-firewall","generate-firewalld-services")
+        status = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
         status = exec_status("/usr/bin/firewall-cmd", "--reload")
         HANA_FW_SERVICES.each do |service|
           status = exec_status("/usr/bin/firewall-cmd", "--add-service", service)

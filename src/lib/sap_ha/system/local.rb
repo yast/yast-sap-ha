@@ -20,25 +20,25 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 #          Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
-require 'socket'
-require 'sap_ha/exceptions'
-require 'sap_ha/helpers'
-require 'sap_ha/node_logger'
+require "yast"
+require "socket"
+require "sap_ha/exceptions"
+require "sap_ha/helpers"
+require "sap_ha/node_logger"
 require "base64"
-require_relative 'shell_commands'
+require_relative "shell_commands"
 
 # In yast2 4.1.3 a reorganization of the YaST systemd library was introduced. When running on an
 # older version, just fall back to the old SystemdService module (bsc#1146220).
 begin
-  require 'yast2/systemd/service'
-  require 'yast2/systemd/socket'
+  require "yast2/systemd/service"
+  require "yast2/systemd/socket"
 rescue LoadError
-  Yast.import 'SystemdService'
-  Yast.import 'SystemdSocket'
+  Yast.import "SystemdService"
+  Yast.import "SystemdSocket"
 end
 
-Yast.import 'Cluster'
+Yast.import "Cluster"
 
 module SapHA
   module System
@@ -49,23 +49,23 @@ module SapHA
       include SapHA::Exceptions
       include Yast::Logger
 
-      COROSYNC_KEY_PATH = '/etc/corosync/authkey'.freeze
-      CSYNC2_KEY_PATH = '/etc/csync2/key_hagroup'.freeze
+      COROSYNC_KEY_PATH = "/etc/corosync/authkey".freeze
+      CSYNC2_KEY_PATH = "/etc/csync2/key_hagroup".freeze
 
       # List all block devices on the system
       def block_devices
         devices = {}
-        Dir.glob('/dev/disk/by-*').map do |p|
-          dev_map = Dir.glob(File.join(p, '*')).map { |e| [File.basename(e), e] }.to_h
+        Dir.glob("/dev/disk/by-*").map do |p|
+          dev_map = Dir.glob(File.join(p, "*")).map { |e| [File.basename(e), e] }.to_h
           devices[File.basename(p)] = dev_map
         end
         # if there are no udev-generated IDs, fall-back to /dev/*
-        out, status = exec_outerr_status('lsblk', '-nlp', '-oName', '-e11')
+        out, status = exec_outerr_status("lsblk", "-nlp", "-oName", "-e11")
         if status.exitstatus != 0
           log.error "Failed calling lsblk: #{out}"
         else
           dev_map = out.split("\n").map { |e| [File.basename(e), e] }.to_h
-          devices['by-device'] = dev_map
+          devices["by-device"] = dev_map
         end
         devices
       end
@@ -80,9 +80,9 @@ module SapHA
           raise LocalSystemException, "Unknown action #{action} on systemd #{unit_type}"
         end
         unit = if unit_type == :service
-                 find_service(unit_name)
-               else
-                 find_socket(unit_name)
+          find_service(unit_name)
+        else
+          find_socket(unit_name)
                end
         if unit.nil?
           NodeLogger.error "Could not #{action} #{unit_type} "\
@@ -109,7 +109,7 @@ module SapHA
           "#{h[:ip_ring1]}\t#{h[:host_name]} \# added by yast2-sap-ha"
         end.join("\n")
         begin
-          File.open('/etc/hosts', 'a') { |fh| fh.puts(str) }
+          File.open("/etc/hosts", "a") { |fh| fh.puts(str) }
           success = true
         rescue StandardError => e
           out = e.message
@@ -123,7 +123,7 @@ module SapHA
       end
 
       def generate_csync2_key
-        out, status = exec_outerr_status('/usr/sbin/csync2', '-k', CSYNC2_KEY_PATH)
+        out, status = exec_outerr_status("/usr/sbin/csync2", "-k", CSYNC2_KEY_PATH)
         NodeLogger.log_status(status.exitstatus == 0,
           "Generated the csync2 authentication key",
           "Could not generate the csync2 authentication key",
@@ -154,7 +154,7 @@ module SapHA
       end
 
       def generate_corosync_key
-        out, status = exec_outerr_status('/usr/sbin/corosync-keygen', '-l')
+        out, status = exec_outerr_status("/usr/sbin/corosync-keygen", "-l")
         NodeLogger.log_status(status.exitstatus == 0,
           "Generated the corosync authentication key",
           "Could not generate the corosync authentication key",
@@ -186,21 +186,20 @@ module SapHA
 
       # join an existing cluster
       def join_cluster(_ip_address)
-        raise 'Not implemented'
+        raise "Not implemented"
       end
 
-      def open_ports(role, rings, number_of_rings)
-        #TODO Take care about rings and nubmer_of_rings
-        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--state')
+      def open_cluster_service
+        out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
         return if status.exitstatus != 0
-        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--add-service', 'cluster')
+        out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--add-service", "cluster")
         NodeLogger.log_status(
           status.exitstatus == 0,
           "Open cluster service in firewall",
           "Could not open cluster service in firewall",
           out
         )
-        out, status = exec_outerr_status('/usr/bin/firewall-cmd', '--permanent', '--add-service', 'cluster')
+        out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", "cluster")
         NodeLogger.log_status(
           status.exitstatus == 0,
           "Open cluster service permanent in firewall",
@@ -211,7 +210,7 @@ module SapHA
 
       def change_password(user_name, password)
         cmd_string = "#{user_name}:#{password}"
-        out, status = exec_outerr_status_stdin('chpasswd', cmd_string)
+        out, status = exec_outerr_status_stdin("chpasswd", cmd_string)
         NodeLogger.log_status(status.exitstatus == 0,
           "Changed password for user #{user_name}",
           "Could not change password for user #{user_name}",
@@ -220,23 +219,23 @@ module SapHA
 
       def start_cluster_services
         success = true
-        success &= systemd_unit(:enable, :service, 'sbd')
-        success &= systemd_unit(:enable, :socket, 'csync2')
-        success &= systemd_unit(:start,  :socket, 'csync2')
-        success &= systemd_unit(:enable, :service, 'pacemaker')
-        success &= systemd_unit(:start,  :service, 'pacemaker')
-        success &= systemd_unit(:enable, :service, 'hawk')
-        success &= systemd_unit(:start,  :service, 'hawk')
+        success &= systemd_unit(:enable, :service, "sbd")
+        success &= systemd_unit(:enable, :socket, "csync2")
+        success &= systemd_unit(:start,  :socket, "csync2")
+        success &= systemd_unit(:enable, :service, "pacemaker")
+        success &= systemd_unit(:start,  :service, "pacemaker")
+        success &= systemd_unit(:enable, :service, "hawk")
+        success &= systemd_unit(:start,  :service, "hawk")
         NodeLogger.log_status(
           success,
-          'Enabled and started cluster-required systemd units',
-          'Could not enable and start cluster-required systemd units'
+          "Enabled and started cluster-required systemd units",
+          "Could not enable and start cluster-required systemd units"
         )
       end
 
       def cluster_maintenance(action = :on)
-        mm = action == :on ? 'true' : 'false'
-        cmd = ['crm', 'configure', 'property', "maintenance-mode=#{mm}"]
+        mm = action == :on ? "true" : "false"
+        cmd = ["crm", "configure", "property", "maintenance-mode=#{mm}"]
         out, status = exec_outerr_status(*cmd)
         NodeLogger.log_status(
           status.exitstatus == 0,
@@ -252,20 +251,19 @@ module SapHA
         Yast::Cluster.Read
         log.debug "--- Exporting Cluster settings to yast2-cluster: #{settings}"
         Yast::Cluster.Import(settings)
-         stat = Yast::Cluster.Write
-        NodeLogger.log_status(stat, 'Wrote cluster settings', 'Could not write cluster settings')
+        stat = Yast::Cluster.Write
+        NodeLogger.log_status(stat, "Wrote cluster settings", "Could not write cluster settings")
       end
 
       # Add the SBD stonith resource to the cluster
       def add_stonith_resource
         log.debug "--- called #{self.class}.#{__callee__} ---"
-        out, status = exec_outerr_status('crm', 'configure',
-          'primitive', 'stonith-sbd', 'stonith:external/sbd')
+        out, status = exec_outerr_status("crm", "configure",
+          "primitive", "stonith-sbd", "stonith:external/sbd")
         NodeLogger.log_status(status.exitstatus == 0,
-          'Added a primitive to the cluster: stonith-sbd',
-          'Could not add the stonith-sbd primitive to the cluster',
-          out
-        )
+          "Added a primitive to the cluster: stonith-sbd",
+          "Could not add the stonith-sbd primitive to the cluster",
+          out)
       end
 
       # Initialize the SBD devices
@@ -275,12 +273,11 @@ module SapHA
         flag = true
         devices.each do |device|
           log.warn "Initializing the SBD device on #{device}"
-          status = exec_status('sbd', '-d', device, 'create')
+          status = exec_status("sbd", "-d", device, "create")
           log.warn "SBD initialization on #{device} returned #{status.exitstatus}"
           flag &= NodeLogger.log_status(status.exitstatus == 0,
             "Successfully initialized the SBD device #{device}",
-            "Could not initialize the SBD device #{device}"
-          )
+            "Could not initialize the SBD device #{device}")
         end
         flag
       end
@@ -296,7 +293,6 @@ module SapHA
         socket_api = defined?(Yast2::Systemd::Socket) ? Yast2::Systemd::Socket : Yast::SystemdSocket
         socket_api.find!(name)
       end
-
     end
     Local = LocalClass.instance
   end

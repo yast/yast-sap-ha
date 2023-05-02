@@ -20,10 +20,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 # Authors: Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
+require "yast"
 require "yast/i18n"
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
 
 module SapHA
   module Wizard
@@ -39,24 +39,23 @@ module SapHA
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('NTP Configuration'),
+          _("NTP Configuration"),
           base_layout_with_label(
-            'Configure Network Time Protocol client',
+            "Configure Network Time Protocol client",
             VBox(
-              SelectionBox(Id(:ntp_servers), 'Used servers:', []),
-              PushButton(Id(:ntp_configure), 'Reconfigure'),
+              SelectionBox(Id(:ntp_servers), "Used servers:", []),
+              PushButton(Id(:ntp_configure), "Reconfigure"),
               HBox(
-                Label('Starts at boot:'),
-                Label(Id(:ntp_enabled), '')
+                Label("Starts at boot:"),
+                Label(Id(:ntp_enabled), "")
               )
             )
           ),
-          Helpers.load_help('ntp'),
+          Helpers.load_help("ntp"),
           true,
           true
         )
       end
-
 
       def can_go_next?
         return true if @model.no_validators
@@ -67,12 +66,12 @@ module SapHA
       def handle_user_input(input, event)
         case input
         when :ntp_configure
-          if Yast::WFM.ClientExists('ntp-client')
-            Yast::WFM.CallFunction('ntp-client', [])
+          if Yast::WFM.ClientExists("ntp-client")
+            Yast::WFM.CallFunction("ntp-client", [])
             # NTP Client rewrites the heading
             Yast::Wizard.SetDialogTitle("HA Setup for SAP Products")
           else
-            Yast::Popup.Error('Could not find the yast-ntp-client module!')
+            Yast::Popup.Error("Could not find the yast-ntp-client module!")
             continue
           end
           @my_model.read_configuration

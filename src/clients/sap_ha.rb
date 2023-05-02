@@ -214,7 +214,6 @@ module Yast
           }
         }
 
-
         @aliases = {
           "product_check"         => -> { product_check },
           "file_import_check"    => -> { file_import_check },
@@ -288,23 +287,21 @@ module Yast
         return :unknown
       end
       # TODO: here we should check if the symbol can be handled by th
-        #stat = Yast::Cluster.LoadClusterConfig
-        #Yast::Cluster.load_csync2_confe Sequencer
+      # stat = Yast::Cluster.LoadClusterConfig
+      # Yast::Cluster.load_csync2_confe Sequencer
       @config.product.fetch("id", "abort").downcase.to_sym
     end
 
     def file_import_check
-      begin
-        log.debug "--- called #{self.class}.#{__callee__} ---"
-        SapHA::SAPHAUnattendedInstall.new(@config).check_config
-      rescue StandardError => e
-        if @config.unattended
-          # Will be trated by the caller to collect the log.
-          raise e
-        else
-          # Adjust the WF to show the Summary with the problems.
-          return :unknown
-        end
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      SapHA::SAPHAUnattendedInstall.new(@config).check_config
+    rescue StandardError => e
+      if @config.unattended
+        # Will be trated by the caller to collect the log.
+        raise e
+      else
+        # Adjust the WF to show the Summary with the problems.
+        return :unknown
       end
     end
 

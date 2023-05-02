@@ -19,13 +19,13 @@
 # Summary: SUSE High Availability Setup for SAP Products: Remote SSH invocation
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'fileutils'
-require 'tmpdir'
-require 'sap_ha/helpers'
-require 'sap_ha/exceptions'
-require 'sap_ha/node_logger'
-require_relative 'shell_commands.rb'
+require "yast"
+require "fileutils"
+require "tmpdir"
+require "sap_ha/helpers"
+require "sap_ha/exceptions"
+require "sap_ha/node_logger"
+require_relative "shell_commands.rb"
 
 module SapHA
   module System
@@ -38,8 +38,8 @@ module SapHA
 
       def initialize
         log.debug "--- #{self.class}.#{__callee__} --- "
-        @script_path = Helpers.data_file_path('check_ssh.expect')
-        @ssh_user_dir = File.join(Dir.home, '.ssh')
+        @script_path = Helpers.data_file_path("check_ssh.expect")
+        @ssh_user_dir = File.join(Dir.home, ".ssh")
         reinit_identities
         create_user_identities unless check_user_identities
         authorize_own_keys
@@ -102,9 +102,9 @@ module SapHA
         stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path, "copy-id",
           host, password)
         check_status(stat, host)
-        ssh_dir = File.join(Dir.home, '.ssh')
+        ssh_dir = File.join(Dir.home, ".ssh")
         @user_identities.each do |key|
-          out, stat = exec_outerr_status('scp', key, "#{host}:#{key}")
+          out, stat = exec_outerr_status("scp", key, "#{host}:#{key}")
           if stat.exitstatus == 0
             log.info "Copied SSH key #{key} to host #{host}."
           else
@@ -113,7 +113,7 @@ module SapHA
           end
         end
         @user_pubkeys.each do |key|
-          out, stat = exec_outerr_status('scp', key, "#{host}:#{key}")
+          out, stat = exec_outerr_status("scp", key, "#{host}:#{key}")
           if stat.exitstatus == 0
             log.info "Copied SSH public key #{key} to host #{host}."
           else
@@ -121,8 +121,8 @@ module SapHA
             result = false
           end
         end
-        ak = File.join(ssh_dir, 'authorized_keys')
-        out, stat = exec_outerr_status('scp', ak, "#{host}:#{ak}")
+        ak = File.join(ssh_dir, "authorized_keys")
+        out, stat = exec_outerr_status("scp", ak, "#{host}:#{ak}")
         if stat.exitstatus == 0
           log.info "Copied 'authorized_keys' to host #{host}."
         else
@@ -130,7 +130,7 @@ module SapHA
           result = false
         end
         stat = exec_status_mask_password([5], "/usr/bin/expect", "-f", @script_path,
-                           "authorize", host, password)
+          "authorize", host, password)
         NodeLogger.log_status(result, "Copied SSH keys to node #{host}",
           "Could not copy SSH keys to node #{host}")
       end
@@ -141,13 +141,13 @@ module SapHA
         # Create the .shh directory
         log.info "SSH::copy_keys(#{host}, overwrite=#{overwrite})"
         begin
-          ssh_dir = File.join(Dir.home, '.ssh')
-          Dir.mkdir(ssh_dir, 0700)
+          ssh_dir = File.join(Dir.home, ".ssh")
+          Dir.mkdir(ssh_dir, 0o700)
         rescue Errno::EEXIST
           log.debug "#{ssh_dir} already exists"
         end
         # Create a temporary directory for the keys
-        tmpdir = Dir.mktmpdir('sap-ha-keys-')
+        tmpdir = Dir.mktmpdir("sap-ha-keys-")
         log.debug "Created tmp directory #{tmpdir}"
         log.info "Retrieving SSH keys from node #{host}"
         begin
@@ -168,8 +168,8 @@ module SapHA
           end
           ::FileUtils.mv source_path, target_path
           keys_copied += 1
-          source_pub_key = source_path + '.pub'
-          target_pub_key = target_path + '.pub'
+          source_pub_key = source_path + ".pub"
+          target_pub_key = target_path + ".pub"
           if File.exist? source_pub_key
             ::FileUtils.mv source_pub_key, target_pub_key, force: true
             authorize_key target_pub_key
@@ -196,7 +196,7 @@ module SapHA
       def rpc_server_running?(host)
         log.debug "--- #{self.class}.#{__callee__} --- "
         stat = exec_status("ssh", "-o", "StrictHostKeyChecking=no", "root@#{host}",
-          'ps aux | grep [r]pc_server.rb')
+          "ps aux | grep [r]pc_server.rb")
         stat.exitstatus == 0
       end
 
@@ -212,18 +212,18 @@ module SapHA
         exec_status("ssh", "-o", "StrictHostKeyChecking=no", "-f", "root@#{host}", *cmd)
       end
 
-      private
+    private
 
       def authorize_own_keys
         @user_pubkeys.each { |p| authorize_key p }
       end
 
       def authorize_key(path)
-        auth_keys_path = File.join(@ssh_user_dir, 'authorized_keys')
+        auth_keys_path = File.join(@ssh_user_dir, "authorized_keys")
         if exec_status("grep", "-q", "-s", path, auth_keys_path.to_s).exitstatus != 0
           log.info "Adding key #{path} to #{auth_keys_path}"
           key = File.read(path)
-          File.open(auth_keys_path, mode: 'a') do |fh|
+          File.open(auth_keys_path, mode: "a") do |fh|
             fh << "\n"
             fh << key
           end

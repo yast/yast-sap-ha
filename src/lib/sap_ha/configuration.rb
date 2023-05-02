@@ -19,18 +19,18 @@
 # Summary: SUSE High Availability Setup for SAP Products: Top-level configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'erb'
-require 'psych'
+require "yast"
+require "erb"
+require "psych"
 
-require 'sap_ha/helpers'
-require 'sap_ha/node_logger'
-require 'sap_ha/configuration/cluster'
-require 'sap_ha/configuration/cluster_finalizer'
-require 'sap_ha/configuration/fencing'
-require 'sap_ha/configuration/watchdog'
-require 'sap_ha/configuration/hana'
-require 'sap_ha/configuration/ntp'
+require "sap_ha/helpers"
+require "sap_ha/node_logger"
+require "sap_ha/configuration/cluster"
+require "sap_ha/configuration/cluster_finalizer"
+require "sap_ha/configuration/fencing"
+require "sap_ha/configuration/watchdog"
+require "sap_ha/configuration/hana"
+require "sap_ha/configuration/ntp"
 
 module SapHA
   # Module's configuration
@@ -89,8 +89,8 @@ module SapHA
     # Function to refresh the proposals of some modules. This is neccessary when
     # loading an old configuration to detect new hardware.
     def refresh_all_proposals
-        @watchdog.refresh_proposals
-        @fencing.read_system
+      @watchdog.refresh_proposals
+      @fencing.read_system
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -99,11 +99,11 @@ module SapHA
       log.debug "--- called #{self.class}.#{__callee__}(#{value}) ---"
       @product_id = value
       product = @yaml_configuration.find do |p|
-        p.fetch('id', '') == @product_id
+        p.fetch("id", "") == @product_id
       end
       raise ProductNotFoundException, "Could not find product with ID '#{value}'" unless product
       @product = product.dup
-      @product_name = @product['string_name']
+      @product_name = @product["string_name"]
     end
 
     # Scenario Name setter. Raises an ScenarioNotFoundException if the name was not found
@@ -114,7 +114,7 @@ module SapHA
       raise ProductNotFoundException,
         "Setting scenario name before setting the Product ID" if @product.nil?
       @scenario_name = value
-      @scenario = @product['scenarios'].find { |s| s['name'] == @scenario_name }
+      @scenario = @product["scenarios"].find { |s| s["name"] == @scenario_name }
       unless @scenario
         log.error("Scenario name '#{@scenario_name}' not found in the scenario list")
         raise ScenarioNotFoundException
@@ -124,8 +124,8 @@ module SapHA
 
     def apply_scenario
       log.debug "--- called #{self.class}.#{__callee__}() ---"
-      if @scenario['config_sequence']
-        @config_sequence = @scenario['config_sequence'].map do |el|
+      if @scenario["config_sequence"]
+        @config_sequence = @scenario["config_sequence"].map do |el|
           instv = "@#{el}".to_sym
           unless instance_variable_defined?(instv)
             log.error "Scenario #{@scenario} requires a configuration object"\
@@ -137,25 +137,24 @@ module SapHA
             object:      instance_variable_get(instv), # local configuration object
             screen_name: instance_variable_get(instv).screen_name, # screen name for GUI
             rpc_object:  "sapha.config_#{el}",
-            rpc_method:  "sapha.config_#{el}.apply"
-          }
+            rpc_method:  "sapha.config_#{el}.apply" }
         end
       else
         log.error "Scenario #{@scenario} does not set a configuration sequence."
         raise GUIFatal, "Scenario configuration is incorrect. Please check the logs."
       end
       @cluster.set_fixed_nodes(
-        @scenario.fetch('fixed_number_of_nodes', false),
-        @scenario.fetch('number_of_nodes', 2)
+        @scenario.fetch("fixed_number_of_nodes", false),
+        @scenario.fetch("number_of_nodes", 2)
       )
-      @hana.additional_instance = @scenario['additional_instance'] || false if @hana
+      @hana.additional_instance = @scenario["additional_instance"] || false if @hana
     end
 
     def all_scenarios
       log.debug "--- called #{self.class}.#{__callee__}() ---"
       raise ProductNotFoundException,
         "Getting scenarios list before setting the Product ID" if @product.nil?
-      @product['scenarios'].map { |s| s['name'] }
+      @product["scenarios"].map { |s| s["name"] }
     end
 
     # Generate help string for all scenarios
@@ -163,7 +162,7 @@ module SapHA
       log.debug "--- called #{self.class}.#{__callee__}() ---"
       raise ProductNotFoundException,
         "Getting scenarios help before setting the Product ID" if @product.nil?
-      (@product['scenarios'].map { |s| s['description'] }).join('<br><br>')
+      (@product["scenarios"].map { |s| s["description"] }).join("<br><br>")
     end
 
     # Can the cluster be set up?
@@ -206,14 +205,16 @@ module SapHA
       log.debug "--- called #{self.class}.#{__callee__} ---"
       @timestamp = Time.now
       NodeLogger.info(
-        "Starting setup process on node #{SapHA::NodeLogger.node_name}")
+        "Starting setup process on node #{SapHA::NodeLogger.node_name}"
+      )
       true
     end
 
     def end_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
       NodeLogger.info(
-        "Finished setup process on node #{SapHA::NodeLogger.node_name}")
+        "Finished setup process on node #{SapHA::NodeLogger.node_name}"
+      )
       true
     end
 
@@ -224,19 +225,19 @@ module SapHA
 
     def write_config
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SapHA::Helpers.write_var_file('configuration.yml', dump(false, true),
+      SapHA::Helpers.write_var_file("configuration.yml", dump(false, true),
         timestamp: @timestamp)
     end
 
-    private
+  private
 
     # Load scenarios from the YAML configuration file
     def load_scenarios
       log.debug "--- called #{self.class}.#{__callee__} ---"
       begin
-        Psych.unsafe_load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
+        Psych.unsafe_load_file(SapHA::Helpers.data_file_path("scenarios.yaml"))
       rescue NoMethodError
-        Psych.load_file(SapHA::Helpers.data_file_path('scenarios.yaml'))
+        Psych.load_file(SapHA::Helpers.data_file_path("scenarios.yaml"))
       end
     end
   end # class Configuration

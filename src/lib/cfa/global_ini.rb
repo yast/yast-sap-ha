@@ -91,12 +91,11 @@ module CFA
       end
     end
 
-    private
+  private
 
     # Returns matcher for cfa to find entries with given key
     def key_matcher(key)
       Matcher.new { |k, _v| k == key }
     end
-
   end
 end

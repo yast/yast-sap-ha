@@ -19,19 +19,19 @@
 # Summary: SUSE High Availability Setup for SAP Products
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require_relative '../../../test_helper'
-require 'sap_ha/rpc_server'
-require 'xmlrpc/client'
+require_relative "../../../test_helper"
+require "sap_ha/rpc_server"
+require "xmlrpc/client"
 
 describe SapHA::RPCServer do
   describe "RPC configuration" do
     before(:all) do
-      @server = SapHA::RPCServer.new(local: true, test:true)
+      @server = SapHA::RPCServer.new(local: true, test: true)
       @server_thread = Thread.new do
         @server.start
         @server = nil
       end
-      @client =  XMLRPC::Client.new('127.0.0.1', "/RPC2", 8080)
+      @client = XMLRPC::Client.new("127.0.0.1", "/RPC2", 8080)
     end
 
     after(:all) do
@@ -40,27 +40,27 @@ describe SapHA::RPCServer do
     end
 
     it "exposes required methods" do
-      methods_list = @client.call('system.listMethods')
-      expect(methods_list).to include('sapha.ping', 'sapha.import_config', 'sapha.shutdown')
+      methods_list = @client.call("system.listMethods")
+      expect(methods_list).to include("sapha.ping", "sapha.import_config", "sapha.shutdown")
     end
 
     it "pongs" do
-      ret = @client.call('sapha.ping')
+      ret = @client.call("sapha.ping")
       expect(ret).to eq true
     end
 
     it "imports the config and exposes additional methods" do
       config = prepare_hana_config(nil, transport_mode: :unicast, number_of_rings: 1)
       yaml_config = config.dump(true)
-      ret = @client.call('sapha.import_config', yaml_config)
+      ret = @client.call("sapha.import_config", yaml_config)
       expect(ret).to eq true
-      
-      methods_list = @client.call('system.listMethods')
+
+      methods_list = @client.call("system.listMethods")
 
       # check the configuration sequence
       config_sequence = config.config_sequence
       config_sequence.each do |c|
-        expect(methods_list).to include(c[:rpc_method]), 
+        expect(methods_list).to include(c[:rpc_method]),
           "RPC method #{c[:rpc_method]} is not exposed"
         # sig = @client.call('system.methodSignature', c[:rpc_method])
         # expect(sig).to eq(['role']),
@@ -70,9 +70,9 @@ describe SapHA::RPCServer do
 
     it "shuts down the server" do
       expect(@server).not_to be_nil
-      @client.call('sapha.shutdown')
+      @client.call("sapha.shutdown")
       sleep 3
-      expect{@client.call('sapha.ping')}.to raise_error(Errno::ECONNREFUSED)
+      expect { @client.call("sapha.ping") }.to raise_error(Errno::ECONNREFUSED)
     end
   end
 end
