@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.4.1
+Version:        4.4.2
 Release:        0
 
 BuildArch:      noarch
@@ -86,6 +86,7 @@ rake test:unit
 
 %install
 mkdir -p %{buildroot}%{augeas_dir}
+mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
 
 rake install DESTDIR="%{buildroot}"
 # Augeas lens for SAP INI files

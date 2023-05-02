@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May  2 16:07:02 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha can not configure firewall (bsc#1211027)
+- Rework package sturcture to use the yast2 defaults
+- 4.4.2
+
+-------------------------------------------------------------------
 Thu Feb 23 11:21:43 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - L3: yast2-sap-ha error - Could not adjust global.ini for the production system
