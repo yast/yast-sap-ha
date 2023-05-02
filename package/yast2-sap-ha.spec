@@ -25,17 +25,22 @@ BuildArch:      noarch
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
 
-Requires:       yast2
-Requires:       yast2-ruby-bindings
+Requires:       conntrack-tools
 Requires:       corosync
+Requires:       corosync-qdevice
+Requires:       crmsh
 Requires:       csync2
+Requires:       hawk2
+Requires:       pacemaker
+Requires:       yast2
+Requires:       yast2-cluster
+Requires:       yast2-ruby-bindings
+Requires:       yast2-ntp-client
 # for opening URLs
 Requires:       xdg-utils
 # for handling the SSH client
 Requires:       expect
 Requires:       openssh
-Requires:       yast2-cluster
-Requires:       yast2-ntp-client
 # for lsblk
 Requires:       util-linux
 # lsmod, modprobe
