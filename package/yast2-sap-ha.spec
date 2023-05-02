@@ -33,7 +33,7 @@ Requires:       csync2
 Requires:       hawk2
 Requires:       pacemaker
 Requires:       yast2
-Requires:       yast2-cluster
+Requires:       yast2-cluster >= 4.4.4
 Requires:       yast2-ruby-bindings
 Requires:       yast2-ntp-client
 # for opening URLs
