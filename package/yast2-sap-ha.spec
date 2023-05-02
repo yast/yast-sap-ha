@@ -85,22 +85,11 @@ rake test:unit
 %build
 
 %install
-mkdir -p %{buildroot}%{yast_dir}/data/sap_ha/
-mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
-mkdir -p %{yast_scrconfdir}
 mkdir -p %{buildroot}%{augeas_dir}
 
 rake install DESTDIR="%{buildroot}"
-# wizard help files
-install -m 644 data/*.html %{buildroot}%{yast_dir}/data/sap_ha/
-# ruby templates
-install -m 644 data/*.erb %{buildroot}%{yast_dir}/data/sap_ha/
-# HA scenarios definitions
-install -m 644 data/scenarios.yaml %{buildroot}%{yast_dir}/data/sap_ha/
-# SSH invocation wrapper
-install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
 # Augeas lens for SAP INI files
-install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
+mv %{buildroot}%{yast_dir}/data/sap_ha/sapini.aug %{buildroot}%{augeas_dir}
 
 %post
 /usr/bin/systemctl enable csync2.socket
