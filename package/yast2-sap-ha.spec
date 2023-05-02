@@ -105,6 +105,7 @@ mv %{buildroot}%{yast_dir}/data/sap_ha/sapini.aug %{buildroot}%{augeas_dir}
 %{yast_dir}/data/sap_ha/
 %{yast_vardir}/sap_ha/
 %{yast_scrconfdir}/*.scr
+%{yast_ybindir}
 %{augeas_dir}/sapini.aug
 
 %changelog
