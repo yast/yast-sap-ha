@@ -17,6 +17,7 @@
 # ------------------------------------------------------------------------------
 #
 # Summary: SUSE High Availability Setup for SAP Products: HANA configuration
+# Authors: Peter Varkoly <varkoly@suse.com>
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require "yast"
@@ -256,7 +257,7 @@ module SapHA
       def apply(role)
         return false unless configured?
         @nlog.info("Appying HANA Configuration")
-        config_firewall(@instance)
+        config_firewall(@instance,role)
         if role == :master
           SapHA::System::Hana.hdb_start(@system_id)
           if @perform_backup
@@ -307,13 +308,16 @@ module SapHA
           "Could not configure HANA cluster resources", out)
       end
 
-      def config_firewall(instance)
-        instances = SCR.Read(path("sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
+      def config_firewall(instance,role)
+        instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
         instances << instance
-        SCR.Write(path("sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
-        SCR.Write(path("sysconfig.hana-firewall"), nil)
+        Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
+        Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
         status = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
         status = exec_status("/usr/bin/firewall-cmd", "--reload")
+        if role != :master
+           status = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
+        end
         HANA_FW_SERVICES.each do |service|
           status = exec_status("/usr/bin/firewall-cmd", "--add-service", service)
           status = exec_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", service)
