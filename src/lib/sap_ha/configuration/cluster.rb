@@ -17,6 +17,7 @@
 # ------------------------------------------------------------------------------
 #
 # Summary: SUSE High Availability Setup for SAP Products: Cluster members configuration
+# Authors: Peter Varkoly <varkoly@suse.com>
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
 require "yast"
@@ -35,7 +36,7 @@ module SapHA
     class Cluster < BaseConfig
       attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes, :keys
       attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2, :append_hosts,
-        :host_passwords
+        :host_passwords, :fw_config
 
       include Yast::UIShortcuts
       include SapHA::Exceptions
@@ -78,6 +79,7 @@ module SapHA
         @append_hosts = false
         # host name to root passwd mapping
         @host_passwords = {}
+        @fw_config = "stop"
         init_rings
         init_nodes
         @yaml_exclude << :@host_passwords
