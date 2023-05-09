@@ -39,7 +39,7 @@ module SapHA
         @recreate_table = true
 	fw_config_items = [Item(Id("done"),  _("Firewall is configured"), @my_model.fw_config == "done")]
         fw_config_items << Item(Id("off"),   _("Turn off Firewall."), @my_model.fw_config == "off")
-        fw_config_items << Item(Id("setup"), _("Setup Firewall."), @my_model.fw_config == "setup"))
+        fw_config_items << Item(Id("setup"), _("Setup Firewall."), @my_model.fw_config == "setup")
       end
 
       def set_contents
@@ -47,7 +47,7 @@ module SapHA
         Yast::Wizard.SetContents(
           _("Communication Layer"),
           base_layout_with_label(
-            'Define communication layer\'s configuration',
+            "Define communication layer's configuration",
             VBox(
               VBox(
                 two_widget_hbox(
@@ -62,10 +62,7 @@ module SapHA
                   PushButton(Id(:edit_ring), _("Edit selected"))
                 )
               ),
-              ComboBox(
-	        Id(:fw_config), Opt(:notify, :hstretch), "Firewall configuration", fw_config_items
-
-	      )
+              ComboBox(Id(:fw_config), Opt(:notify, :hstretch), "Firewall configuration", fw_config_items),
               CheckBox(Id(:enable_csync2), Opt(:hstretch), "Enable c&sync2", false),
               CheckBox(Id(:enable_secauth), Opt(:hstretch),
                 "Enable &corosync secure authentication", false)
