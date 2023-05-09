@@ -190,14 +190,14 @@ module SapHA
       end
 
       def handle_firewall(fw_config)
-        case @global_config.cluster.fw_config
+        case fw_config
         when "done"
-          @nlog.info("Firewall is already configured")
+          NodeLogger.info("Firewall is already configured")
         when "off"
-          @nlog.info("Firewall will be turned off")
+          NodeLogger.info("Firewall will be turned off")
 	  systemd_unit(:stop, :service, "firewalld")
         when "setup"
-          @nlog.info("Firewall will be configured for cluster services.")
+          NodeLogger.info("Firewall will be configured for cluster services.")
           out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
           return if status.exitstatus != 0
           out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--add-service", "cluster")

@@ -37,9 +37,6 @@ module SapHA
         @my_model = model.cluster
         @page_validator = @my_model.method(:validate_comm_layer)
         @recreate_table = true
-	fw_config_items = [Item(Id("done"),  _("Firewall is configured"), @my_model.fw_config == "done")]
-        fw_config_items << Item(Id("off"),   _("Turn off Firewall."), @my_model.fw_config == "off")
-        fw_config_items << Item(Id("setup"), _("Setup Firewall."), @my_model.fw_config == "setup")
       end
 
       def set_contents
@@ -157,6 +154,12 @@ module SapHA
             MinWidth(15, InputField(Id(:mcast), "Multicast address", ring[:mcast]))
             : Empty()
         )
+      end
+
+      def fw_config_items
+	[Item(Id("done"),  _("Firewall is configured"), @my_model.fw_config == "done"),
+         Item(Id("off"),   _("Turn off Firewall."), @my_model.fw_config == "off"),
+         Item(Id("setup"), _("Setup Firewall."), @my_model.fw_config == "setup")]
       end
     end
   end
