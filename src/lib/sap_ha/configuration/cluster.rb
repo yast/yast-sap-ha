@@ -352,6 +352,8 @@ module SapHA
         @nlog.info("Applying Cluster Configuration")
         flag = true
         SapHA::System::Local.append_hosts_file(@nodes) if @append_hosts
+	#Handle firewall
+        SapHA::System::Local.handle_firewall(@global_config.cluster.fw_config)
         if role == :master
           @keys[:corosync] = generate_corosync_key if @enable_secauth
           @keys[:csync2] = generate_csync2_key if @enable_csync2
@@ -366,7 +368,6 @@ module SapHA
         flag &= SapHA::System::Local.start_cluster_services
         flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
-        SapHA::System::Local.open_cluster_service
         flag
       end
 

@@ -37,6 +37,9 @@ module SapHA
         @my_model = model.cluster
         @page_validator = @my_model.method(:validate_comm_layer)
         @recreate_table = true
+	fw_config_items = [Item(Id("done"),  _("Firewall is configured"), @my_model.fw_config == "done")]
+        fw_config_items << Item(Id("off"),   _("Turn off Firewall."), @my_model.fw_config == "off")
+        fw_config_items << Item(Id("setup"), _("Setup Firewall."), @my_model.fw_config == "setup"))
       end
 
       def set_contents
@@ -59,10 +62,13 @@ module SapHA
                   PushButton(Id(:edit_ring), _("Edit selected"))
                 )
               ),
+              ComboBox(
+	        Id(:fw_config), Opt(:notify, :hstretch), "Firewall configuration", fw_config_items
+
+	      )
               CheckBox(Id(:enable_csync2), Opt(:hstretch), "Enable c&sync2", false),
               CheckBox(Id(:enable_secauth), Opt(:hstretch),
                 "Enable &corosync secure authentication", false)
-              # PushButton(Id(:join_cluster), 'Join existing cluster'),
             )
           ),
           Helpers.load_help("comm_layer"), true, true
@@ -92,6 +98,7 @@ module SapHA
         @my_model.cluster_name = value(:cluster_name)
         @my_model.enable_secauth = value(:enable_secauth)
         @my_model.enable_csync2 = value(:enable_csync2)
+        @my_model.fw_config = value(:fw_config)
       end
 
       def ring_table_widget
@@ -111,26 +118,21 @@ module SapHA
       end
 
       def handle_user_input(input, event)
+        update_model
         case input
         when :edit_ring
-          update_model
           edit_ring
         when :ring_definition_table
-          update_model
           edit_ring if event["EventReason"] == "Activated"
         when :number_of_rings
-          update_model
           number = Integer(value(:number_of_rings))
           @my_model.number_of_rings = number
           @recreate_table = true
           refresh_view
         when :transport_mode
-          update_model
           @my_model.transport_mode = value(:transport_mode).downcase.to_sym
           @recreate_table = true
           refresh_view
-        when :join_cluster
-          return :join_cluster
         else
           super
         end

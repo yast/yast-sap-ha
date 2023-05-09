@@ -309,18 +309,29 @@ module SapHA
       end
 
       def config_firewall(instance,role)
-        instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
-        instances << instance
-        Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
-        Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
-        status = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
-        status = exec_status("/usr/bin/firewall-cmd", "--reload")
-        if role != :master
-           status = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
-        end
-        HANA_FW_SERVICES.each do |service|
-          status = exec_status("/usr/bin/firewall-cmd", "--add-service", service)
-          status = exec_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", service)
+        case @global_config.cluster.fw_config
+        when "done"
+          @nlog.info("Firewall is already configured")
+        when "off"
+          @nlog.info("Firewall will be turned off")
+          SapHA::System::Local.systemd_unit(:stop, :service, "firewalld")
+        when "setup"
+          @nlog.info("Firewall will be configured for HANA services.")
+          instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
+          instances << instance
+          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
+          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
+          _s = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
+          _s = exec_status("/usr/bin/firewall-cmd", "--reload")
+          if role != :master
+             _s = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
+          end
+          HANA_FW_SERVICES.each do |service|
+            _s = exec_status("/usr/bin/firewall-cmd", "--add-service", service)
+            _s = exec_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", service)
+          end
+        else
+           @nlog.info("Invalide firewall configuration status")
         end
       end
     end

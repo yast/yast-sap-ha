@@ -83,7 +83,7 @@ module SapHA
           find_service(unit_name)
         else
           find_socket(unit_name)
-               end
+        end
         if unit.nil?
           NodeLogger.error "Could not #{action} #{unit_type} "\
           "#{unit_name}: #{unit_type} does not exist"
@@ -189,23 +189,32 @@ module SapHA
         raise "Not implemented"
       end
 
-      def open_cluster_service
-        out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
-        return if status.exitstatus != 0
-        out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--add-service", "cluster")
-        NodeLogger.log_status(
-          status.exitstatus == 0,
-          "Open cluster service in firewall",
-          "Could not open cluster service in firewall",
-          out
-        )
-        out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", "cluster")
-        NodeLogger.log_status(
-          status.exitstatus == 0,
-          "Open cluster service permanent in firewall",
-          "Could not open cluster service permanent in firewall",
-          out
-        )
+      def handle_firewall(fw_config)
+        case @global_config.cluster.fw_config
+        when "done"
+          @nlog.info("Firewall is already configured")
+        when "off"
+          @nlog.info("Firewall will be turned off")
+	  systemd_unit(:stop, :service, "firewalld")
+        when "setup"
+          @nlog.info("Firewall will be configured for cluster services.")
+          out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
+          return if status.exitstatus != 0
+          out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--add-service", "cluster")
+          NodeLogger.log_status(
+            status.exitstatus == 0,
+            "Open cluster service in firewall",
+            "Could not open cluster service in firewall",
+            out
+          )
+          out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", "cluster")
+          NodeLogger.log_status(
+            status.exitstatus == 0,
+            "Open cluster service permanent in firewall",
+            "Could not open cluster service permanent in firewall",
+            out
+          )
+	end
       end
 
       def change_password(user_name, password)
