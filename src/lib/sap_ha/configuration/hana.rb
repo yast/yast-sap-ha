@@ -261,11 +261,11 @@ module SapHA
         if role == :master
           SapHA::System::Hana.hdb_start(@system_id)
           if @perform_backup
-            secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
             SapHA::System::Hana.make_backup(@system_id, @backup_user, @backup_file, @instance)
-            secondary_password = @global_config.cluster.host_passwords[secondary_host_name]
-            SapHA::System::Hana.copy_ssfs_keys(@system_id, secondary_host_name, secondary_password)
           end
+          secondary_password = @global_config.cluster.host_passwords[secondary_host_name]
+          secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+          SapHA::System::Hana.copy_ssfs_keys(@system_id, secondary_host_name, secondary_password)
           SapHA::System::Hana.enable_primary(@system_id, @site_name_1)
           configure_crm
         else # secondary node
