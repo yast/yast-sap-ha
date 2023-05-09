@@ -79,7 +79,7 @@ module SapHA
         @append_hosts = false
         # host name to root passwd mapping
         @host_passwords = {}
-        @fw_config = "stop"
+        @fw_config = "off"
         init_rings
         init_nodes
         @yaml_exclude << :@host_passwords
