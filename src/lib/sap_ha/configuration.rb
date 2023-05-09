@@ -31,6 +31,7 @@ require "sap_ha/configuration/fencing"
 require "sap_ha/configuration/watchdog"
 require "sap_ha/configuration/hana"
 require "sap_ha/configuration/ntp"
+require "sap_ha/system/shell_commands"
 
 module SapHA
   # Module's configuration
@@ -84,6 +85,7 @@ module SapHA
       @ntp = Configuration::NTP.new(self)
       @config_sequence = []
       @platform = SapHA::Helpers.platform_check
+      @fw_state = exec_status("/usr/bin/firewall-cmd","--state")
     end
 
     # Function to refresh the proposals of some modules. This is neccessary when
@@ -204,17 +206,15 @@ module SapHA
     def start_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
       @timestamp = Time.now
-      NodeLogger.info(
-        "Starting setup process on node #{SapHA::NodeLogger.node_name}"
-      )
+      NodeLogger.info( "Starting setup process on node #{SapHA::NodeLogger.node_name}")
       true
     end
 
     def end_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      NodeLogger.info(
-        "Finished setup process on node #{SapHA::NodeLogger.node_name}"
-      )
+      NodeLogger.info( "Finished setup process on node #{SapHA::NodeLogger.node_name}")
+      # Start firewall if this was running by starting the module
+      exec_status("/usr/bin/systemctl","start","firewalld") if @fw_state == 0
       true
     end
 
@@ -225,8 +225,7 @@ module SapHA
 
     def write_config
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SapHA::Helpers.write_var_file("configuration.yml", dump(false, true),
-        timestamp: @timestamp)
+      SapHA::Helpers.write_var_file("configuration.yml", dump(false, true), timestamp: @timestamp)
     end
 
   private
