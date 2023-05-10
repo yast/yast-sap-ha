@@ -281,6 +281,7 @@ module SapHA
       end
 
       def adjust_global_ini(system_id, role, additional_instance)
+	# SAPHanaSR is needed on all nodes
         add_plugin_to_global_ini(system_id, "SAPHANA_SR")
         if additional_instance
           # cost optimized
@@ -296,7 +297,6 @@ module SapHA
 
       def add_plugin_to_global_ini(system_id, plugin)
         user_name = "#{system_id.downcase}adm"
-	# SAPHanaSR is needed on all nodes
         sr_path = SapHA::Helpers.data_file_path("GLOBAL_INI_#{plugin}")
         command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", system_id, sr_path]
         out, status = su_exec_outerr_status(user_name, *command)
