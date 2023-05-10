@@ -46,13 +46,9 @@ Requires:       HANA-Firewall >= 2.0.3
 Requires:       util-linux
 Requires:       SAPHanaSR
 Requires:       kmod
-# configuration parser
-Requires:       augeas-lenses
-Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
 Requires:       sysvinit-tools
 
-BuildRequires:  augeas-lenses
 BuildRequires:  csync2
 BuildRequires:  kmod
 BuildRequires:  sysvinit-tools
@@ -64,7 +60,6 @@ BuildRequires:  yast2-devtools
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-packager
 BuildRequires:  yast2-ruby-bindings
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 Summary:        SUSE High Availability Setup for SAP Products
@@ -73,10 +68,9 @@ Group:          System/YaST
 URL:            http://www.suse.com
 
 %description
-A YaST2 module to enable high availability for SAP HANA and SAP NetWeaver installations.
+A YaST2 module to enable high availability for SAP HANA installations.
 
 %prep
-%define augeas_dir %{_datarootdir}/augeas/lenses/dist
 %setup -n %{name}-%{version}
 
 %check
@@ -85,12 +79,9 @@ rake test:unit
 %build
 
 %install
-mkdir -p %{buildroot}%{augeas_dir}
 mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
 
 rake install DESTDIR="%{buildroot}"
-# Augeas lens for SAP INI files
-mv %{buildroot}%{yast_dir}/data/sap_ha/sapini.aug %{buildroot}%{augeas_dir}
 
 %post
 /usr/bin/systemctl enable csync2.socket
@@ -106,6 +97,5 @@ mv %{buildroot}%{yast_dir}/data/sap_ha/sapini.aug %{buildroot}%{augeas_dir}
 %{yast_vardir}/sap_ha/
 %{yast_scrconfdir}/*.scr
 %{yast_ybindir}
-%{augeas_dir}/sapini.aug
 
 %changelog

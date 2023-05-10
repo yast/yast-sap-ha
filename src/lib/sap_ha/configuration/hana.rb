@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2023 SUSE Linux GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -47,8 +47,6 @@ module SapHA
         :replication_mode,
         :operation_mode,
         :additional_instance,
-        :hook_script,
-        :hook_script_parameters,
         :production_constraints
 
       HANA_REPLICATION_MODES = ["sync", "syncmem", "async"].freeze
@@ -91,22 +89,12 @@ module SapHA
         @additional_instance = false
         @np_system_id = "QAS"
         @np_instance = "10"
-        @hook_script_parameters = {}
         @production_constraints = {}
-        @hook_script = ""
       end
 
       def additional_instance=(value)
         @additional_instance = value
         return unless value
-        @hook_script_parameters = {
-          generated:            false,
-          hook_execution_order: "1",
-          hook_db_user_name:    "SYSTEM",
-          hook_db_password:     "",
-          hook_port_number:     "3" + @np_instance + "15",
-          hook_db_instance:     @np_instance
-        }
         @production_constraints = {
           global_alloc_limit:    65_536.to_s,
           preload_column_tables: "false"
@@ -115,10 +103,6 @@ module SapHA
 
       def np_instance=(value)
         @np_instance = value
-        unless @hook_script_parameters[:generated]
-          @hook_script_parameters[:hook_db_instance] = @np_instance
-          @hook_script_parameters[:hook_port_number] = "3" + @np_instance + "15"
-        end
       end
 
       def configured?
@@ -136,15 +120,6 @@ module SapHA
           check.element_in_set(@replication_mode, HANA_REPLICATION_MODES,
             "Value should be one of the following: #{HANA_REPLICATION_MODES.join(",")}.",
             "Replication mode")
-          if @operation_mode == "logreplay"
-            # Logreplay is only available for SPS11+
-            version = SapHA::System::Hana.version(@system_id)
-            # TODO: remove debug
-            flag = SapHA::Helpers.version_comparison("1.00.110", version, ">=")
-            check.report_error(flag,
-              "Operation mode 'logreplay' is only available for HANA SPS11+"\
-              " (detected version #{version || "Unknown"}).", "Operation mode", @operation_mode)
-          end
           check.identifier(@site_name_1, nil, "Site name 1")
           check.identifier(@site_name_2, nil, "Site name 2")
           check.element_in_set(@prefer_takeover, [true, false],
@@ -168,10 +143,7 @@ module SapHA
               "Instance number")
             check.not_equal(@system_id, @np_system_id, "SAP HANA System IDs should not collide",
               "System ID")
-            hook_script_validation(check, @hook_script_parameters)
             production_constraints_validation(check, @production_constraints)
-            check.non_empty_string(@hook_script, "The failover hook script was not generated.",
-              "", true)
           end
         end
       end
@@ -206,16 +178,6 @@ module SapHA
         end
       end
 
-      def hook_generated?
-        @hook_script_parameters[:generated]
-      end
-
-      def hook_script_parameters=(value)
-        @hook_script_parameters.merge!(value)
-        @hook_script = SapHA::Helpers.render_template("tmpl_srhook.py.erb", binding)
-        @hook_script_parameters[:generated] = true
-      end
-
       # Validator for the backup settings popup
       # @param check [SapHA::SemanticCheck]
       # @param hash [Hash] input fields' contents
@@ -225,15 +187,6 @@ module SapHA
         keys = SapHA::System::Hana.check_secure_store(@system_id).map(&:downcase)
         check.element_in_set(hash[:backup_user].downcase, keys,
           "There is no such HANA user store key detected.", "Secure store key")
-      end
-
-      # Validator for the hook script settings popup
-      # @param check [SapHA::SemanticCheck]
-      # @param hash [Hash] input fields' contents
-      def hook_script_validation(check, hash)
-        check.nonneg_integer(hash[:hook_execution_order], "Hook execution order")
-        check.identifier(hash[:hook_db_user_name], nil, "DB user name")
-        check.port(hash[:hook_port_number], "Port number")
       end
 
       # Validator for the production instance constraints popup
@@ -257,9 +210,8 @@ module SapHA
       def apply(role)
         return false unless configured?
         @nlog.info("Appying HANA Configuration")
-        config_firewall(@instance,role)
+        config_firewall(role)
         if role == :master
-          SapHA::System::Hana.hdb_start(@system_id)
           if @perform_backup
             SapHA::System::Hana.make_backup(@system_id, @backup_user, @backup_file, @instance)
           end
@@ -273,15 +225,10 @@ module SapHA
           primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
           SapHA::System::Hana.enable_secondary(@system_id, @site_name_2,
             primary_host_name, @instance, @replication_mode, @operation_mode)
-          if @additional_instance # cost-optimized scenario
-            SapHA::System::Hana.hdb_stop(@np_system_id)
-            SapHA::System::Hana.adjust_production_system(@system_id,
-              @hook_script_parameters.merge(@production_constraints))
-            # SapHA::System::Hana.adjust_non_production_system(@np_system_id)
-          end
-          SapHA::System::Hana.hdb_start(@system_id)
           cleanup_hana_resources
+          SapHA::System::Hana.hdb_start(@system_id)
         end
+        SapHA::System::Hana.adjust_global_ini(@system_id, role, @additional_instance)
         true
       end
 
@@ -308,7 +255,7 @@ module SapHA
           "Could not configure HANA cluster resources", out)
       end
 
-      def config_firewall(instance,role)
+      def config_firewall(role)
         case @global_config.cluster.fw_config
         when "done"
           @nlog.info("Firewall is already configured")
@@ -318,7 +265,7 @@ module SapHA
         when "setup"
           @nlog.info("Firewall will be configured for HANA services.")
           instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
-          instances << instance
+          instances << @instance
           Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
           Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
           _s = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")

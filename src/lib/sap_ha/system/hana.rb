@@ -25,7 +25,6 @@ require "sap_ha/helpers"
 require "sap_ha/node_logger"
 require "sap_ha/system/ssh"
 require_relative "shell_commands"
-require "cfa/global_ini"
 
 module SapHA
   module System
@@ -35,8 +34,6 @@ module SapHA
       include ShellCommands
       include SapHA::Exceptions
       include Yast::Logger
-
-      HANA_GLOBAL_INI = "/hana/shared/%s/global/hdb/custom/config/global.ini".freeze
 
       # Check if HBD daemon is running
       # @param system_id [String] SAP SID of the HANA instance
@@ -156,20 +153,9 @@ module SapHA
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{site_name},"\
           " #{host_name_primary}, #{instance}, #{rmode}, #{omode}) ---"
         user_name = "#{system_id.downcase}adm"
-        version = version(system_id)
-        # Select an appropriate command-line switch for replication mode
-        # Assume legacy `mode` by default (pre-SPS12)
-        rmode_string = if SapHA::Helpers.version_comparison("1.00.120", version, ">=")
-          "--replicationMode=#{rmode}"
-        else
-          "--mode=#{rmode}"
-                       end
-        omode_string = if SapHA::Helpers.version_comparison("1.00.110", version, ">=")
-          "--operationMode=#{omode}"
-        end
         command = ["hdbnsutil", "-sr_register", "--remoteHost=#{host_name_primary}",
-                   "--remoteInstance=#{instance}", rmode_string, omode_string,
-                   "--name=#{site_name}"].reject(&:nil?)
+                   "--remoteInstance=#{instance}", "--replicationMode=#{rmode}",
+                   "--operationMode=#{omode}", "--name=#{site_name}"].reject(&:nil?)
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(status.exitstatus == 0,
           "Enabled HANA (#{system_id}) System Replication on the secondary host #{site_name}",
@@ -202,25 +188,6 @@ module SapHA
           "Successfully set key #{key_name} in the secure user store on system #{system_id}",
           "Could not set key #{key_name} in the secure user store on system #{system_id}",
           out)
-      end
-
-      # Implement adjustments to the non-production system
-      # @param system_id [String] HANA System ID (production)
-      # @param options [Hash] production system options
-      def adjust_non_production_system(system_id, options = {})
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
-        adjust_system(system_id, options, "non-production")
-      end
-
-      # Implement adjustments to the production system, so that a non-production
-      # HANA could be run along it
-      # @param system_id [String] HANA System ID (production)
-      # @param options [Hash] production system options
-      def adjust_production_system(system_id, options = {})
-        log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{options.inspect}) ---"
-        adjust_system(system_id, options, "production") do |ini|
-          ini.set_config("system_replication", "preload_column_tables", options[:preload_column_tables])
-        end
       end
 
       # Create a user for monitoring the non-production HANA on the secondary node
@@ -285,16 +252,6 @@ module SapHA
       # @param system_id [String] HANA System ID
       def copy_ssfs_keys(system_id, secondary_host_name, password)
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secondary_host_name} ---"
-        # TODO: check the paths, ideally taking them from the ENV
-        # according to the docs, they should be:
-        #   $DIR_INSTANCE/../global/security/rsecssfs/data/SSFS_<SID>.DAT
-        #   $DIR_INSTANCE/../global/security/rsecssfs/key/SSFS_<SID>.KEY
-        # but those paths are invalid
-        hana_version = version(system_id)
-        unless SapHA::Helpers.version_comparison("2.00", hana_version, ">=")
-          log.info "No need to copy SSFS keys for HANA version #{hana_version}"
-          return
-        end
         # Check if is it possible to create a SSH connection without password in case it is nil
         if password.nil?
           begin
@@ -323,37 +280,26 @@ module SapHA
         end
       end
 
-    private
-
-      # Implement adjustment of the system
-      def adjust_system(system_id, options = {}, system_type = "", &block)
-        # Change the global.ini
-        global_ini_path = HANA_GLOBAL_INI % system_id.upcase
-        unless File.exist?(global_ini_path)
-          NodeLogger.error "Could not adjust global.ini for the #{system_type} system:"
-          NodeLogger.output "File #{global_ini_path} does not exist"
-          return false
+      def adjust_global_ini(system_id, role, additional_instance)
+        add_plugin_to_global_ini(system_id, "SAPHANA_SR")
+        if additional_instance
+          # cost optimized
+	  # TODO
+	else
+          # performance optimized
+          add_plugin_to_global_ini(system_id, "SUS_CHKSRV")
+          add_plugin_to_global_ini(system_id, "SUS_TKOVER")
         end
-        begin
-          global_ini = CFA::GlobalIni.new(global_ini_path)
-          global_ini.load
-          global_ini.set_config("memorymanager", "global_allocation_limit", options[:global_alloc_limit])
-          global_ini.set_config("ha_dr_provider_SAPHanaSR", "provider", "SAPHanaSR")
-          global_ini.set_config("ha_dr_provider_SAPHanaSR", "path", "/usr/share/SAPHanaSR")
-          global_ini.set_config("ha_dr_provider_SAPHanaSR", "execution_order", "1")
-          global_ini.set_config("trace", "ha_dr_saphanasr", "info")
+        command = ["hdbnsutil", "-reloadHADRProviders"]
+        out, status = su_exec_outerr_status(user_name, *command)
+      end
 
-          block.call(global_ini) if block_given?
-
-          global_ini.save
-        rescue StandardError => e
-          NodeLogger.error "Could not adjust global.ini for the #{system_type} system:"
-          NodeLogger.output e.message
-          return false
-        else
-          NodeLogger.info "Successfully adjusted global.ini for the #{system_type} system #{system_id}"
-          true
-        end
+      def add_plugin_to_global_ini(system_id, plugin)
+        user_name = "#{system_id.downcase}adm"
+	# SAPHanaSR is needed on all nodes
+        sr_path = SapHA::Helpers.data_file_path("GLOBAL_INI_#{plugin}")
+        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", system_id, sr_path]
+        out, status = su_exec_outerr_status(user_name, *command)
       end
     end # HanaClass
     Hana = HanaClass.instance
