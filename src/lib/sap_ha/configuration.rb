@@ -61,6 +61,7 @@ module SapHA
     include Yast::Logger
     include Yast::I18n
     include SapHA::Exceptions
+    include SapHA::System::ShellCommands
 
     def initialize(role = :master)
       @timestamp = Time.now
