@@ -101,17 +101,6 @@ USER: uname
 
   describe "#make_backup" do
     context "when the call to hdbsql succedes," do
-      it "creates the backup for HANA 1.0" do
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return([hdb_version_output, good_exit])
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbsql", "-U", "hanabackup", '"BACKUP DATA USING FILE (\'backup\')"')
-          .and_return(["", good_exit])
-        result = SapHA::System::Hana.make_backup("XXX", "hanabackup", "backup", "10")
-        expect(result).to eq true
-      end
-
       it "creates the backup for HANA 2.0" do
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
           .with("xxxadm", "HDB", "version")
@@ -126,17 +115,6 @@ USER: uname
     end
 
     context "when the call to hdbsql fails," do
-      it "does not create the backup for HANA 1.0" do
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return([hdb_version_output, good_exit])
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbsql", "-U", "hanabackup", '"BACKUP DATA USING FILE (\'backup\')"')
-          .and_return(["Some error", bad_exit])
-        result = SapHA::System::Hana.make_backup("XXX", "hanabackup", "backup", "10")
-        expect(result).to eq false
-      end
-
       it "does not create the backup for HANA 2.0" do
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
           .with("xxxadm", "HDB", "version")
@@ -178,11 +156,6 @@ USER: uname
       it "returns the version string" do
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
           .with("xxxadm", "HDB", "version")
-          .and_return([hdb_version_output, good_exit])
-        result = SapHA::System::Hana.version("XXX")
-        expect(result).to eq "1.00.121"
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
           .and_return([hdb_version_output_20, good_exit])
         result = SapHA::System::Hana.version("XXX")
         expect(result).to eq "2.00.010"
@@ -211,42 +184,8 @@ USER: uname
   end
 
   describe "#enable_secondary" do
-    context "when the call to hdbnsutil succedes," do
+    context "when the call to hdbnsutil succeeds for HANA" do
       it "enables the SR on the secondary node" do
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return(["1.00.100", good_exit])
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbnsutil", "-sr_register", "--remoteHost=hana01",
-            "--remoteInstance=10", "--mode=sync", "--name=SECONDARY")
-          .and_return(["", good_exit])
-        result = SapHA::System::Hana.enable_secondary("XXX", "SECONDARY", "hana01", "10", "sync",
-          "delta_datashipping")
-        expect(result).to eq true
-      end
-    end
-
-    context "when the call to hdbnsutil fails," do
-      it "does not enable the SR on the secondary node" do
-        # by default we assume SPS<12 and --mode parameter
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return(["", good_exit])
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbnsutil", "-sr_register", "--remoteHost=hana01",
-            "--remoteInstance=10", "--mode=sync", "--name=SECONDARY")
-          .and_return(["Some error", bad_exit])
-        result = SapHA::System::Hana.enable_secondary("XXX", "SECONDARY", "hana01", "10", "sync",
-          "delta_datashipping")
-        expect(result).to eq false
-      end
-    end
-
-    context "when the call to hdbnsutil succeeds for HANA SPS12" do
-      it "enables the SR on the secondary node" do
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return([hdb_version_output, good_exit])
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
           .with("xxxadm", "hdbnsutil", "-sr_register", "--remoteHost=hana01",
             "--remoteInstance=10", "--replicationMode=sync", "--operationMode=delta_datashipping",
@@ -271,13 +210,6 @@ USER: uname
     end
 
     context "when the storage is not empty" do
-      it "returns the list of the keys" do
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbuserstore", "list")
-          .and_return [hdb_secure_store_list, good_exit]
-        result = SapHA::System::Hana.check_secure_store("XXX")
-        expect(result).to match_array ["KEY1", "KEY2", "KEY10"]
-      end
 
       it "returns the list of the keys for HANA 2.0" do
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
