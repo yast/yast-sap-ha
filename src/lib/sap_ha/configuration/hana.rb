@@ -228,7 +228,8 @@ module SapHA
           cleanup_hana_resources
           SapHA::System::Hana.hdb_start(@system_id)
         end
-        SapHA::System::Hana.adjust_global_ini(@system_id, role, @additional_instance)
+        adapt_sudoers
+        adjust_global_ini(role)
         true
       end
 
@@ -280,6 +281,41 @@ module SapHA
         else
            @nlog.info("Invalide firewall configuration status")
         end
+      end
+
+      # Creates the sudoers file
+      def adapt_sudoers
+        sudo_templ_path = SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb")
+	if File.exist?(sudo_templ_path)
+	  Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template(sudo_templ_path, binding))
+	end
+      end
+
+      # Activates all necessary plugins based on role an scenario
+      def adjust_global_ini(role)
+        # SAPHanaSR is needed on all nodes
+        add_plugin_to_global_ini("SAPHANA_SR")
+        if @additional_instance
+          # cost optimized
+          add_plugin_to_global_ini("SUS_COSTOPT") if role != :master
+        else
+          # performance optimized
+          add_plugin_to_global_ini("SUS_CHKSRV")
+          add_plugin_to_global_ini("SUS_TKOVER")
+        end
+        command = ["hdbnsutil", "-reloadHADRProviders"]
+        out, status = su_exec_outerr_status(user_name, *command)
+      end
+
+      # Activates the plugin in global ini
+      def add_plugin_to_global_ini(plugin)
+        user_name = "#{@system_id.downcase}adm"
+        sr_path = Helpers.data_file_path("GLOBAL_INI_#{plugin}")
+        if File.exist?("#{sr_path}.erb")
+          sr_path = Helpers.write_var_file(plugin, Helpers.render_template("#{sr_path}.erb", binding))
+        end
+        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", @system_id, sr_path]
+        out, status = su_exec_outerr_status(user_name, *command)
       end
     end
   end
