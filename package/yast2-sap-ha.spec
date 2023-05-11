@@ -40,8 +40,8 @@ Requires:       yast2-ntp-client
 Requires:       xdg-utils
 # for handling the SSH client
 Requires:       expect
+Requires:       firewalld
 Requires:       openssh
-
 Requires:       HANA-Firewall >= 2.0.3
 Requires:       util-linux
 Requires:       SAPHanaSR
@@ -49,8 +49,12 @@ Requires:       kmod
 # for pidof
 Requires:       sysvinit-tools
 
+BuildRequires:  HANA-Firewall >= 2.0.3
 BuildRequires:  csync2
+BuildRequires:  firewalld
 BuildRequires:  kmod
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
 BuildRequires:  util-linux
@@ -60,8 +64,6 @@ BuildRequires:  yast2-devtools
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-packager
 BuildRequires:  yast2-ruby-bindings
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0-only
 Group:          System/YaST
