@@ -86,8 +86,6 @@ mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
 rake install DESTDIR="%{buildroot}"
 
 %post
-/usr/bin/systemctl enable csync2.socket
-/usr/bin/systemctl start  csync2.socket
 
 %files
 %defattr(-,root,root)
