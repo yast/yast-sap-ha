@@ -214,8 +214,14 @@ module SapHA
     def end_setup
       log.debug "--- called #{self.class}.#{__callee__} ---"
       NodeLogger.info( "Finished setup process on node #{SapHA::NodeLogger.node_name}")
-      # Start firewall if this was running by starting the module
-      exec_status("/usr/bin/systemctl","start","firewalld") if @fw_state == 0
+      # Start firewall if this was running by starting the module on slave nodes
+      if @fw_state == 0
+        if role == :master
+	  SapHA::Helpers.write_var_file("need_to_start_firewalld","")
+	else
+          exec_status("/usr/bin/systemctl","start","firewalld")
+	end
+      end
       true
     end
 

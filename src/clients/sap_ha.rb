@@ -21,8 +21,10 @@
 
 require "yast"
 require "psych"
+require "sap_ha/configuration"
 require "sap_ha/helpers"
 require "sap_ha/node_logger"
+require "sap_ha/system/shell_commands"
 require "sap_ha/wizard/cluster_nodes_page"
 require "sap_ha/wizard/comm_layer_page"
 require "sap_ha/wizard/join_cluster_page"
@@ -36,7 +38,6 @@ require "sap_ha/wizard/gui_installation_page"
 require "sap_ha/wizard/list_selection"
 require "sap_ha/wizard/rich_text"
 require "sap_ha/wizard/scenario_selection_page"
-require "sap_ha/configuration"
 
 # YaST module
 module Yast
@@ -434,6 +435,9 @@ module Yast
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SapHA::Wizard::SetupSummaryPage.new(@config).run
+      if File.exist?(SapHA::Helpers.data_file_path("need_to_start_firewalld"))
+        SapHA::System::ShellCommands.exec_status("/usr/bin/systemctl","start","firewalld")
+      end
     end
 
     def debug_run
