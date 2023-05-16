@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE Linux GmbH, Nuernberg, Germany.
+# Copyright (c) 2023 SUSE Linux GmbH, Nuernberg, Germany.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 2 of the GNU General Public License as published by the
@@ -17,9 +17,10 @@
 # ------------------------------------------------------------------------------
 #
 # Summary: SUSE High Availability Setup for SAP Products: XML RPC Server
+# Authors: Peter Varkoly <varkoly@suse.com>
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-ENV["Y2DIR"] = File.expand_path("../../../../src", __FILE__)
+#ENV["Y2DIR"] = File.expand_path("../../../../src", __FILE__)
 
 require "yast"
 require "xmlrpc/server"
