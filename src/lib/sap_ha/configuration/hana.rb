@@ -215,8 +215,8 @@ module SapHA
           if @perform_backup
             SapHA::System::Hana.make_backup(@system_id, @backup_user, @backup_file, @instance)
           end
-          secondary_password = @global_config.cluster.host_passwords[secondary_host_name]
           secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+          secondary_password = @global_config.cluster.host_passwords[secondary_host_name]
           SapHA::System::Hana.copy_ssfs_keys(@system_id, secondary_host_name, secondary_password)
           SapHA::System::Hana.enable_primary(@system_id, @site_name_1)
           configure_crm
@@ -285,9 +285,8 @@ module SapHA
 
       # Creates the sudoers file
       def adapt_sudoers
-        sudo_templ_path = SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb")
-	if File.exist?(sudo_templ_path)
-	  Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template(sudo_templ_path, binding))
+	if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb"))
+	  Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template("SUDOERS_HANASR.erb", binding))
 	end
       end
 
