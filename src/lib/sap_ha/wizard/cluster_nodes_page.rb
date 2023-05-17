@@ -54,7 +54,7 @@ module SapHA
                 two_widget_hbox(
                   InputField(Id(:expected_votes), Opt(:hstretch), _("Expected votes:"), ""),
                   VBox(Label(" "), Left(CheckBox(Id(:append_hosts), Opt(:stretch, :notify),
-                    _("Append to /etc/hosts"))))
+                    _("Append to /etc/hosts"), @my_model.append_hosts)))
                 )
               )
             )
