@@ -35,16 +35,7 @@ module SapHA
         @my_model = model.hana
         @my_config = model
         @page_validator = @my_model.method(:validate)
-        # Read hana installation
-        Dir.glob("/data/SAP_INST/*/installationSuccesfullyFinished.dat") do |f|
-          content = File.read(f)
-          @my_model.system_id, @my_model.instance = content.scan(/SAP HANA System ID:\s+(\w{3}).*SAP HANA Instance:\s+(\w{2})/m)
-          log.info "HANAConfigurationPage found hana #{@my_model.system_id} #{@my_model.instance}"
-          if !@my_model.system_id.nil?
-            @my_model.perform_backup = !File.exist?("/usr/sap/#{@my_model.system_id}/HDB#{@my_model.instance}/backup/")
-            break
-          end
-        end
+        eval_hana_installation
         prepare_contents
       end
 
@@ -198,8 +189,8 @@ module SapHA
         # Production HANA
         @contents = VBox(
           two_widget_hbox(
-            InputField(Id(:hana_sid), Opt(:hstretch), "System ID:", ""),
-            InputField(Id(:hana_inst), Opt(:hstretch), "Instance number:", "")
+            InputField(Id(:hana_sid), Opt(:hstretch), "System ID:", @my_model.system_id)
+            InputField(Id(:hana_inst), Opt(:hstretch), "Instance number:", @my_model.instance)
           ),
           two_widget_hbox(
             ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
@@ -258,6 +249,23 @@ module SapHA
           nil,
           InputField(Id(:hook_db_user_name), Opt(:hstretch), "DB &user name:", "")
         )
+      end
+
+      def eval_hana_installation
+        return if @my_model.system_id != ""
+        # Read hana installation
+        Dir.glob("/data/SAP_INST/*/installationSuccesfullyFinished.dat") do |f|
+          content = File.read(f)
+          result = content.scan(/SAP HANA System ID:\s+(\w{3}).*SAP HANA Instance:\s+(\w{2})/m)
+          log.info "HANAConfigurationPage found hana #{result} len: #{result.length} 0: #{result[0]}"
+          if result.length == 1
+            @my_model.system_id = result[0][0].upcase
+            @my_model.instance = result[0][1]
+            @my_model.perform_backup = !File.exist?("/usr/sap/#{@my_model.system_id}/HDB#{@my_model.instance}/backup/")
+            log.info "HANAConfigurationPage hana default #{@my_model.perform_backup} #{@my_model.system_id} #{@my_model.instance}"
+            break
+          end
+        end
       end
     end
   end
