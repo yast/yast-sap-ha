@@ -189,7 +189,7 @@ module SapHA
         # Production HANA
         @contents = VBox(
           two_widget_hbox(
-            InputField(Id(:hana_sid), Opt(:hstretch), "System ID:", @my_model.system_id)
+            InputField(Id(:hana_sid), Opt(:hstretch), "System ID:", @my_model.system_id),
             InputField(Id(:hana_inst), Opt(:hstretch), "Instance number:", @my_model.instance)
           ),
           two_widget_hbox(
