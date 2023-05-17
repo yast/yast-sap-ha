@@ -35,6 +35,16 @@ module SapHA
         @my_model = model.hana
         @my_config = model
         @page_validator = @my_model.method(:validate)
+        # Read hana installation
+        Dir.glob("/data/SAP_INST/*/installationSuccesfullyFinished.dat") do |f|
+          content = File.read(f)
+          @my_model.system_id, @my_model.instance = content.scan(/SAP HANA System ID:\s+(\w{3}).*SAP HANA Instance:\s+(\w{2})/m)
+          log.info "HANAConfigurationPage found hana #{@my_model.system_id} #{@my_model.instance}"
+          if !@my_model.system_id.nil?
+            @my_model.perform_backup = !File.exist?("/usr/sap/#{@my_model.system_id}/HDB#{@my_model.instance}/backup/")
+            break
+          end
+        end
         prepare_contents
       end
 
@@ -53,6 +63,7 @@ module SapHA
           true,
           true
         )
+        refresh_view
       end
 
       def update_model
