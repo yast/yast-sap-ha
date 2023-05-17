@@ -158,8 +158,8 @@ module SapHA
 
       def fw_config_items
 	[Item(Id("done"),  _("Firewall is configured"), @my_model.fw_config == "done"),
-         Item(Id("off"),   _("Turn off Firewall."), @my_model.fw_config == "off"),
-         Item(Id("setup"), _("Setup Firewall."), @my_model.fw_config == "setup")]
+         Item(Id("off"),   _("Turn off Firewall"), @my_model.fw_config == "off"),
+         Item(Id("setup"), _("Configure Firewall"), @my_model.fw_config == "setup")]
       end
     end
   end
