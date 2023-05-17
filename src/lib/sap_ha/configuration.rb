@@ -86,7 +86,7 @@ module SapHA
       @ntp = Configuration::NTP.new(self)
       @config_sequence = []
       @platform = SapHA::Helpers.platform_check
-      @fw_state = exec_status("/usr/bin/firewall-cmd","--state")
+      @fw_state = exec_status("/usr/bin/firewall-cmd","--state").exitstatus
     end
 
     # Function to refresh the proposals of some modules. This is neccessary when
@@ -216,7 +216,7 @@ module SapHA
       NodeLogger.info( "Finished setup process on node #{SapHA::NodeLogger.node_name}")
       # Start firewall if this was running by starting the module on slave nodes
       if @fw_state == 0
-        if role == :master
+        if @role == :master
 	  SapHA::Helpers.write_var_file("need_to_start_firewalld","")
 	else
           exec_status("/usr/bin/systemctl","start","firewalld")
