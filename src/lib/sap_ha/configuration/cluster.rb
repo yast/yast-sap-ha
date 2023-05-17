@@ -73,10 +73,10 @@ module SapHA
         @expected_votes = 2
         @exception_type = ClusterConfigurationException
         @cluster_name = "hacluster"
-        @enable_secauth = false
+        @enable_secauth = true
         @enable_csync2 = false
         @keys = {}
-        @append_hosts = false
+        @append_hosts = true
         # host name to root passwd mapping
         @host_passwords = {}
         @fw_config = "off"
