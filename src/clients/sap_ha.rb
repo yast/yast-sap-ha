@@ -434,10 +434,10 @@ module Yast
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      SapHA::Wizard::SetupSummaryPage.new(@config).run
-      if File.exist?(SapHA::Helpers.data_file_path("need_to_start_firewalld"))
+      if File.exist?(SapHA::Helpers.var_file_path("need_to_start_firewalld"))
         SapHA::System::ShellCommands.exec_status("/usr/bin/systemctl","start","firewalld")
       end
+      SapHA::Wizard::SetupSummaryPage.new(@config).run
     end
 
     def debug_run
