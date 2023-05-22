@@ -54,14 +54,8 @@ module SapHA
         log.info "--- called #{self.class}.#{__callee__}(#{system_id}, #{secstore_user},"\
           " #{file_name}, #{instance_number}) ---"
         user_name = "#{system_id.downcase}adm"
-        # do backup differently for HANA 2.0
-        version = version(system_id)
-        if SapHA::Helpers.version_comparison("2.00.010", version, ">=")
-          command = "hdbsql", "-U", secstore_user, "-d", "SYSTEMDB",
+        command = "hdbsql", "-i", instance_number, "-U", secstore_user, "-d", "SYSTEMDB",
                     "\"BACKUP DATA FOR FULL SYSTEM USING FILE ('#{file_name}')\""
-        else
-          command = "hdbsql", "-U", secstore_user, "\"BACKUP DATA USING FILE ('#{file_name}')\""
-        end
         out, status = su_exec_outerr_status(user_name, *command)
         NodeLogger.log_status(
           status.exitstatus == 0,
