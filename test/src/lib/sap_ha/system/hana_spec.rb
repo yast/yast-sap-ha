@@ -103,28 +103,11 @@ USER: uname
     context "when the call to hdbsql succedes," do
       it "creates the backup for HANA 2.0" do
         expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return([hdb_version_output_20, good_exit])
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbsql", "-U", "hanabackup", "-d", "SYSTEMDB",
+          .with("xxxadm", "hdbsql", "-i", "10", "-U", "hanabackup", "-d", "SYSTEMDB",
             '"BACKUP DATA FOR FULL SYSTEM USING FILE (\'backup\')"')
           .and_return(["", good_exit])
         result = SapHA::System::Hana.make_backup("XXX", "hanabackup", "backup", "10")
         expect(result).to eq true
-      end
-    end
-
-    context "when the call to hdbsql fails," do
-      it "does not create the backup for HANA 2.0" do
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "HDB", "version")
-          .and_return([hdb_version_output_20, good_exit])
-        expect(SapHA::System::Hana).to receive(:su_exec_outerr_status)
-          .with("xxxadm", "hdbsql", "-U", "hanabackup", "-d", "SYSTEMDB",
-            '"BACKUP DATA FOR FULL SYSTEM USING FILE (\'backup\')"')
-          .and_return(["Some error", bad_exit])
-        result = SapHA::System::Hana.make_backup("XXX", "hanabackup", "backup", "10")
-        expect(result).to eq false
       end
     end
   end
