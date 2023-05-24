@@ -189,7 +189,7 @@ module SapHA
         raise "Not implemented"
       end
 
-      def handle_firewall(fw_config)
+      def config_firewall(fw_config, role)
         case fw_config
         when "done"
           NodeLogger.info("Firewall is already configured")
@@ -214,6 +214,9 @@ module SapHA
             "Could not open cluster service permanent in firewall",
             out
           )
+          if role != :master
+             _s = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
+          end
 	end
       end
 

@@ -352,8 +352,6 @@ module SapHA
         @nlog.info("Applying Cluster Configuration")
         flag = true
         SapHA::System::Local.append_hosts_file(@nodes) if @append_hosts
-	#Handle firewall
-        SapHA::System::Local.handle_firewall(@fw_config)
         if role == :master
           @keys[:corosync] = generate_corosync_key if @enable_secauth
           @keys[:csync2] = generate_csync2_key if @enable_csync2
@@ -365,6 +363,8 @@ module SapHA
         @nlog.log_status(status, "Exported configuration for yast2-cluster",
           "Could not export configuration for yast2-cluster")
         flag &= status
+	#Handle firewall
+        SapHA::System::Local.config_firewall(@fw_config, role)
         flag &= SapHA::System::Local.start_cluster_services
         flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
