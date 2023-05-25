@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.4.1
+Version:        4.4.2
 Release:        0
 
 BuildArch:      noarch
@@ -25,31 +25,36 @@ BuildArch:      noarch
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
 
-Requires:       yast2
-Requires:       yast2-ruby-bindings
+Requires:       conntrack-tools
 Requires:       corosync
+Requires:       corosync-qdevice
+Requires:       crmsh
 Requires:       csync2
+Requires:       hawk2
+Requires:       pacemaker
+Requires:       yast2
+Requires:       yast2-cluster >= 4.4.4
+Requires:       yast2-ruby-bindings
+Requires:       yast2-ntp-client
 # for opening URLs
 Requires:       xdg-utils
 # for handling the SSH client
 Requires:       expect
+Requires:       firewalld
 Requires:       openssh
-Requires:       yast2-cluster
-Requires:       yast2-ntp-client
-# for lsblk
+Requires:       HANA-Firewall >= 2.0.3
 Requires:       util-linux
-# lsmod, modprobe
 Requires:       SAPHanaSR
 Requires:       kmod
-# configuration parser
-Requires:       augeas-lenses
-Requires:       rubygem(%{rb_default_ruby_abi}:cfa)
 # for pidof
 Requires:       sysvinit-tools
 
-BuildRequires:  augeas-lenses
+BuildRequires:  HANA-Firewall >= 2.0.3
 BuildRequires:  csync2
+BuildRequires:  firewalld
 BuildRequires:  kmod
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
 BuildRequires:  util-linux
@@ -59,20 +64,15 @@ BuildRequires:  yast2-devtools
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-packager
 BuildRequires:  yast2-ruby-bindings
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:cfa)
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
-BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
-
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0-only
 Group:          System/YaST
 URL:            http://www.suse.com
 
 %description
-A YaST2 module to enable high availability for SAP HANA and SAP NetWeaver installations.
+A YaST2 module to enable high availability for SAP HANA installations.
 
 %prep
-%define augeas_dir %{_datarootdir}/augeas/lenses/dist
 %setup -n %{name}-%{version}
 
 %check
@@ -81,22 +81,9 @@ rake test:unit
 %build
 
 %install
-mkdir -p %{buildroot}%{yast_dir}/data/sap_ha/
 mkdir -p %{buildroot}%{yast_vardir}/sap_ha/
-mkdir -p %{yast_scrconfdir}
-mkdir -p %{buildroot}%{augeas_dir}
 
 rake install DESTDIR="%{buildroot}"
-# wizard help files
-install -m 644 data/*.html %{buildroot}%{yast_dir}/data/sap_ha/
-# ruby templates
-install -m 644 data/*.erb %{buildroot}%{yast_dir}/data/sap_ha/
-# HA scenarios definitions
-install -m 644 data/scenarios.yaml %{buildroot}%{yast_dir}/data/sap_ha/
-# SSH invocation wrapper
-install -m 755 data/check_ssh.expect %{buildroot}%{yast_dir}/data/sap_ha/
-# Augeas lens for SAP INI files
-install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
 
 %post
 
@@ -109,6 +96,6 @@ install -m 644 data/sapini.aug %{buildroot}%{augeas_dir}
 %{yast_dir}/data/sap_ha/
 %{yast_vardir}/sap_ha/
 %{yast_scrconfdir}/*.scr
-%{augeas_dir}/sapini.aug
+%{yast_ybindir}
 
 %changelog

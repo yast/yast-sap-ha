@@ -19,14 +19,14 @@
 # Summary: SUSE High Availability Setup for SAP Products: Cluster members configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'erb'
-require 'socket'
-require_relative 'base_config'
-require 'sap_ha/system/local'
-require 'sap_ha/exceptions'
+require "yast"
+require "erb"
+require "socket"
+require_relative "base_config"
+require "sap_ha/system/local"
+require "sap_ha/exceptions"
 
-Yast.import 'UI'
+Yast.import "UI"
 
 module SapHA
   module Configuration

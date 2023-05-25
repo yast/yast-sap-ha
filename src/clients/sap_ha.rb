@@ -19,23 +19,24 @@
 # Summary: SUSE High Availability Setup for SAP Products: main GUI Wizard class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/node_logger'
-require 'sap_ha/wizard/cluster_nodes_page'
-require 'sap_ha/wizard/comm_layer_page'
-require 'sap_ha/wizard/join_cluster_page'
-require 'sap_ha/wizard/fencing_page'
-require 'sap_ha/wizard/watchdog_page'
-require 'sap_ha/wizard/hana_page'
-require 'sap_ha/wizard/ntp_page'
-require 'sap_ha/wizard/overview_page'
-require 'sap_ha/wizard/summary_page'
-require 'sap_ha/wizard/gui_installation_page'
-require 'sap_ha/wizard/list_selection'
-require 'sap_ha/wizard/rich_text'
-require 'sap_ha/wizard/scenario_selection_page'
-require 'sap_ha/configuration'
+require "yast"
+require "psych"
+require "sap_ha/configuration"
+require "sap_ha/helpers"
+require "sap_ha/node_logger"
+require "sap_ha/wizard/cluster_nodes_page"
+require "sap_ha/wizard/comm_layer_page"
+require "sap_ha/wizard/join_cluster_page"
+require "sap_ha/wizard/fencing_page"
+require "sap_ha/wizard/watchdog_page"
+require "sap_ha/wizard/hana_page"
+require "sap_ha/wizard/ntp_page"
+require "sap_ha/wizard/overview_page"
+require "sap_ha/wizard/summary_page"
+require "sap_ha/wizard/gui_installation_page"
+require "sap_ha/wizard/list_selection"
+require "sap_ha/wizard/rich_text"
+require "sap_ha/wizard/scenario_selection_page"
 
 # YaST module
 module Yast
@@ -43,24 +44,29 @@ module Yast
   class SAPHAClass < Client
     attr_reader :sequence
 
-    Yast.import 'UI'
-    Yast.import 'Wizard'
-    Yast.import 'Sequencer'
-    Yast.import 'Popup'
+    Yast.import "UI"
+    Yast.import "Wizard"
+    Yast.import "Sequencer"
+    Yast.import "Service"
+    Yast.import "Popup"
     include Yast::UIShortcuts
     include Yast::Logger
     include SapHA::Exceptions
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
-      begin 
-        if WFM.Args.include?('readconfig')
-          ix = WFM.Args.index('readconfig') + 1
-          @config = YAML.load(File.read(WFM.Args[ix]))
+      begin
+        if WFM.Args.include?("readconfig")
+          ix = WFM.Args.index("readconfig") + 1
+          begin
+            @config = Psych.unsafe_load(File.read(WFM.Args[ix]))
+          rescue NoMethodError
+            @config = Psych.load(File.read(WFM.Args[ix]))
+          end
           @config.imported = true
-          if WFM.Args.include?('unattended')
+          if WFM.Args.include?("unattended")
             @config.unattended = true
-          end  
+          end
         else
           @config = SapHA::HAConfiguration.new
         end
@@ -73,9 +79,9 @@ module Yast
         @config = SapHA::HAConfiguration.new
         Popup.TimedError("The configuration file could not be loaded because of a unexpected error. Switching to the manual configuration. Details: #{e.message}", 10)
       ensure
-        @config.debug = WFM.Args.include? 'over'
-        @config.no_validators = WFM.Args.include?('noval') || WFM.Args.include?('validators')
-        Wizard.SetTitleIcon('yast-heartbeat')
+        @config.debug = WFM.Args.include? "over"
+        @config.no_validators = WFM.Args.include?("noval") || WFM.Args.include?("validators")
+        Wizard.SetTitleIcon("yast-heartbeat")
         @sequence = {
           "ws_start"              => "product_check",
           "product_check"         =>  {
@@ -184,7 +190,7 @@ module Yast
             next:              :ws_finish
           }
         }
-        
+
         @unattended_sequence = {
           "ws_start"              => "product_check",
           "product_check"         =>  {
@@ -209,64 +215,62 @@ module Yast
           }
         }
 
-
         @aliases = {
-          'product_check'         => -> { product_check },
-          'file_import_check'    => -> { file_import_check },
-          'scenario_selection'    => -> { scenario_selection },
-          'product_not_supported' => -> { product_not_supported },
-          # 'prereqs_notice'        => [-> () { show_prerequisites }, true],
-          'prereqs_notice'        => -> { show_prerequisites },
-          'configure_cluster'     => -> { configure_cluster },
-          'configure_comm_layer'  => -> { configure_comm_layer },
-          'join_cluster'          => -> { join_existing_cluster },
-          'fencing'               => -> { fencing_mechanism },
-          'watchdog'              => -> { watchdog },
-          'hana'                  => -> { configure_hana },
-          'debug_run'             => -> { debug_run },
-          'installation'          => -> { run_installation },
-          'unattended_install'    => -> { run_unattended_install },
-          'ntp'                   => -> { configure_ntp },
-          'config_overview'       => -> { configuration_overview },
-          'summary'               => -> { show_summary }
+          "product_check"         => -> { product_check },
+          "file_import_check"    => -> { file_import_check },
+          "scenario_selection"    => -> { scenario_selection },
+          "product_not_supported" => -> { product_not_supported },
+          # "prereqs_notice"        => [-> () { show_prerequisites }, true],
+          "prereqs_notice"        => -> { show_prerequisites },
+          "configure_cluster"     => -> { configure_cluster },
+          "configure_comm_layer"  => -> { configure_comm_layer },
+          "join_cluster"          => -> { join_existing_cluster },
+          "fencing"               => -> { fencing_mechanism },
+          "watchdog"              => -> { watchdog },
+          "hana"                  => -> { configure_hana },
+          "debug_run"             => -> { debug_run },
+          "installation"          => -> { run_installation },
+          "unattended_install"    => -> { run_unattended_install },
+          "ntp"                   => -> { configure_ntp },
+          "config_overview"       => -> { configuration_overview },
+          "summary"               => -> { show_summary }
         }
-      end  
+      end
     end
 
     def main
-      textdomain 'hana-ha'
-      #Take care that corosync is enabled and running
+      textdomain "hana-ha"
       @sequence["ws_start"] = "debug_run" if @config.debug
       @sequence["product_check"][:hana] = "file_import_check" if @config.imported
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
-        if @config.unattended 
-          Sequencer.Run(@aliases, @unattended_sequence) 
+        if @config.unattended
+          Sequencer.Run(@aliases, @unattended_sequence)
         else
-          Sequencer.Run(@aliases, @sequence)      
+          Sequencer.Run(@aliases, @sequence)
         end
       rescue StandardError => e
         # FIXME: y2start overrides the return code, therefore exit prematurely without
         # shutting down Yast properly, see bsc#1099871
         # If the error was not catched until here, we know that is a unattended installation.
         # exit!(1)
-        @unattended_error = "Error occurred during the unattended installation: #{e.message}" 
-        log.error @unattended_error 
+        @unattended_error = "Error occurred during the unattended installation: #{e.message}"
+        log.error @unattended_error
         puts @unattended_error
         Popup.TimedError(@unattended_error, 10)
       ensure
         Wizard.CloseDialog
         if @config.unattended
-          if @unattended_error.nil? 
-            success = SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
+          if @unattended_error.nil?
+            SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
             log.info "Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt"
-            # FIXME: yast redirects stdout, therefore the usage of the CommanlineClass is needed to write on the stdout, but as the 
-            # the dependent modules we have (cluster, firewall, ntp) demands UI existence, we cannot call the module without creating the UI object. 
+            # FIXME: yast redirects stdout, therefore the usage of the CommanlineClass is needed to write on the stdout, but as the
+            # the dependent modules we have (cluster, firewall, ntp) demands UI existence, we cannot call the module without creating the UI object.
             # The best option is to presente a Timed Popup to the user.
             Popup.TimedMessage("Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt", 10)
           end
-        end  
+        end
       end
     end
 
@@ -274,9 +278,9 @@ module Yast
     def product_check
       log.debug "--- called #{self.class}.#{__callee__} ---"
       # TODO: here we need to know what product we are installing
-      # Yast.import 'SAPProduct'
+      # Yast.import "SAPProduct"
       # SAPProduct.Read
-      # SAPProduct.installedProducts [{productID: 'HANA'...}...]
+      # SAPProduct.installedProducts [{productID: "HANA"...}...]
       begin
         @config.set_product_id "HANA"
       rescue ProductNotFoundException => e
@@ -284,25 +288,23 @@ module Yast
         return :unknown
       end
       # TODO: here we should check if the symbol can be handled by th
-        #stat = Yast::Cluster.LoadClusterConfig
-        #Yast::Cluster.load_csync2_confe Sequencer
-      @config.product.fetch('id', 'abort').downcase.to_sym
+      # stat = Yast::Cluster.LoadClusterConfig
+      # Yast::Cluster.load_csync2_confe Sequencer
+      @config.product.fetch("id", "abort").downcase.to_sym
     end
 
     def file_import_check
-      begin
-        log.debug "--- called #{self.class}.#{__callee__} ---"
-        SapHA::SAPHAUnattendedInstall.new(@config).check_config
-      rescue StandardError => e
-        if @config.unattended
-          # Will be trated by the caller to collect the log.
-          raise e
-        else
-          # Adjust the WF to show the Summary with the problems.
-          return :unknown 
-        end 
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      SapHA::SAPHAUnattendedInstall.new(@config).check_config
+    rescue StandardError => e
+      if @config.unattended
+        # Will be trated by the caller to collect the log.
+        raise e
+      else
+        # Adjust the WF to show the Summary with the problems.
+        return :unknown
       end
-    end  
+    end
 
     def scenario_selection
       log.debug "--- called #{self.class}.#{__callee__} ---"
@@ -319,9 +321,9 @@ module Yast
     def product_not_supported
       log.debug "--- called #{self.class}.#{__callee__} ---"
       SapHA::Wizard::RichText.new.run(
-        'Product not supported',
-        SapHA::Helpers.load_help('product_not_found'),
-        SapHA::Helpers.load_help('product_not_found'),
+        "Product not supported",
+        SapHA::Helpers.load_help("product_not_found"),
+        SapHA::Helpers.load_help("product_not_found"),
         false,
         false
       )
@@ -331,12 +333,12 @@ module Yast
 
     def show_prerequisites
       log.error "--- called #{self.class}.#{__callee__} ---"
-      notice = @config.scenario['prerequisites_notice']
+      notice = @config.scenario["prerequisites_notice"]
       return :next unless notice
       SapHA::Wizard::RichText.new.run(
-        'Prerequisites',
+        "Prerequisites",
         SapHA::Helpers.load_help(notice, @config.platform),
-        '',
+        "",
         true,
         true
       )
@@ -346,7 +348,7 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__} ---"
       log.error("No HA scenarios found for product #{@product_name}")
       SapHA::Wizard::RichText.new.run(
-        'Scenarios not found',
+        "Scenarios not found",
         "There were no HA scenarios found for the product #{@product_name}",
         "The product you are installing is not supported by this module.<br>
         You can set up a cluster manually using the Cluster YaST module.",
@@ -398,7 +400,7 @@ module Yast
 
     def run_installation
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      return :next if WFM.Args.include? 'noinst'
+      return :next if WFM.Args.include? "noinst"
       ui = SapHA::Wizard::GUIInstallationPage.new
       begin
         SapHA::SAPHAInstallation.new(@config, ui).run
@@ -413,7 +415,7 @@ module Yast
 
     def run_unattended_install
       log.debug "--- called #{self.class}.#{__callee__} ---"
-      return :next if WFM.Args.include? 'noinst'
+      return :next if WFM.Args.include? "noinst"
       ui = SapHA::Wizard::GUIInstallationPage.new
       begin
         # FIXME: We cannot use the unattended install as the other YaST Modules need
@@ -432,15 +434,18 @@ module Yast
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      if File.exist?(SapHA::Helpers.var_file_path("need_to_start_firewalld"))
+        Service.Start("firewalld")
+      end
       SapHA::Wizard::SetupSummaryPage.new(@config).run
     end
 
     def debug_run
       @config.set_product_id "HANA"
-      if WFM.Args.include? 'cost'
-        @config.set_scenario_name 'Scale Up: Cost-optimized'
+      if WFM.Args.include? "cost"
+        @config.set_scenario_name "Scale Up: Cost-optimized"
       else
-        @config.set_scenario_name 'Scale Up: Performance-optimized'
+        @config.set_scenario_name "Scale Up: Performance-optimized"
       end
       :config_overview
     end
