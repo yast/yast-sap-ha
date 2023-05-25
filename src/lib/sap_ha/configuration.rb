@@ -31,6 +31,7 @@ require "sap_ha/configuration/fencing"
 require "sap_ha/configuration/watchdog"
 require "sap_ha/configuration/hana"
 require "sap_ha/configuration/ntp"
+require "sap_ha/system/local"
 require "sap_ha/system/shell_commands"
 
 module SapHA
@@ -219,7 +220,7 @@ module SapHA
         if @role == :master
 	  SapHA::Helpers.write_var_file("need_to_start_firewalld","")
 	else
-          exec_status("/usr/bin/systemctl","start","firewalld")
+          SapHA::System::Local.systemd_unit(:stop, :service, "firewalld")
 	end
       end
       true

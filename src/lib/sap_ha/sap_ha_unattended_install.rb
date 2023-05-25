@@ -45,7 +45,6 @@ module SapHA
       check_ssh
       :next
     rescue UnattendedModeException, ConfigValidationException => e
-      puts e.message
       log.error e.message
       NodeLogger.fatal "The imported configuration file did not pass on all checks. Please, review the errors and try again."
       # Raise the error and let the caller resolve how to present it.

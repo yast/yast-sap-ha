@@ -192,7 +192,7 @@ module SapHA
       _out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
       return if status.exitstatus != 0
       out, status = exec_output_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
-      puts "open_port: status=#{status}, out=#{out}"
+      @logger.info "open_port: status=#{status}, out=#{out}"
       @port_opened = true
       status.exitstatus == 0
     end
@@ -203,7 +203,7 @@ module SapHA
       _out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
       return if status.exitstatus != 0
       out, status = exec_output_status("/usr/bin/firewall-cmd", "--remove-port", "8080/tcp")
-      puts "close_port: status=#{status}, out=#{out}"
+      @logger.info "close_port: status=#{status}, out=#{out}"
       @port_opened = false
       status.exitstatus == 0
     end
