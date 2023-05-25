@@ -253,7 +253,9 @@ module SapHA
 
       def eval_hana_installation
         return if @my_model.system_id != ""
-        # Read hana installation
+        # Read hana installations created by the sap-installation wizard.
+        # In case of successfully installation this file(s) will be created.
+	# By changing the format of these summaray files the pattern should be adaptad also.
         Dir.glob("/data/SAP_INST/*/installationSuccesfullyFinished.dat") do |f|
           content = File.read(f)
           result = content.scan(/SAP HANA System ID:\s+(\w{3}).*SAP HANA Instance:\s+(\w{2})/m)
