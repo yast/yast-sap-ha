@@ -215,7 +215,7 @@ module SapHA
             out
           )
           if role != :master
-             _s = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
+             exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
           end
 	end
       end
