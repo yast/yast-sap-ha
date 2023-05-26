@@ -18,26 +18,26 @@
 # Summary: SUSE High Availability Setup for SAP Products
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require_relative 'test_helper'
-require 'sap_ha/node_logger'
+require_relative "test_helper"
+require "sap_ha/node_logger"
 
 describe SapHA::NodeLogger do
   subject { SapHA::NodeLogger }
-  let(:unknown_msg) { 'This is an unknown message' }
-  let(:debug_msg)   { 'This is a debug message' }
-  let(:info_msg)    { 'This is an info message' }
-  let(:warn_msg)    { 'This is a warning message!' }
-  let(:error_msg)   { 'This is an error message!!!' }
-  let(:fatal_msg)   { 'This is a fatal message!!!1111' }
+  let(:unknown_msg) { "This is an unknown message" }
+  let(:debug_msg)   { "This is a debug message" }
+  let(:info_msg)    { "This is an info message" }
+  let(:warn_msg)    { "This is a warning message!" }
+  let(:error_msg)   { "This is an error message!!!" }
+  let(:fatal_msg)   { "This is a fatal message!!!1111" }
 
-  describe '#instance' do
-    it 'works' do
+  describe "#instance" do
+    it "works" do
       expect(subject).not_to be_nil
     end
   end
 
-  describe '#text' do
-    it 'returns a plain-text log' do
+  describe "#text" do
+    it "returns a plain-text log" do
       subject.unknown(unknown_msg)
       subject.debug(debug_msg)
       subject.info(info_msg)
@@ -54,16 +54,16 @@ describe SapHA::NodeLogger do
     end
   end
 
-  describe '#set_debug' do
-    it 'enables debug logging' do
+  describe "#set_debug" do
+    it "enables debug logging" do
       subject.set_debug
       subject.debug(debug_msg)
       expect(subject.text).to match(/DEBUG: #{debug_msg}/)
     end
   end
 
-  describe '#to_html' do
-    it 'converts a plain-text log into HTML representation' do
+  describe "#to_html" do
+    it "converts a plain-text log into HTML representation" do
 
       def colored_level(level_name)
         '<font color="[^"]+"><b>\s+%s</b></font>' % level_name

@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Tue May  2 16:07:02 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)
+- yast2-sap-ha can not configure firewall (bsc#1211027)
+- Rework package sturcture to use the yast2 defaults
+- L3: yast2-sap-ha error - Could not adjust global.ini for the production system
+  (bsc#1207740)
+- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
+- recover .yardopts
+- 4.5.2
+
+-------------------------------------------------------------------
 Mon Mar  6 12:44:10 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - Bump version to 4.5.1

@@ -17,6 +17,8 @@
 
 require "yast/rake"
 
+Yast::Tasks.submit_to :sle15sp4
+
 Yast::Tasks.configuration do |conf|
   conf.skip_license_check << /.*/
   conf.exclude_files << /pry_debug.rb/
@@ -27,4 +29,3 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /test/
   conf.exclude_files << /aux/
 end
-

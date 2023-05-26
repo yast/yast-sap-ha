@@ -20,10 +20,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 # Authors: Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
+require "yast"
 require "yast/i18n"
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
 
 module SapHA
   module Wizard
@@ -40,26 +40,26 @@ module SapHA
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Cluster nodes'),
+          _("Cluster nodes"),
           base_layout_with_label(
             _('Define cluster nodes\' configuration'),
             VBox(
               MinHeight(4, nodes_table),
               HBox(
-                PushButton(Id(:add_node), _('Add node')),
-                PushButton(Id(:edit_node), _('Edit selected')),
-                PushButton(Id(:delete_node), _('Delete node'))
+                PushButton(Id(:add_node), _("Add node")),
+                PushButton(Id(:edit_node), _("Edit selected")),
+                PushButton(Id(:delete_node), _("Delete node"))
               ),
               HBox(
                 two_widget_hbox(
-                  InputField(Id(:expected_votes), Opt(:hstretch), _('Expected votes:'), ''),
-                  VBox(Label(' '), Left(CheckBox(Id(:append_hosts), Opt(:stretch, :notify),
-                    _('Append to /etc/hosts'))))
+                  InputField(Id(:expected_votes), Opt(:hstretch), _("Expected votes:"), ""),
+                  VBox(Label(" "), Left(CheckBox(Id(:append_hosts), Opt(:stretch, :notify),
+                    _("Append to /etc/hosts"), @my_model.append_hosts)))
                 )
               )
             )
           ),
-          Helpers.load_help('cluster_nodes'),
+          Helpers.load_help("cluster_nodes"),
           true,
           true
         )
@@ -68,7 +68,7 @@ module SapHA
       def can_go_next?
         return true if @model.no_validators
         return false unless @my_model.configured?
-        Yast::Popup.Feedback('Please wait', 'Checking SSH connection') do
+        Yast::Popup.Feedback("Please wait", "Checking SSH connection") do
           unless check_ssh_connectivity
             @show_errors = false
             return false
@@ -111,9 +111,9 @@ module SapHA
 
       def nodes_table_header
         if @my_model.number_of_rings == 1
-          Header(_('ID'), _('Host name'), _('IP in ring 1'))
+          Header(_("ID"), _("Host name"), _("IP in ring 1"))
         else
-          Header(_('ID'), _('Host name'), _('IP in ring 1'), _('IP in ring 2'))
+          Header(_("ID"), _("Host name"), _("IP in ring 1"), _("IP in ring 2"))
         end
       end
 
@@ -124,7 +124,7 @@ module SapHA
           edit_node
         when :node_definition_table
           update_model
-          edit_node if event['EventReason'] == 'Activated'
+          edit_node if event["EventReason"] == "Activated"
         when :append_hosts
           @my_model.append_hosts = value(:append_hosts)
         else
@@ -146,10 +146,10 @@ module SapHA
         base_popup(
           "Configuration for node #{values[:node_id]}",
           @my_model.method(:node_validator),
-          MinWidth(15, InputField(Id(:host_name), 'Host name:', values[:host_name] || "")),
-          MinWidth(15, InputField(Id(:ip_ring1), 'IP in ring #1:', values[:ip_ring1] || "")),
+          MinWidth(15, InputField(Id(:host_name), "Host name:", values[:host_name] || "")),
+          MinWidth(15, InputField(Id(:ip_ring1), "IP in ring #1:", values[:ip_ring1] || "")),
           @my_model.number_of_rings == 2 ? MinWidth(15, InputField(Id(:ip_ring2),
-            'IP in ring #2:', values[:ip_ring2] || "")) : Empty(),
+            "IP in ring #2:", values[:ip_ring2] || "")) : Empty(),
           # InputField(Id(:node_id), 'Node ID:', values[:node_id] || "")
         )
       end
@@ -168,21 +168,21 @@ module SapHA
               SapHA::System::SSH.instance.check_ssh_password(ip, password)
             rescue SSHAuthException => e
               # Yast::Popup.Error(e.message)
-              show_message(e.message, 'Error')
+              show_message(e.message, "Error")
               return false
             rescue SSHException => e
               # Yast::Popup.Error(e.message)
-              show_message(e.message, 'Error')
+              show_message(e.message, "Error")
               return false
             else
               @my_model.set_host_password(ip, password)
-              Yast::Popup.Feedback('Please wait', 'Copying SSH keys') do
+              Yast::Popup.Feedback("Please wait", "Copying SSH keys") do
                 SapHA::System::SSH.instance.copy_keys_to(ip, password)
               end
             end
           rescue SSHException => e
             # Yast::Popup.Error(e.message)
-            show_message(e.message, 'Error')
+            show_message(e.message, "Error")
             return false
           end
           true

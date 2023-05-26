@@ -35,10 +35,10 @@ module SapHA
     attr_accessor :silent
     attr_reader :checks_passed
 
-    #Site identifier regexp. That is what SAP allows. All ASCII charactest from 33 until 125
-    #expect of '*' and '/'. The identifier can be 256 character long
-    #However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
-    #The identifier must not be longer than 30 characters and it must be minimum 2 long.
+    # Site identifier regexp. That is what SAP allows. All ASCII charactest from 33 until 125
+    # expect of '*' and '/'. The identifier can be 256 character long
+    # However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
+    # The identifier must not be longer than 30 characters and it must be minimum 2 long.
     IDENTIFIER_REGEXP = Regexp.new("^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$")
     SAP_SID_REGEXP = Regexp.new("^[A-Z][A-Z0-9]{2}$")
     SAP_INST_NUM_REGEX = Regexp.new("^[0-9]{2}$")
@@ -153,7 +153,7 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def element_in_set(element, set, message = "", field_name = "")
       flag = set.include? element
-      message = "The value must be in the set [#{set.join(', ')}]" if message.nil? || message.empty?
+      message = "The value must be in the set [#{set.join(", ")}]" if message.nil? || message.empty?
       report_error(flag, message, field_name, element)
     end
 
@@ -240,7 +240,7 @@ module SapHA
     def sap_sid(value, message = "", field_name = "")
       message = "A valid SAP System ID consists of three characters, starts with a letter, and "\
       " must not collide with one of the reserved IDs" if message.nil? || message.empty?
-      flag = !SAP_SID_REGEXP.match(value).nil? && !RESERVED_SAP_SIDS.include?(value)
+      flag = SAP_SID_REGEXP.match?(value) && !RESERVED_SAP_SIDS.include?(value)
       report_error(flag, message, field_name, value)
     end
 
@@ -281,9 +281,9 @@ module SapHA
     def check(verbosity)
       old_silent = @silent
       @silent = if verbosity == :verbose
-                  false
-                else
-                  true
+        false
+      else
+        true
                 end
       transaction_begin
       yield self
@@ -335,7 +335,7 @@ module SapHA
       nil
     end
 
-    private
+  private
 
     def error_string(field_name, explanation, value = nil)
       field_name = field_name.strip
