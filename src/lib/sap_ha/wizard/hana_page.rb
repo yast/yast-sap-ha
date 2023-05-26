@@ -120,16 +120,6 @@ module SapHA
           )
           return unless production_constraints
           @my_model.production_constraints = production_constraints
-        when :hook_script_params
-          update_model
-          unless @my_model.hook_generated?
-            hook_parameters = hook_script_popup(@my_model.hook_script_parameters)
-            return unless hook_parameters
-            @my_model.hook_script_parameters = hook_parameters
-          end
-          ret = generate_and_show_hook
-          return unless ret
-          @my_model.hook_script = ret[:hook_script]
         else
           super
         end
@@ -156,32 +146,6 @@ module SapHA
             values[:global_alloc_limit] || "")),
           MinWidth(20, InputField(Id(:preload_column_tables), "&Preload column tables:",
             values[:preload_column_tables] || ""))
-        )
-      end
-
-      def hook_script_popup(values)
-        log.debug "--- #{self.class}.#{__callee__} --- "
-        base_popup(
-          "Hook script parameters",
-          # TODO: write validators for the popups
-          @my_model.method(:hook_script_validation),
-          MinWidth(15, InputField(Id(:hook_execution_order), "&Execution order:",
-            values[:hook_execution_order] || "")),
-          InputField(Id(:hook_db_user_name), Opt(:hstretch), "DB &user name:",
-            values[:hook_db_user_name] || ""),
-          Password(Id(:hook_db_password), Opt(:hstretch), "DB &password:",
-            values[:hook_db_password] || ""),
-          InputField(Id(:hook_port_number), Opt(:hstretch), "&Port number:",
-            values[:hook_port_number] || "")
-        )
-      end
-
-      def generate_and_show_hook
-        txt = @my_model.hook_script
-        base_popup(
-          "Please review the script",
-          nil,
-          MinSize(75, 20, MultiLineEdit(Id(:hook_script), "Hook script (Python):", txt))
         )
       end
 
@@ -232,12 +196,9 @@ module SapHA
                 two_widget_hbox(
                   InputField(Id(:np_hana_sid), Opt(:hstretch), "System ID:", ""),
                   InputField(Id(:np_hana_inst), Opt(:hstretch), "Instance number:", "")
-                ),
-                two_widget_hbox(
-                  Empty(),
-                  PushButton(Id(:hook_script_params), Opt(:hstretch), "Hook script...")
                 )
-              ))
+              )
+            )
           )
         end
       end
