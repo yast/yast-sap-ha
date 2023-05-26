@@ -46,6 +46,7 @@ Requires:       HANA-Firewall >= 2.0.3
 Requires:       util-linux
 Requires:       SAPHanaSR
 Requires:       kmod
+Requires:       rubygem(%{rb_default_ruby_abi}:xmlrpc)
 # for pidof
 Requires:       sysvinit-tools
 
@@ -54,6 +55,7 @@ BuildRequires:  csync2
 BuildRequires:  firewalld
 BuildRequires:  kmod
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
