@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-sap-ha
 #
-# Copyright (c) 2022 SUSE LLC
+# Copyright (c) 2023 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.5.2
+Version:        4.5.7
 Release:        0
 
 BuildArch:      noarch
