@@ -19,15 +19,14 @@
 # Summary: SUSE High Availability Setup for SAP Products: Watchdog configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/system/watchdog'
-require_relative 'base_config'
+require "yast"
+require "sap_ha/system/watchdog"
+require_relative "base_config"
 
 module SapHA
   module Configuration
     # Watchdog configuration
     class Watchdog < BaseConfig
-
       attr_reader :to_install, :configured, :proposals, :loaded
 
       include Yast::UIShortcuts
@@ -62,9 +61,9 @@ module SapHA
 
       def description
         prepare_description do |dsc|
-          dsc.parameter('Configured modules', @configured.join(', ')) unless @configured.empty?
-          dsc.parameter('Already loaded modules', @loaded.join(', ')) unless @loaded.empty?
-          dsc.parameter('Modules to install', @to_install.join(', ')) unless @to_install.empty?
+          dsc.parameter("Configured modules", @configured.join(", ")) unless @configured.empty?
+          dsc.parameter("Already loaded modules", @loaded.join(", ")) unless @loaded.empty?
+          dsc.parameter("Modules to install", @to_install.join(", ")) unless @to_install.empty?
         end
       end
 
@@ -81,7 +80,7 @@ module SapHA
 
       def apply(role)
         return false unless configured?
-        @nlog.info('Appying Watchdog Configuration')
+        @nlog.info("Appying Watchdog Configuration for #{role}")
         stat = true
         @to_install.each do |module_name|
           stat &= System::Watchdog.install(module_name)

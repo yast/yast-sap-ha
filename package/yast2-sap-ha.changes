@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Fri May 26 04:52:05 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)
+- yast2-sap-ha can not configure firewall (bsc#1211027)
+- Rework package sturcture to use the yast2 defaults
+- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
+- Add csync2 to buildrequires
+- 4.6.1 
+
+-------------------------------------------------------------------
 Mon Mar  6 12:58:58 UTC 2023 - Ladislav Slezák <lslezak@suse.cz>
 
 - Bump version to 4.6.0 (bsc#1208913)
