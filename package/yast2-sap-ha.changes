@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 Fri May 26 13:48:04 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
-- The hook creation is dperecated. This was removed from wizard and from backend.
+- The hook creation is derpecated. This was removed from wizard and from backend.
   This functionality now will be provided by the susCostOpt.py delivered by SAPHanaSR
   Now a key sus_<SID>_costopt must be created.
 - 4.4.3 
