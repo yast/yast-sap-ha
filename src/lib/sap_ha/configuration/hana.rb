@@ -247,7 +247,7 @@ module SapHA
 
       def configure_crm
         # TODO: move this to SapHA::System::Local.configure_crm
-        primary_host_name = @global_config.get_primary_on_primary
+        primary_host_name = @global_config.cluster.get_primary_on_primary
         secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
         crm_conf = Helpers.render_template("tmpl_cluster_config.erb", binding)
         file_path = Helpers.write_var_file("cluster.config", crm_conf)
