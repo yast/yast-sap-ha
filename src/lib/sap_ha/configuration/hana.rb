@@ -311,7 +311,7 @@ module SapHA
       def add_plugin_to_global_ini(plugin)
         sr_path = Helpers.data_file_path("GLOBAL_INI_#{plugin}")
         if File.exist?("#{sr_path}.erb")
-          sr_path = Helpers.write_var_file(plugin, Helpers.render_template("#{sr_path}.erb", binding))
+          sr_path = Helpers.write_var_file(plugin, Helpers.render_template("GLOBAL_INI_#{plugin}.erb", binding))
         end
         command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", @system_id, sr_path]
         out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
