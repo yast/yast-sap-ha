@@ -1,10 +1,18 @@
 -------------------------------------------------------------------
+Fri Jun  9 05:47:22 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)
+- New function to get the primary hostname on the master.
+- Fix setting secondary and primary hostname for the template
+- 4.4.4
+
+-------------------------------------------------------------------
 Fri May 26 13:48:04 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
-- The hook creation is dperecated. This was removed from wizard and from backend.
+- The hook creation is deprecated. This was removed from wizard and from backend.
   This functionality now will be provided by the susCostOpt.py delivered by SAPHanaSR
   Now a key sus_<SID>_costopt must be created.
-- 4.4.3 
+- 4.4.3
 
 -------------------------------------------------------------------
 Tue May  2 16:07:02 UTC 2023 - Peter Varkoly <varkoly@suse.com>

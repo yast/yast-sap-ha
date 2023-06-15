@@ -86,7 +86,7 @@ location loc_<%= @np_system_id -%>_never_<%= primary_host_name -%> rsc_SAP_<%= @
 colocation col_<%= @np_system_id -%>_never_with_<%= @system_id -%>ip -inf: rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:Started \
     rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>
 
-order ord_<%= @np_system_id -%>_stop_before_<%= @system_id -%>-promote mandatory \
+order ord_<%= @np_system_id -%>_stop_before_<%= @system_id -%>-promote mandatory: \
     rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
     msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote
 
