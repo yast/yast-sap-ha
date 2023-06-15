@@ -280,12 +280,13 @@ module SapHA
 
       def get_primary_on_primary
         SapHA::System::Network.ip_addresses.each do |my_ip|
-	  @nodes.map do |_, node|
+	  @nodes.each do |_, node|
 	    if node[:ip_ring1] == my_ip
 	      return node[:host_name]
 	    end
 	  end
 	end
+        return nil
       end
 
       def validate(verbosity = :verbose)
