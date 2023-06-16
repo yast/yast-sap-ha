@@ -18,18 +18,18 @@
 # Summary: SUSE High Availability Setup for SAP Products
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require_relative '../../../../test_helper'
-require 'sap_ha/exceptions'
-require 'sap_ha/system/local'
-require 'sap_ha/system/shell_commands'
+require_relative "../../../../test_helper"
+require "sap_ha/exceptions"
+require "sap_ha/system/local"
+require "sap_ha/system/shell_commands"
 
 describe SapHA::System::LocalClass do
 
-  let(:bad_exit) {double('ExitStatus', exitstatus: 1)}
-  let(:good_exit) {double('ExitStatus', exitstatus: 0)}
+  let(:bad_exit) { double("ExitStatus", exitstatus: 1) }
+  let(:good_exit) { double("ExitStatus", exitstatus: 0) }
 
-  describe '#block_devices' do
-    it 'lists all block devices on this machine' do
+  describe "#block_devices" do
+    it "lists all block devices on this machine" do
       result = SapHA::System::Local.block_devices
       expect(result).not_to be_nil
     end
@@ -85,13 +85,13 @@ describe SapHA::System::LocalClass do
   # end
 
   # # TODO: auto-generated
-  # describe '#open_ports' do
+  # describe '#open_cluster_service' do
   #   it 'works' do
   #     local_class = SapHA::System::LocalClass.new
   #     role = double('role')
   #     rings = double('rings')
   #     number_of_rings = double('number_of_rings')
-  #     result = local_class.open_ports(role, rings, number_of_rings)
+  #     result = local_class.open_cluster_service
   #     expect(result).not_to be_nil
   #   end
   # end
@@ -134,8 +134,8 @@ describe SapHA::System::LocalClass do
   #   end
   # end
 
-  describe '#append_hosts_file' do
-    let(:hosts) {
+  describe "#append_hosts_file" do
+    let(:hosts) do
       {
         node1: {
           host_name: "hana01",
@@ -150,26 +150,26 @@ describe SapHA::System::LocalClass do
           node_id:   1
         }
       }
-    }
-    context 'when provided with a list of nodes in 1-ring configuration' do
-      it 'writes the hosts file' do
+    end
+    context "when provided with a list of nodes in 1-ring configuration" do
+      it "writes the hosts file" do
         io = StringIO.new
         exp = "192.168.100.1\thana01 # added by yast2-sap-ha\n"\
           "192.168.100.2\thana02 # added by yast2-sap-ha\n"
-        expect(File).to receive(:open).with('/etc/hosts', 'a').and_yield(io)
+        expect(File).to receive(:open).with("/etc/hosts", "a").and_yield(io)
         SapHA::System::Local.append_hosts_file(hosts)
         expect(io.string).to eq exp
       end
     end
 
-    context 'when provided with a list of nodes in 2-ring configuration' do
-      it 'writes the hosts file' do
+    context "when provided with a list of nodes in 2-ring configuration" do
+      it "writes the hosts file" do
         io = StringIO.new
         exp = "192.168.100.1\thana01 # added by yast2-sap-ha\n"\
           "192.168.100.2\thana02 # added by yast2-sap-ha\n"
-        hosts[:node1][:ip_ring2] = '192.168.101.1'
-        hosts[:node2][:ip_ring2] = '192.168.101.2'
-        expect(File).to receive(:open).with('/etc/hosts', 'a').and_yield(io)
+        hosts[:node1][:ip_ring2] = "192.168.101.1"
+        hosts[:node2][:ip_ring2] = "192.168.101.2"
+        expect(File).to receive(:open).with("/etc/hosts", "a").and_yield(io)
         SapHA::System::Local.append_hosts_file(hosts)
         expect(io.string).to eq exp
       end
@@ -215,16 +215,16 @@ describe SapHA::System::LocalClass do
   #   end
   # end
 
-  describe '#cluster_maintenance' do
-    it 'works' do
+  describe "#cluster_maintenance" do
+    it "works" do
       expect(SapHA::System::Local).to receive(:exec_outerr_status)
-        .with('crm', 'configure', 'property', 'maintenance-mode=true')
-        .and_return(['', good_exit])
+        .with("crm", "configure", "property", "maintenance-mode=true")
+        .and_return(["", good_exit])
       result = SapHA::System::Local.cluster_maintenance(:on)
       expect(result).to eq true
       expect(SapHA::System::Local).to receive(:exec_outerr_status)
-        .with('crm', 'configure', 'property', 'maintenance-mode=false')
-        .and_return(['', good_exit])
+        .with("crm", "configure", "property", "maintenance-mode=false")
+        .and_return(["", good_exit])
       result = SapHA::System::Local.cluster_maintenance(:off)
       expect(result).to eq true
     end

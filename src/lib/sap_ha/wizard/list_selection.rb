@@ -19,9 +19,9 @@
 # Summary: SUSE High Availability Setup for SAP Products: Base List Selection view
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/exceptions'
+require "yast"
+require "sap_ha/helpers"
+require "sap_ha/exceptions"
 
 module SapHA
   module Wizard
@@ -36,11 +36,11 @@ module SapHA
         ret = Yast::UI.WaitForEvent
         return :next unless ret # allow for debugging
         # Allow for double-clicking the item in the list
-        while ret['ID'] == :selection_box
-          return :next if ret['EventReason'] == 'Activated'
+        while ret["ID"] == :selection_box
+          return :next if ret["EventReason"] == "Activated"
           ret = Yast::UI.WaitForEvent
         end
-        ret['ID']
+        ret["ID"]
       end
     end
   end
