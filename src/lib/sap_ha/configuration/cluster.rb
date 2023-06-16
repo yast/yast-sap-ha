@@ -278,6 +278,17 @@ module SapHA
         end.compact
       end
 
+      def get_primary_on_primary
+        SapHA::System::Network.ip_addresses.each do |my_ip|
+	  @nodes.each do |_, node|
+	    if node[:ip_ring1] == my_ip
+	      return node[:host_name]
+	    end
+	  end
+	end
+        return nil
+      end
+
       def validate(verbosity = :verbose)
         validate_comm_layer(verbosity).concat(validate_nodes(verbosity))
       end

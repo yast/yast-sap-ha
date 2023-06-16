@@ -4,8 +4,13 @@ Fri May 26 04:52:05 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 - yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)
 - yast2-sap-ha can not configure firewall (bsc#1211027)
 - Rework package sturcture to use the yast2 defaults
+- New function to get the primary hostname on the master.
+- Fix setting secondary and primary hostname for the template
+- Do not enbale and start csync2 by installing the package. This is unsecure.
+- The hook creation is deprecated. This was removed from wizard and from backend.
+  This functionality now will be provided by the susCostOpt.py delivered by SAPHanaSR
+  Now a key sus_<SID>_costopt must be created.
 - yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
-- Add csync2 to buildrequires
 - 4.6.1 
 
 -------------------------------------------------------------------
@@ -29,35 +34,54 @@ Thu Feb 23 11:21:43 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - L3: yast2-sap-ha error - Could not adjust global.ini for the production system
   (bsc#1207740)
-- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
-- 4.4.1
+- Add csync2 to buildrequires
+- 4.5.6
 
 -------------------------------------------------------------------
-Thu Dec 29 10:28:37 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Thu Dec 29 11:09:12 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - Clean up Rakefile
-- 1.0.18
-
--------------------------------------------------------------------
-Thu Dec 22 09:47:04 UTC 2022 - Peter Varkoly <varkoly@suse.com>
-
 - Use ruby base64 to replace uuencode/uudecode
   (bsc#1206601)
-- 1.0.17
+- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
+  Enable csync2 by installing the package. yast2-sap-ha will
+  not be executed on the second node.
+- 4.5.5
 
 -------------------------------------------------------------------
-Tue Sep  6 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Tue Sep  9 10:06:08 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 HA Setup for SAP Products - cannot input several instance numbers
   (bsc#1202979)
-- 1.0.16
+- 4.5.4
+
+-------------------------------------------------------------------
+Thu Sep  8 07:01:42 UTC 2022 - Michal Filka <mfilka@suse.com>
+
+- bsc#1203227
+  - replaced fgrep by grep -F
+- 4.5.3
+
+-------------------------------------------------------------------
+Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha: csync2 configuration not enabled (bsc#1202112)
+- 4.5.2
 
 -------------------------------------------------------------------
 Mon Jun 13 14:32:45 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 sap_ha tool does not allow digits at the beginning of site names
   (bsc#1200427)
-- 1.0.15
+- 4.5.1
+
+-------------------------------------------------------------------
+Tue Jun  7 07:37:53 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+
+- ruby-xmlrpc is not part of stdlib anymore
+  Update requirement
+- Adapt version to normal yast2 version
+- 4.5.0
 
 -------------------------------------------------------------------
 Sun May 22 18:09:27 UTC 2022 - Peter Varkoly <varkoly@suse.com>
@@ -78,17 +102,17 @@ Fri May 13 12:09:33 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 - 1.0.13
 
 -------------------------------------------------------------------
-Tue May  3 13:58:15 UTC 2022 - Peter Varkoly <varkoly@suse.com>
+Tue May  3 13:56:48 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
-- softdog missing in Yast while configuring HA for SAP Products
-  (bsc#1199029)
+- Adapt ntp tests
+- (bsc#1199029)
+  softdog missing in Yast while configuring HA for SAP Products
 - 1.0.12
 
 -------------------------------------------------------------------
 Tue Dec  7 15:12:47 UTC 2021 - Peter Varkoly <varkoly@suse.com>
 
 - kmod-compat has broken dependencies (bsc#1186618)
-  Update requirement
 - 1.0.11
 
 -------------------------------------------------------------------
@@ -98,6 +122,7 @@ Tue Oct 12 16:08:26 UTC 2021 - Peter Varkoly <varkoly@suse.com>
   (bsc#1190774)
   Add SAPHanaSR via global.ini as proposed in
   https://documentation.suse.com/sbp/all/html/SLES4SAP-hana-sr-guide-PerfOpt-15/index.html#id-1.10.6.6"
+- Remove HANA takeover hook script. This is not necessary for HANA 2 any more.
 - 1.0.10
 
 -------------------------------------------------------------------
