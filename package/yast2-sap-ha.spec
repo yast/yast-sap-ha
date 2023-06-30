@@ -32,6 +32,7 @@ Requires:       crmsh
 Requires:       csync2
 Requires:       hawk2
 Requires:       pacemaker
+Requires:       rubygem(%{rb_default_ruby_abi}:xmlrpc)
 Requires:       yast2
 Requires:       yast2-cluster >= 4.4.4
 Requires:       yast2-ruby-bindings
@@ -54,6 +55,7 @@ BuildRequires:  csync2
 BuildRequires:  firewalld
 BuildRequires:  kmod
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  sysvinit-tools
 BuildRequires:  update-desktop-files
