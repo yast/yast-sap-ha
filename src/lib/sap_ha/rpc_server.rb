@@ -49,9 +49,8 @@ module SapHA
   class RPCServer
     include System::ShellCommands
 
-    LOG_FILE_PATH = "/tmp/rpc_serv"
-
     def initialize(options = {})
+      @log_file_path = SapHA::Helpers.var_file_path("rpc_serv")
       init_logger
       @logger.info "--- #{self.class}.#{__callee__} ---"
       @server = if options[:local]
@@ -72,14 +71,14 @@ module SapHA
 
     def init_logger
       begin
-        @fh = File.open(LOG_FILE_PATH, File::WRONLY | File::APPEND | File::CREAT | File::EXCL)
+        @fh = File.open(@log_file_path, File::WRONLY | File::APPEND | File::CREAT | File::EXCL)
       rescue Errno::EEXIST
-        @fh = File.open(LOG_FILE_PATH, File::WRONLY | File::APPEND)
+        @fh = File.open(@log_file_path, File::WRONLY | File::APPEND)
       end
       @fh.flock(File::LOCK_EX)
       @fh.sync = true
       @fh.flock(File::LOCK_UN)
-      @logger = Logger.new("/tmp/rpc_serv")
+      @logger = Logger.new(@log_file_path)
       @logger.level = Logger::INFO
       @logger.formatter = proc do |severity, datetime, _progname, msg|
         date = datetime.strftime("%Y-%m-%d %H:%M:%S")
