@@ -19,14 +19,13 @@
 # Summary: SUSE High Availability Setup for SAP Products: Cluster members configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'erb'
-require 'socket'
-require_relative 'base_config'
+require "yast"
+require "erb"
+require "socket"
+require_relative "base_config"
 
-Yast.import 'NtpClient'
-Yast.import 'Progress'
-Yast.import 'OSRelease'
+Yast.import "NtpClient"
+Yast.import "Progress"
 
 module SapHA
   module Configuration
@@ -68,23 +67,19 @@ module SapHA
 
       def description
         prepare_description do |dsc|
-          dsc.parameter('Synchronize with servers', @used_servers.join(', '))
-          dsc.parameter('Start at boot', start_at_boot?)
+          dsc.parameter("Synchronize with servers", @used_servers.join(", "))
+          dsc.parameter("Start at boot", start_at_boot?)
         end
       end
 
       def start_at_boot?
-        if Yast::OSRelease.ReleaseVersion.start_with?('15') # if we are running on SLE 15
-          @config["ntp_sync"] == 'systemd'
-        else # on SLE 12
-          @config["start_at_boot"]
-        end
+        @config["ntp_sync"] == "systemd"
       end
 
       def apply(role)
         return false unless configured?
         # Master has the configuration in place already
-        @nlog.info('Appying NTP Configuration')
+        @nlog.info("Appying NTP Configuration")
         return true if role == :master
         Yast::NtpClient.Import @config
         stat = Yast::NtpClient.Write

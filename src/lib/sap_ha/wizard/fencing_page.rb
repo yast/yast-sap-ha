@@ -20,10 +20,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 # Authors: Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
+require "yast"
 require "yast/i18n"
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
 
 module SapHA
   module Wizard
@@ -31,7 +31,7 @@ module SapHA
     class FencingConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = model.fencing
         @page_validator = @my_model.method(:validate)
       end
@@ -39,34 +39,33 @@ module SapHA
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Fencing Mechanism'),
+          _("Fencing Mechanism"),
           base_layout_with_label(
-            'Choose STONITH method',
+            "Choose STONITH method",
             VBox(
-              ComboBox(Id(:stonith_method), Opt(:hstretch), 'STONITH method:', ['SBD', 'IPMI']),
+              ComboBox(Id(:stonith_method), Opt(:hstretch), "STONITH method:", ["SBD", "IPMI"]),
               HBox(
                 MinHeight(5,
                   Table(
                     Id(:sbd_dev_list_table),
                     Opt(:keepSorting, :immediate),
-                    Header(_('#'), _('Device path')),
+                    Header(_("#"), _("Device path")),
                     @model.fencing.table_items
-                  )
-                )
+                  ))
               ),
               HBox(
-                PushButton(Id(:add_sbd_device), _('Add')),
-                PushButton(Id(:remove_sbd_device), _('Remove'))
+                PushButton(Id(:add_sbd_device), _("Add")),
+                PushButton(Id(:remove_sbd_device), _("Remove"))
               ),
               VSpacing(1),
-              InputField(Id(:sbd_options), Opt(:hstretch), 'SBD options:', ''),
+              InputField(Id(:sbd_options), Opt(:hstretch), "SBD options:", ""),
               VSpacing(1),
-              CheckBox(Id(:sbd_delayed_start), Opt(:hstretch), 'Delay SBD start'),
+              CheckBox(Id(:sbd_delayed_start), Opt(:hstretch), "Delay SBD start"),
               VSpacing(1),
               Label(_("Note that all data on the selected devices will be destroyed."))
             )
           ),
-          Helpers.load_help('fencing'),
+          Helpers.load_help("fencing"),
           true,
           true
         )
@@ -82,12 +81,12 @@ module SapHA
         set_value(:stonith_method, false, :Enabled)
         set_value(:sbd_dev_list_table, @my_model.table_items, :Items)
         set_value(:sbd_options, @my_model.sbd_options)
-        set_value(:sbd_delayed_start, @my_model.sbd_delayed_start == 'yes' ? true : false)
+        set_value(:sbd_delayed_start, @my_model.sbd_delayed_start == "yes" ? true : false)
       end
 
       def update_model
         @my_model.sbd_options = value(:sbd_options)
-        @my_model.sbd_delayed_start = value(:sbd_delayed_start) ? 'yes' : 'no'
+        @my_model.sbd_delayed_start = value(:sbd_delayed_start) ? "yes" : "no"
       end
 
       def handle_user_input(input, event)
@@ -109,13 +108,13 @@ module SapHA
         items = @model.fencing.combo_items
         Yast::UI.OpenDialog(
           VBox(
-            Label(Opt(:boldFont), 'SBD Device Configuration'),
-            ComboBox(Id(:sbd_combo), Opt(:notify, :hstretch), 'Type:', items),
-            MinSize(55, 11, 
-              SelectionBox(Id(:sbd_ids), Opt(:notify, :immediate), 'Identifiers:', [])),
-            TextEntry(Id(:dev_path), Opt(:hstretch), 'Device path:', ''),
+            Label(Opt(:boldFont), "SBD Device Configuration"),
+            ComboBox(Id(:sbd_combo), Opt(:notify, :hstretch), "Type:", items),
+            MinSize(55, 11,
+              SelectionBox(Id(:sbd_ids), Opt(:notify, :immediate), "Identifiers:", [])),
+            TextEntry(Id(:dev_path), Opt(:hstretch), "Device path:", ""),
             Yast::Wizard.CancelOKButtonBox
-          ) 
+          )
         )
         handle_combo
         loop do
@@ -145,7 +144,7 @@ module SapHA
         end
       end
 
-      private
+    private
 
       def handle_combo
         dev_type = value(:sbd_combo)
