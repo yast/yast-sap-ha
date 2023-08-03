@@ -3,6 +3,7 @@ Thu Aug  3 08:35:22 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - Add ExclusiveArch:  x86_64 ppc64le
   SAP packages are only for x86_64 and ppc64le
+  Avoid build problems with other SAP packages
 - 4.6.2
 
 -------------------------------------------------------------------
