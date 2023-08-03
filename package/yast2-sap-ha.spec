@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.4.4
+Version:        4.4.5
 Release:        0
 
 BuildArch:      noarch
@@ -64,6 +64,7 @@ BuildRequires:  yast2-devtools
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-packager
 BuildRequires:  yast2-ruby-bindings
+ExclusiveArch:  x86_64 ppc64le
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0-only
 Group:          System/YaST
