@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Aug  3 08:38:16 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- Add ExclusiveArch:  x86_64 ppc64le
+  SAP packages are only for x86_64 and ppc64le
+  Avoid build problems with other SAP packages
+- 4.5.8 
+
+-------------------------------------------------------------------
 Fri May 26 04:40:48 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)
