@@ -201,4 +201,37 @@ describe SapHA::SemanticChecks do
       expect(subject.sap_instance_number("999")).to eq false
     end
   end
+
+  describe 'SAP naming tests' do
+    it 'reports if valid SID and site names will be allowed' do
+      subject.silent = true
+      expect(subject.identifier('1Nuremberg')).to eq true
+      expect(subject.identifier('1Nuremberg-A')).to eq true
+      expect(subject.identifier('1Nuremberg_BA')).to eq true
+      expect(subject.identifier('SuSE-1_2')).to eq true
+      expect(subject.sap_sid('X12')).to eq true
+    end
+    it 'reports if invalid SID and site names will be found' do
+      subject.silent = true
+      expect(subject.identifier('Nürnberg')).to eq false
+      expect(subject.identifier('-Nuremberg')).to eq false
+      expect(subject.identifier('_Nuremberg')).to eq false
+      expect(subject.identifier('*WalDorf-1_2/')).to eq false
+      expect(subject.sap_sid('123')).to eq false
+      expect(subject.sap_sid('NOT')).to eq false
+    end
+    it 'reports if valid instance number will be allowed' do
+      subject.silent = true
+      expect(subject.sap_instance_number('05')).to eq true
+      expect(subject.sap_instance_number('09')).to eq true
+      expect(subject.sap_instance_number('10')).to eq true
+      expect(subject.sap_instance_number('99')).to eq true
+    end
+    it 'reports if invalid instance number will be found' do
+      subject.silent = true
+      expect(subject.sap_instance_number('1')).to eq false
+      expect(subject.sap_instance_number('1A')).to eq false
+      expect(subject.sap_instance_number('999')).to eq false
+    end
+  end
 end
