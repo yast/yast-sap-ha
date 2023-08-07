@@ -50,7 +50,6 @@ Requires:       kmod
 # for pidof
 Requires:       sysvinit-tools
 
-BuildRequires:  HANA-Firewall >= 2.0.3
 BuildRequires:  csync2
 BuildRequires:  firewalld
 BuildRequires:  kmod
