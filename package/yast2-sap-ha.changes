@@ -1,9 +1,6 @@
 -------------------------------------------------------------------
 Mon Aug  7 05:06:22 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
-- Add ExclusiveArch:  x86_64 ppc64le
-  SAP packages are only for x86_64 and ppc64le
-  Avoid build problems with other SAP packages
 - New function to get the primary hostname on the master.
 - Fix setting secondary and primary hostname for the template
 - The hook creation is deprecated. This was removed from wizard and from backend.

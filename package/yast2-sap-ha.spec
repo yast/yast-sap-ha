@@ -49,7 +49,6 @@ Requires:       kmod
 # for pidof
 Requires:       sysvinit-tools
 
-BuildRequires:  HANA-Firewall >= 2.0.3
 BuildRequires:  csync2
 BuildRequires:  firewalld
 BuildRequires:  kmod
@@ -64,7 +63,6 @@ BuildRequires:  yast2-devtools
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-packager
 BuildRequires:  yast2-ruby-bindings
-ExclusiveArch:  x86_64 ppc64le
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0-only
 Group:          System/YaST
