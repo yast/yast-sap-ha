@@ -72,6 +72,8 @@ module SapHA
         if @my_model.additional_instance
           @my_model.np_system_id = value(:np_hana_sid).upcase
           @my_model.np_instance = value(:np_hana_inst)
+          @my_model.preload_column_tables = value(:preload_column_tables)
+          @my_model.global_alloc_limit = value(:global_alloc_limit)
         end
       end
 
