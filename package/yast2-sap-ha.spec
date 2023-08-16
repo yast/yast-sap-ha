@@ -19,9 +19,7 @@
 Name:           yast2-sap-ha
 Version:        4.5.8
 Release:        0
-
 BuildArch:      noarch
-
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
 
@@ -33,7 +31,7 @@ Requires:       csync2
 Requires:       hawk2
 Requires:       pacemaker
 Requires:       yast2
-Requires:       yast2-cluster >= 4.4.4
+Requires:       yast2-cluster >= 4.3.8
 Requires:       yast2-ruby-bindings
 Requires:       yast2-ntp-client
 # for opening URLs
