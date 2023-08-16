@@ -19,9 +19,7 @@
 Name:           yast2-sap-ha
 Version:        4.6.2
 Release:        0
-
 BuildArch:      noarch
-
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
 
@@ -34,7 +32,7 @@ Requires:       hawk2
 Requires:       pacemaker
 Requires:       rubygem(%{rb_default_ruby_abi}:xmlrpc)
 Requires:       yast2
-Requires:       yast2-cluster >= 4.4.4
+Requires:       yast2-cluster >= 4.3.8
 Requires:       yast2-ruby-bindings
 Requires:       yast2-ntp-client
 # for opening URLs
@@ -65,7 +63,6 @@ BuildRequires:  yast2-devtools
 BuildRequires:  yast2-ntp-client
 BuildRequires:  yast2-packager
 BuildRequires:  yast2-ruby-bindings
-ExclusiveArch:  x86_64 ppc64le
 Summary:        SUSE High Availability Setup for SAP Products
 License:        GPL-2.0-only
 Group:          System/YaST
