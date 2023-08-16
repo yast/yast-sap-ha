@@ -3,7 +3,7 @@ Mon Aug  7 05:13:47 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - Fix evaluation CustOpt settings. (bsc#1209204)
 - Remove superfluously BuildRequires: HANA-Firewall
-- 4.5.8 
+- 4.5.8
 
 -------------------------------------------------------------------
 Fri May 26 04:40:48 UTC 2023 - Peter Varkoly <varkoly@suse.com>
