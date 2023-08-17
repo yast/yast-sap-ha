@@ -1,6 +1,7 @@
 -------------------------------------------------------------------
 Mon Aug  7 05:06:22 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
+- Set default value for global_alloc_limit to "0"
 - New function to get the primary hostname on the master.
 - Fix setting secondary and primary hostname for the template
 - The hook creation is deprecated. This was removed from wizard and from backend.
