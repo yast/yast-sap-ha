@@ -96,7 +96,7 @@ module SapHA
         @additional_instance = value
         return unless value
         @production_constraints = {
-          global_alloc_limit:    0,
+          global_alloc_limit:    "0",
           preload_column_tables: "false"
         }
       end
