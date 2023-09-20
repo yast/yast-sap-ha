@@ -40,7 +40,9 @@ Requires:       xdg-utils
 Requires:       expect
 Requires:       firewalld
 Requires:       openssh
+%ifarch x86_64 ppc64le
 Requires:       HANA-Firewall >= 2.0.3
+%endif
 Requires:       util-linux
 Requires:       SAPHanaSR
 Requires:       kmod
