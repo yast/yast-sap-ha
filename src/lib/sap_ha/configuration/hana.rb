@@ -303,7 +303,7 @@ module SapHA
           add_plugin_to_global_ini("SUS_COSTOPT", @system_id) if role != :master
           add_plugin_to_global_ini("NON_PROD", @np_system_id) if role != :master
           command = ["hdbnsutil", "-reloadHADRProviders"]
-          out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
+          out, status = su_exec_outerr_status("#{@np_system_id.downcase}adm", *command)
         else
           # performance optimized
           add_plugin_to_global_ini("SUS_CHKSRV", @system_id)
