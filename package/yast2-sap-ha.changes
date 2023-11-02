@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Thu Nov  2 10:05:10 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha wizard terminates abruptly when save configuration option
+  is selected post configuration (bsc#1214603)
+- yast2-sap-ha does not set global_allocation_limit for non productive database
+  (bsc#1216651)
+- 4.4.6
+
+-------------------------------------------------------------------
 Mon Aug  7 05:13:47 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - Set default value for global_alloc_limit to "0"
