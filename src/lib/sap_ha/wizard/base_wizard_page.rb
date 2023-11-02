@@ -250,8 +250,10 @@ module SapHA
             Yast::UI.CloseDialog
             return parameters
           when :cancel
-            Yast::UI.CloseDialog
-            return nil
+            if Yast::Popup.YesNo(_("Do you realy want to abort?"))
+              Yast::UI.CloseDialog
+              return nil
+            end
           end
         end
       end
