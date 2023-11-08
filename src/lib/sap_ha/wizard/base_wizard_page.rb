@@ -44,6 +44,7 @@ module SapHA
 
       # Initialize the Wizard page
       def initialize(model)
+        textdomain "hana-ha"
         log.debug "--- #{self.class}.#{__callee__} ---"
         @model = model
       end
