@@ -105,8 +105,12 @@ module SapHA
           case input
           # TODO: return only :abort, :cancel and :back from here. If the page needs anything else,
           # it should redefine the main_loop
-          when :abort, :back, :cancel, :join_cluster
-            @model.write_config if input == :abort || input == :cancel
+          when :abort, :cancel
+            if Yast::Popup.YesNo(_("Do you realy want to abort?"))
+              @model.write_config
+              return input
+            end
+          when :back, :join_cluster
             update_model
             return input
           when :next, :summary
@@ -240,8 +244,9 @@ module SapHA
               end.params[0]
               parameters[id] = Yast::UI.QueryWidget(Id(id), :Value)
             end
-            log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} ---"
+            log.debug "--- #{self.class}.#{__callee__} popup parameters: #{parameters} --- #{validator.class} -- #{@model.no_validators}"
             if validator && !@model.no_validators
+              log.debug "validator called"
               ret = SemanticChecks.instance.check_popup(validator, parameters)
               unless ret.empty?
                 show_dialog_errors(ret)
@@ -251,10 +256,8 @@ module SapHA
             Yast::UI.CloseDialog
             return parameters
           when :cancel
-            if Yast::Popup.YesNo(_("Do you realy want to abort?"))
-              Yast::UI.CloseDialog
-              return nil
-            end
+            Yast::UI.CloseDialog
+            return nil
           end
         end
       end
