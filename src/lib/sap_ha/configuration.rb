@@ -94,7 +94,7 @@ module SapHA
     # loading an old configuration to detect new hardware.
     def refresh_all_proposals
       @watchdog.refresh_proposals
-      @fencing.read_system
+      @fencing.refresh_proposals
     end
 
     # Product ID setter. Raises an ScenarioNotFoundException if the ID was not found
@@ -233,6 +233,7 @@ module SapHA
 
     def write_config
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      @timestamp = Time.now
       SapHA::Helpers.write_var_file("configuration.yml", dump(false, true), timestamp: @timestamp)
     end
 
