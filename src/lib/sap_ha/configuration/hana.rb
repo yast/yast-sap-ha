@@ -97,8 +97,8 @@ module SapHA
         return unless value
 	@prefer_takeover = false
         @production_constraints = {
-          global_alloc_limit_prod:    "0",
-          global_alloc_limit_non:    "0",
+          global_alloc_limit_prod:  "0",
+          global_alloc_limit_non:   "0",
           preload_column_tables: "false"
         }
       end
@@ -197,8 +197,8 @@ module SapHA
       def production_constraints_validation(check, hash)
         check.element_in_set(hash[:preload_column_tables], ["true", "false"],
           "The field must contain a boolean value: 'true' or 'false'", "Preload column tables")
-        check.not_equal(hash[:global_alloc_limit_prod], 0, "Global allocation limit production system must be adapted.")
-        check.not_equal(hash[:global_alloc_limit_non], 0, "Global allocation limit of non production system must be adapted.")
+        check.not_equal(hash[:global_alloc_limit_prod], 0.to_s, "Global allocation limit production system must be adapted.")
+        check.not_equal(hash[:global_alloc_limit_non], 0.to_s, "Global allocation limit of non production system must be adapted.")
       end
 
       # Validator for the non-production instance constraints popup
