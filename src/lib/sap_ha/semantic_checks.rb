@@ -284,7 +284,7 @@ module SapHA
         false
       else
         true
-                end
+      end
       transaction_begin
       yield self
       return transaction_end if verbosity == :verbose
