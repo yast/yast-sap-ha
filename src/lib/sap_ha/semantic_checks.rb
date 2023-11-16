@@ -264,6 +264,18 @@ module SapHA
       report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
     end
 
+    # Check if a HANA db with given sid is installed
+    def hana_is_installed(value, message = "", field_name = "SID", hide_value = false)
+      message = "No SAP HANA is installed with given SID." if message.empty?
+      begin
+        flag = File::Stat.new("/usr/sap/" + value.upcase).dir?
+      rescue StandardError
+        flag = false
+      end
+      log.error "hana installed: #{value}.blockdev? = #{flag}"
+      report_error(flag, msg, field_name, value)
+    end
+
     # Check if string is a block device
     # @param value [String] device path
     def block_device(value, field_name)

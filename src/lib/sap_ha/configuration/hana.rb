@@ -113,6 +113,7 @@ module SapHA
 
       def validate(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
+          check.hana_is_installed(@system_id)
           check.ipv4(@virtual_ip, "Virtual IP")
           check.nonneg_integer(@virtual_ip_mask, "Virtual IP mask")
           check.integer_in_range(@virtual_ip_mask, 1, 32, "CIDR mask has to be between 1 and 32.",
@@ -139,6 +140,7 @@ module SapHA
               "There is no such HANA user store key detected.", "Secure store key")
           end
           if @additional_instance
+            check.hana_is_installed(@np_system_id)
             check.sap_instance_number(@np_instance, nil, "Non-Production Instance Number")
             check.sap_sid(@np_system_id, nil, "Non-Production System ID")
             check.not_equal(@instance, @np_instance, "SAP HANA instance numbers should not collide",
