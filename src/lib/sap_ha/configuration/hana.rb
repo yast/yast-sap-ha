@@ -271,7 +271,7 @@ module SapHA
           @nlog.info("Firewall will be configured for HANA services.")
           instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
           instances << @instance
-          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
+          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances.join(" "))
           Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
           _s = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
           _s = exec_status("/usr/bin/firewall-cmd", "--reload")
