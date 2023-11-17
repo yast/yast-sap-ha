@@ -22,6 +22,7 @@
 require "sap_ha/exceptions"
 require "yast"
 require "erb"
+require "sap_ha/system/shell_commands"
 
 Yast.import "IP"
 Yast.import "Hostname"
@@ -31,6 +32,7 @@ module SapHA
   class SemanticChecks
     include Singleton
     include Yast::Logger
+    include SapHA::System::ShellCommands
 
     attr_accessor :silent
     attr_reader :checks_passed
@@ -50,7 +52,7 @@ module SapHA
       @errors = []
       @checks_passed = true
       @silent = true
-      @test = !ENV["Y2DIR"].nil?
+      @no_test = ENV["Y2DIR"].nil?
     end
 
     # Check if the string is a valid IPv4 address
@@ -266,15 +268,25 @@ module SapHA
     end
 
     # Check if a HANA db with given sid is installed
-    def hana_is_installed(value, message = "", field_name = "SID", hide_value = false)
-      message = "No SAP HANA is installed with given SID." if message.empty?
-      begin
-        flag = File.directory?("/usr/sap/" + value.upcase)
-      rescue StandardError
-        flag = false
+    def hana_is_installed(value, nodes)
+      flag = true
+      message = ''
+      my_ips = SapHA::System::Network.ip_addresses
+      if @no_test
+        nodes.each do |node|
+          log.debug("node #{node} #{my_ips}")
+	  if my_ips.include?(node)
+	    status = exec_status("test", "-d", "/usr/sap/#{value.upcase}")
+	  else
+	    status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "test", "-d", "/usr/sap/#{value.upcase}")
+	  end
+	  if status != 0
+	    flag = false
+	    message += "No SAP HANA #{value} is installed on #{node}\n"
+	  end
+	end
       end
-      flag = true if @test
-      report_error(flag, message, field_name, value)
+      report_error(flag, message, 'SID', value)
     end
 
     # Check if string is a block device
