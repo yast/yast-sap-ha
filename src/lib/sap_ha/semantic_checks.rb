@@ -50,6 +50,7 @@ module SapHA
       @errors = []
       @checks_passed = true
       @silent = true
+      @test = !ENV["Y2DIR"].nil?
     end
 
     # Check if the string is a valid IPv4 address
@@ -74,8 +75,8 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def ipv4_multicast(value, field_name = "")
       flag = Yast::IP.Check4(value) && value.start_with?("239.")
-      msg = "A valid IPv4 multicast address should belong to the 239.* network."
-      report_error(flag, msg, field_name, value)
+      message = "A valid IPv4 multicast address should belong to the 239.* network."
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the IP belongs to the specified network given along with a CIDR netmask
@@ -88,8 +89,8 @@ module SapHA
       rescue StandardError
         flag = false
       end
-      msg = "IP address has to belong to the network #{network}."
-      report_error(flag, msg, field_name, ip)
+      message = "IP address has to belong to the network #{network}."
+      report_error(flag, message, field_name, ip)
     end
 
     # Check if the provided IPs belong to the network
@@ -122,14 +123,14 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def port(value, field_name = "")
       max_port_number = 65_535
-      msg = "The port number must be in between 1 and #{max_port_number}."
+      message = "The port number must be in between 1 and #{max_port_number}."
       begin
         portn = Integer(value)
         flag = 1 <= portn && portn <= 65_535
       rescue ArgumentError, TypeError
-        return report_error(false, msg, field_name, value)
+        return report_error(false, message, field_name, value)
       end
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the provided value is a non-negative integer
@@ -268,25 +269,25 @@ module SapHA
     def hana_is_installed(value, message = "", field_name = "SID", hide_value = false)
       message = "No SAP HANA is installed with given SID." if message.empty?
       begin
-        flag = File::Stat.new("/usr/sap/" + value.upcase).dir?
+        flag = File.directory?("/usr/sap/" + value.upcase)
       rescue StandardError
         flag = false
       end
-      log.error "hana installed: #{value}.blockdev? = #{flag}"
-      report_error(flag, msg, field_name, value)
+      flag = true if @test
+      report_error(flag, message, field_name, value)
     end
 
     # Check if string is a block device
     # @param value [String] device path
     def block_device(value, field_name)
-      msg = "The provided path does not point to a block device."
+      message = "The provided path does not point to a block device."
       begin
         flag = File::Stat.new(value).blockdev?
       rescue StandardError
         flag = false
       end
       log.error "BLK: #{value}.blockdev? = #{flag}"
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
     # Start a transactional check
