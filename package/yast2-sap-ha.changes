@@ -4,7 +4,7 @@ Mon Aug  7 05:13:47 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 - Set default value for global_alloc_limit to "0"
 - Fix evaluation CustOpt settings. (bsc#1209204)
 - Remove superfluously BuildRequires: HANA-Firewall
-- 4.6.2
+- 5.0.0 (#bsc1185510)
 
 -------------------------------------------------------------------
 Fri May 26 04:52:05 UTC 2023 - Peter Varkoly <varkoly@suse.com>
