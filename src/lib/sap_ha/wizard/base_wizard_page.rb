@@ -19,18 +19,18 @@
 # Summary: SUSE High Availability Setup for SAP Products: Base YaST Wizard page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/exceptions'
-require 'sap_ha/semantic_checks'
+require "yast"
+require "sap_ha/helpers"
+require "sap_ha/exceptions"
+require "sap_ha/semantic_checks"
 
-Yast.import 'Wizard'
+Yast.import "Wizard"
 
 module SapHA
   module Wizard
     # Base Wizard page class
     class BaseWizardPage
-      Yast.import 'UI'
+      Yast.import "UI"
       include Yast::Logger
       include Yast::I18n
       include Yast::UIShortcuts
@@ -91,7 +91,7 @@ module SapHA
         main_loop
       end
 
-      protected
+    protected
 
       # Run the main input processing loop
       # Ideally, this method should not be redefined (if we lived in a perfect world)
@@ -118,7 +118,7 @@ module SapHA
         end
       end
 
-      private
+    private
 
       # Create a Wizard page with just a RichText widget on it
       # @param title [String]
@@ -150,7 +150,7 @@ module SapHA
           title,
           base_layout_with_label(
             message,
-            SelectionBox(Id(:selection_box), Opt(:vstretch, :notify), '', list_contents)
+            SelectionBox(Id(:selection_box), Opt(:vstretch, :notify), "", list_contents)
           ),
           help,
           allow_back,
@@ -303,7 +303,7 @@ module SapHA
             Yast::UI.CloseDialog
             return nil
           else
-            handlers[ui].call() if !handlers.nil? && handlers[ui]
+            handlers[ui].call if !handlers.nil? && handlers[ui]
           end
         end
       end
@@ -312,13 +312,12 @@ module SapHA
       # @param id_ [Symbol] widget's ID
       # @param label [String] combo's label
       # @param true_ [Boolean] 'true' option is selected
-      def base_true_false_combo(id_, label = '', true_ = true)
+      def base_true_false_combo(id_, label = "", true_ = true)
         ComboBox(Id(id_), Opt(:hstretch), label,
           [
-            Item(Id(:true), 'true', true_),
-            Item(Id(:false), 'false', !true_)
-          ]
-        )
+            Item(Id(:true), "true", true_),
+            Item(Id(:false), "false", !true_)
+          ])
       end
 
       # Prompt the user for the password
@@ -329,7 +328,7 @@ module SapHA
         Yast::UI.OpenDialog(
           VBox(
             Label(message),
-            MinWidth(15, Password(Id(:password), 'Password:', '')),
+            MinWidth(15, Password(Id(:password), "Password:", "")),
             Yast::Wizard.CancelOKButtonBox
           )
         )

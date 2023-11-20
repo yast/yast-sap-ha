@@ -1,0 +1,14 @@
+[memorymanager]
+global_allocation_limit = <%= @production_constraints[:global_alloc_limit] -%>
+
+[system_replication]
+preload_column_tables = <%= @production_constraints[:preload_column_tables] -%>
+
+[ha_dr_provider_suscostopt]
+provider = susCostOpt
+path = /usr/share/SAPHanaSR/
+userkey = sus_<%= @system_id -%>_costopt
+execution_order = 2
+
+[trace]
+ha_dr_suscostopt = info

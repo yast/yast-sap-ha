@@ -19,9 +19,9 @@
 # Summary: SUSE High Availability Setup for SAP Products
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require_relative '../../../../test_helper'
-require 'sap_ha/configuration/base_config'
-require 'sap_ha/exceptions'
+require_relative "../../../../test_helper"
+require "sap_ha/configuration/base_config"
+require "sap_ha/exceptions"
 
 class TestConfig < SapHA::Configuration::BaseConfig
   def initialize
@@ -30,8 +30,8 @@ class TestConfig < SapHA::Configuration::BaseConfig
 end
 
 describe SapHA::Configuration::BaseConfig do
-  describe '#new' do
-    it 'raises an exception, preventing instantiation' do
+  describe "#new" do
+    it "raises an exception, preventing instantiation" do
       expect { SapHA::Configuration::BaseConfig.new(nil) }
         .to raise_error SapHA::Exceptions::BaseConfigException
       expect(TestConfig.new).not_to be_nil
@@ -39,50 +39,50 @@ describe SapHA::Configuration::BaseConfig do
   end
 
   # TODO: test actual YAML coding
-  describe '#encode_with' do
-    it 'omits the specified attributesS' do
+  describe "#encode_with" do
+    it "omits the specified attributesS" do
       base_config = TestConfig.new
-      coder = double('coder')
+      coder = double("coder")
       allow(coder).to receive(:[]=)
       base_config.encode_with(coder)
     end
   end
 
   # TODO: test actual YAML restoration
-  describe '#init_with' do
-    it 'recreates the object' do
+  describe "#init_with" do
+    it "recreates the object" do
       base_config = TestConfig.new
-      coder = double('coder')
-      expect(coder).to receive(:[]).with('instance_variables') { [] }.at_most(2).times
+      coder = double("coder")
+      expect(coder).to receive(:[]).with("instance_variables") { [] }.at_most(2).times
       result = base_config.init_with(coder)
       expect(result).not_to be_nil
     end
   end
 
-  describe '#read_system' do
-    it 'reads local system configuration' do
+  describe "#read_system" do
+    it "reads local system configuration" do
       base_config = TestConfig.new
       expect { base_config.read_system }.to raise_error SapHA::Exceptions::BaseConfigException
     end
   end
 
-  describe '#configured?' do
-    it 'reports if the configuration is complete' do
+  describe "#configured?" do
+    it "reports if the configuration is complete" do
       base_config = TestConfig.new
       result = base_config.configured?
       expect(result).to eq false
     end
   end
 
-  describe '#description' do
-    it 'provides a description' do
+  describe "#description" do
+    it "provides a description" do
       base_config = TestConfig.new
       expect { base_config.description }.to raise_error SapHA::Exceptions::BaseConfigException
     end
   end
 
-  describe '#import' do
-    it 'imports the parameters from a hash to the instance' do
+  describe "#import" do
+    it "imports the parameters from a hash to the instance" do
       base_config = TestConfig.new
       hash = { something: 22 }
       base_config.import(hash)
@@ -91,8 +91,8 @@ describe SapHA::Configuration::BaseConfig do
   end
 
   # TODO: auto-generated
-  describe '#export' do
-    it 'exports instance variables to a hash' do
+  describe "#export" do
+    it "exports instance variables to a hash" do
       base_config = TestConfig.new
       hash = { something: 22 }
       base_config.import(hash)
@@ -101,15 +101,15 @@ describe SapHA::Configuration::BaseConfig do
     end
   end
 
-  describe '#apply' do
-    it 'raises an exception' do
+  describe "#apply" do
+    it "raises an exception" do
       base_config = TestConfig.new
       expect { base_config.apply(:master) }.to raise_error SapHA::Exceptions::BaseConfigException
     end
   end
 
-  describe '#validate' do
-    it 'raises an exception' do
+  describe "#validate" do
+    it "raises an exception" do
       base_config = TestConfig.new
       expect { base_config.validate }.to raise_error SapHA::Exceptions::BaseConfigException
     end
