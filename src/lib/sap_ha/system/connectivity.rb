@@ -19,12 +19,12 @@
 # Summary: SUSE High Availability Setup for SAP Products: Node connectivity
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'socket'
-require 'xmlrpc/client'
-require 'sap_ha/exceptions'
-require 'sap_ha/node_logger'
-require_relative 'shell_commands'
+require "yast"
+require "socket"
+require "xmlrpc/client"
+require "sap_ha/exceptions"
+require "sap_ha/node_logger"
+require_relative "shell_commands"
 
 module SapHA
   module System
@@ -49,7 +49,7 @@ module SapHA
         log.info "Creating a new RPC client for host #{self[:host_name]}" unless self[:rpc_client]
         self[:rpc_client] = XMLRPC::Client.new(ip, "/RPC2", 8080)
         begin
-          call('sapha.ping')
+          call("sapha.ping")
         rescue RPCRecoverableException => e
           log.debug "--- #{self.class}.#{__callee__}: Caught RPCRecoverableException ---"
           log.error "Error connecting to the XML RPC server on node #{self[:host_name]}: "\
@@ -86,7 +86,7 @@ module SapHA
 
       def stop_rpc_server
         log.info "--- #{self.class}.#{__callee__} ---"
-        call('sapha.shutdown')
+        call("sapha.shutdown")
       end
 
       def kill_rpc_server
@@ -111,7 +111,7 @@ module SapHA
 
       def ping?
         log.info "--- #{self.class}.#{__callee__} ---"
-        call('sapha.ping')
+        call("sapha.ping")
       end
 
       # Perform a polling call: call the method that returns immediately,
@@ -122,7 +122,7 @@ module SapHA
 
         raise RPCCallException, "Cannot call method #{method_name}: "\
           "client #{self[:host_name]} is not connected." unless self[:rpc_client]
-        raise RPCCallException, "Node #{self[:host_name]} is busy configuring something!" if call('sapha.busy')
+        raise RPCCallException, "Node #{self[:host_name]} is busy configuring something!" if call("sapha.busy")
 
         retval = call(method_name, *args)
         return retval unless retval == "wait"
@@ -139,7 +139,7 @@ module SapHA
         true
       end
 
-      private
+    private
 
       # Wrap the .call method with exception handlers
       def call(method_name, *args)
@@ -152,7 +152,7 @@ module SapHA
             error_count += 1
             time_out *= 2
             log.info "Retry \##{error_count} in #{time_out} seconds: "\
-              "calling #{method_name}(#{args.join(', ')}) on node #{self[:host_name]}."
+              "calling #{method_name}(#{args.join(", ")}) on node #{self[:host_name]}."
             sleep(time_out)
             return true
           else
@@ -162,7 +162,7 @@ module SapHA
         end
 
         begin
-          log.info "calling #{method_name}(#{args.join(', ')}) on node #{self[:host_name]}."
+          log.info "calling #{method_name}(#{args.join(", ")}) on node #{self[:host_name]}."
           self[:rpc_client].call(method_name, *args)
         rescue Errno::ECONNREFUSED => e
           log.debug "--- #{self.class}.#{__callee__} :: caught Errno::ECONNREFUSED --- "
@@ -171,19 +171,19 @@ module SapHA
           raise RPCRecoverableException, "Could not connect to the RPC server on node #{self[:host_name]}: #{e.message}"
         rescue Net::HTTPBadResponse => e
           log.debug "--- #{self.class}.#{__callee__} :: caught Net::HTTPBadResponse --- "
-          log.error "Got bad response from node #{self[:host_name]}: #{e.message}. Call #{method_name}(#{args.join(', ')})."
+          log.error "Got bad response from node #{self[:host_name]}: #{e.message}. Call #{method_name}(#{args.join(", ")})."
           retry if try_again.call
           raise RPCFatalException, "Got bad response from node #{self[:host_name]}: #{e.message}"
         rescue Net::ReadTimeout
           log.debug "--- #{self.class}.#{__callee__} :: caught Net::ReadTimeout --- "
-          log.error "Call #{method_name}(#{args.join(', ')}) --- time out"
+          log.error "Call #{method_name}(#{args.join(", ")}) --- time out"
           retry if try_again.call
-          raise RPCFatalException, "Call #{method_name}(#{args.join(', ')}) --- time out"
+          raise RPCFatalException, "Call #{method_name}(#{args.join(", ")}) --- time out"
         rescue StandardError => e
           log.debug "--- #{self.class}.#{__callee__} :: caught StandardError --- "
-          log.error "Call #{method_name}(#{args.join(', ')}): #{e.message}"
+          log.error "Call #{method_name}(#{args.join(", ")}): #{e.message}"
           retry if try_again.call
-          raise RPCFatalException, "Call #{method_name}(#{args.join(', ')}): #{e.message}"
+          raise RPCFatalException, "Call #{method_name}(#{args.join(", ")}): #{e.message}"
         end
       end
     end
@@ -220,24 +220,18 @@ module SapHA
       def run_rpc_servers
         # TODO: retry on failure or raise
         log.info "--- #{self.class}.#{__callee__} ---"
-        @nodes.values.each do |host|
-          host.run_rpc_server
-        end
+        @nodes.values.each(&:run_rpc_server)
       end
 
       # Connect to all nodes
       def connect_to_all
         log.debug "--- #{self.class}.#{__callee__} ---"
-        @nodes.values.each do |host|
-          host.connect
-        end
+        @nodes.values.each(&:connect)
       end
 
       def check_connectivity
         log.debug "--- #{self.class}.#{__callee__} ---"
-        @nodes.values.each do |host|
-          host.ping?
-        end.all?
+        @nodes.values.each(&:ping?).all?
       end
 
       def configure(host_name)
@@ -250,7 +244,6 @@ module SapHA
 
         end
       end
-
 
       def call(host_name, rpc_method, *args)
         log.debug "--- #{self.class}.#{__callee__}(#{host_name}, #{rpc_method}, #{args}) ---"

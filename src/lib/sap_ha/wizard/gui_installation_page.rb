@@ -19,14 +19,14 @@
 # Summary: SUSE High Availability Setup for SAP Products: GUI Installation Page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
-require 'sap_ha/sap_ha_installation'
-require 'sap_ha/sap_ha_unattended_install'
+require "yast"
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
+require "sap_ha/sap_ha_installation"
+require "sap_ha/sap_ha_unattended_install"
 
-Yast.import 'UI'
-Yast.import 'Progress'
+Yast.import "UI"
+Yast.import "Progress"
 
 module SapHA
   module Wizard
@@ -39,12 +39,13 @@ module SapHA
         @task_no = 0
         @tasks = tasks
         Yast::Progress.New(
-          'SAP High-Availability Setup',
-          '',
+          "SAP High-Availability Setup",
+          "",
           titles.length,
           nodes,
           titles,
-          '')
+          ""
+        )
         Yast::Progress.SubprogressType(:progress, @tasks.length)
         Yast::Progress.SubprogressTitle("")
       end

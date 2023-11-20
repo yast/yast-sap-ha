@@ -19,9 +19,9 @@
 # Summary: SUSE High Availability Setup for SAP Products: Base Rich Text view
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/exceptions'
+require "yast"
+require "sap_ha/helpers"
+require "sap_ha/exceptions"
 
 module SapHA
   module Wizard

@@ -19,8 +19,8 @@
 # Summary: SUSE High Availability Setup for SAP Products: Configuration overview page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
+require "yast"
+require "sap_ha/helpers"
 
 module SapHA
   module Wizard
@@ -36,11 +36,11 @@ module SapHA
 
       def set_contents
         super
-        tmpl = Yast::UI.TextMode ? 'tmpl_config_overview_con.erb' : 'tmpl_config_overview_gui.erb'
+        tmpl = Yast::UI.TextMode ? "tmpl_config_overview_con.erb" : "tmpl_config_overview_gui.erb"
         base_rich_text(
           "High-Availability Configuration Overview",
           Helpers.render_template(tmpl, binding),
-          Helpers.load_help('setup_summary'),
+          Helpers.load_help("setup_summary"),
           true,
           true
         )
@@ -62,7 +62,7 @@ module SapHA
         @config.can_install?
       end
 
-      protected
+    protected
 
       def main_loop
         log.debug "--- #{self.class}.#{__callee__} ---"

@@ -19,16 +19,16 @@
 # Summary: SUSE High Availability Setup for SAP Products: System watchdog configuration
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'open3'
-require_relative 'shell_commands'
-require 'sap_ha/node_logger'
+require "yast"
+require "open3"
+require_relative "shell_commands"
+require "sap_ha/node_logger"
 
-Yast.import 'Kernel'
+Yast.import "Kernel"
 
 module SapHA
   module System
-    class WatchdogException < Exception
+    class WatchdogException < RuntimeError
     end
 
     # System watchdog configuration
@@ -112,7 +112,7 @@ module SapHA
           log.error "Could not find the kernel modules source directory #{MODULES_PATH}"
           return []
         end
-        Dir.glob(MODULES_PATH + '/*.ko*').map { |path| File.basename(path).gsub(/\.ko[\.\S+]*$/,'') }
+        Dir.glob(MODULES_PATH + "/*.ko*").map { |path| File.basename(path).gsub(/\.ko[\.]*[\S]*$/, "") }
       end
 
       # Look into the /etc/modules-load.d and list all of the modules
@@ -123,14 +123,14 @@ module SapHA
       end
 
       def load(module_name)
-        out, rc = exec_outerr_status('/usr/sbin/modprobe', module_name)
+        out, rc = exec_outerr_status("/usr/sbin/modprobe", module_name)
         NodeLogger.log_status(rc.exitstatus == 0,
           "Loaded watchdog module #{module_name}",
           "Could not load module #{module_name}. modprobe returned rc=#{rc.exitstatus}",
           out)
       end
 
-      private
+    private
 
       def lsmod
         Open3.popen3("/usr/sbin/lsmod") do |_, stdout, _, _|

@@ -19,10 +19,10 @@
 # Summary: SUSE High Availability Setup for SAP Products: Base configuration class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/exceptions'
-require 'sap_ha/semantic_checks'
-require 'sap_ha/node_logger'
+require "yast"
+require "sap_ha/exceptions"
+require "sap_ha/semantic_checks"
+require "sap_ha/node_logger"
 
 module SapHA
   module Configuration
@@ -51,14 +51,14 @@ module SapHA
           key = variable_name.to_s[1..-1]
           coder[key] = instance_variable_get(variable_name)
         end
-        coder['instance_variables'] = instance_variables - @yaml_exclude if @yaml_exclude
+        coder["instance_variables"] = instance_variables - @yaml_exclude if @yaml_exclude
       end
 
       def init_with(coder)
         log.debug "--- #{self.class}.#{__callee__}(#{coder}) ---"
         raise @exception_type,
-          "The object has no field named `instance_variables`" if coder['instance_variables'].nil?
-        coder['instance_variables'].each do |variable_name|
+          "The object has no field named `instance_variables`" if coder["instance_variables"].nil?
+        coder["instance_variables"].each do |variable_name|
           key = variable_name.to_s[1..-1]
           instance_variable_set(variable_name, coder[key])
         end
@@ -91,7 +91,7 @@ module SapHA
         log.debug "--- #{self.class}.#{__callee__}: #{hash} ---"
         return if hash.nil? || hash.empty?
         hash.each do |k, v|
-          name = k.to_s.start_with?('@') ? k : "@#{k}".to_sym
+          name = k.to_s.start_with?("@") ? k : "@#{k}".to_sym
           instance_variable_set(name, v)
         end
       end
@@ -122,7 +122,7 @@ module SapHA
         <% end %>
         </ul>
         "
-        ERB.new(tmpl, nil, '-').result(binding)
+        ERB.new(tmpl, nil, "-").result(binding)
       end
 
       def prepare_description
