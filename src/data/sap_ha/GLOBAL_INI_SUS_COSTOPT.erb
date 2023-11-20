@@ -1,8 +1,8 @@
 [memorymanager]
-global_allocation_limit = <%= @size_in_mb_for_secondary_hana -%>
+global_allocation_limit = <%= @production_constraints[:global_alloc_limit] -%>
 
 [system_replication]
-preload_column_tables = false
+preload_column_tables = <%= @production_constraints[:preload_column_tables] -%>
 
 [ha_dr_provider_suscostopt]
 provider = susCostOpt

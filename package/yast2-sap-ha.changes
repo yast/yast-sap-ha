@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Mon Aug  7 05:13:47 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- Set default value for global_alloc_limit to "0"
+- Fix evaluation CustOpt settings. (bsc#1209204)
+- Remove superfluously BuildRequires: HANA-Firewall
+- 4.4.5
+
+-------------------------------------------------------------------
 Fri Jun  9 05:47:22 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)

@@ -17,11 +17,9 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.4.4
+Version:        4.4.5
 Release:        0
-
 BuildArch:      noarch
-
 Source0:        %{name}-%{version}.tar.bz2
 Source1:        yast2-sap-ha-rpmlintrc
 
@@ -42,14 +40,15 @@ Requires:       xdg-utils
 Requires:       expect
 Requires:       firewalld
 Requires:       openssh
+%ifarch x86_64 ppc64le
 Requires:       HANA-Firewall >= 2.0.3
+%endif
 Requires:       util-linux
 Requires:       SAPHanaSR
 Requires:       kmod
 # for pidof
 Requires:       sysvinit-tools
 
-BuildRequires:  HANA-Firewall >= 2.0.3
 BuildRequires:  csync2
 BuildRequires:  firewalld
 BuildRequires:  kmod
