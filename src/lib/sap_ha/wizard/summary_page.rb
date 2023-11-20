@@ -19,9 +19,9 @@
 # Summary: SUSE High Availability Setup for SAP Products: Setup summary page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
-require 'sap_ha/node_logger'
+require "yast"
+require "sap_ha/helpers"
+require "sap_ha/node_logger"
 
 module SapHA
   module Wizard
@@ -46,12 +46,12 @@ module SapHA
               HSpacing(3)
             ),
             HBox(
-              PushButton(Id(:save_config), 'Save configuration'),
-              PushButton(Id(:save_log), 'Save log'),
-              PushButton(Id(:open_hawk), 'Open HAWK2')
+              PushButton(Id(:save_config), "Save configuration"),
+              PushButton(Id(:save_log), "Save log"),
+              PushButton(Id(:open_hawk), "Open HAWK2")
             )
           ),
-          '',
+          "",
           false,
           true
         )
@@ -62,11 +62,11 @@ module SapHA
         Yast::Wizard.SetNextButton(:next, "&Finish")
         Yast::Wizard.EnableNextButton
         set_value(:open_hawk, false, :Enabled) if Yast::UI.TextMode
-        SapHA::Helpers.write_var_file('installation_log.html', SapHA::NodeLogger.html,
+        SapHA::Helpers.write_var_file("installation_log.html", SapHA::NodeLogger.html,
           timestamp: true)
-        SapHA::Helpers.write_var_file('installation_log.txt', SapHA::NodeLogger.text,
+        SapHA::Helpers.write_var_file("installation_log.txt", SapHA::NodeLogger.text,
           timestamp: true)
-        SapHA::Helpers.write_var_file('configuration.yml', @config.dump(false),
+        SapHA::Helpers.write_var_file("configuration.yml", @config.dump(false),
           timestamp: @config.timestamp)
       end
 
@@ -80,28 +80,28 @@ module SapHA
           file_name = Yast::UI.AskForSaveFileName("/tmp", "*.txt *.log *.html",
             "Save log file as...")
           return unless file_name
-          log = if file_name.end_with?('html', 'htm')
-                  SapHA::NodeLogger.html
-                else
-                  SapHA::NodeLogger.text
+          log = if file_name.end_with?("html", "htm")
+            SapHA::NodeLogger.html
+          else
+            SapHA::NodeLogger.text
                 end
           success = SapHA::Helpers.write_file(file_name, log)
           if success
-            show_message("Log was written to <code>#{file_name}</code>", 'Success')
+            show_message("Log was written to <code>#{file_name}</code>", "Success")
           else
-            show_message("Could not write log file <code>#{file_name}</code>", 'Error')
+            show_message("Could not write log file <code>#{file_name}</code>", "Error")
           end
         when :save_config
           file_name = Yast::UI.AskForSaveFileName("/tmp", "*.yml", "Save configuration file as...")
           return unless file_name
           success = SapHA::Helpers.write_file(file_name, @config.dump)
           if success
-            show_message("Configuration was written to <code>#{file_name}</code>", 'Success')
+            show_message("Configuration was written to <code>#{file_name}</code>", "Success")
           else
-            show_message("Could not write configuration file <code>#{file_name}</code>", 'Error')
+            show_message("Could not write configuration file <code>#{file_name}</code>", "Error")
           end
         when :open_hawk
-          SapHA::Helpers.open_url('https://localhost:7630/')
+          SapHA::Helpers.open_url("https://localhost:7630/")
         end
       end
     end

@@ -1,7 +1,1 @@
 --no-private
---protected
---markup markdown
---output-dir doc/autodocs
---readme README.md
---file doc/yast-sap-ha.md
-src/**/*.rb

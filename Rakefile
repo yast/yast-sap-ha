@@ -27,4 +27,3 @@ Yast::Tasks.configuration do |conf|
   conf.exclude_files << /test/
   conf.exclude_files << /aux/
 end
-

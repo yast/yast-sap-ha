@@ -19,24 +19,22 @@
 # Summary: SUSE High Availability Setup for SAP Products: XML RPC Server Client
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/rpc_server'
+require "yast"
+require "sap_ha/rpc_server"
 
 module Yast
   # An XML RPC Yast Client
   class SapHARPCClass < Client
-    
     def initialize
       @server = SapHA::RPCServer.new
       at_exit { @server.shutdown }
     end
-  
+
     def main
       # the following call blocks
       @server.start
       # when .shutdown is called
       @server.close_port
-      Yast::SuSEFirewall.ActivateConfiguration
     end
   end
 
