@@ -28,7 +28,7 @@ module SapHA
     # Fencing configuration
     class Fencing < BaseConfig
       attr_reader :proposals, :sysconfig
-      attr_accessor :sbd_options, :sbd_delayed_start
+      attr_accessor :sbd_options, :sbd_delayed_start, :devices
       include Yast::UIShortcuts
       include Yast::Logger
 
@@ -83,7 +83,9 @@ module SapHA
       end
 
       def table_items
-        @devices.each_with_index.map { |e, i| Item(Id(i), (i + 1).to_s, e) }
+        de_items = @devices.each_with_index.map { |e, i| Item(Id(i), (i + 1).to_s, e) }
+        log.debug "table_items #{@devices}"
+        return de_items
       end
 
       def popup_validator(check, dev_path)
@@ -144,8 +146,11 @@ module SapHA
         flag
       end
 
-    private
+      def refresh_proposals
+        @proposals = SapHA::System::Local.block_devices
+      end
 
+    private
       def handle_sysconfig
         handle = ->(sett, default) { (sett.nil? || sett.empty?) ? default : sett }
         @devices = handle.call(@sysconfig[:device], "").split(";")
@@ -154,9 +159,6 @@ module SapHA
         true
       end
 
-      def refresh_proposals
-        @proposals = SapHA::System::Local.block_devices
-      end
     end
   end
 end

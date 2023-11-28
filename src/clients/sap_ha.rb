@@ -312,7 +312,9 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__}:: ret is #{selection.class} ---"
       if selection.is_a?(SapHA::HAConfiguration)
         @config = selection
+        log.debug "-- @config #{@config.to_yaml}"
         @config.refresh_all_proposals
+        log.debug "-- @config after refresh #{@config.to_yaml}"
         return :next
       end
       selection
