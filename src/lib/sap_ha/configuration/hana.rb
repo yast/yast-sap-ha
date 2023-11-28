@@ -214,7 +214,7 @@ module SapHA
 
       def apply(role)
         return false unless configured?
-        @nlog.info("Appying HANA Configuration")
+        @nlog.info("Applying HANA Configuration")
         config_firewall(role)
         if role == :master
           if @perform_backup
