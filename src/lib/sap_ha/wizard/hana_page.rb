@@ -20,10 +20,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 # Authors: Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
+require "yast"
 require "yast/i18n"
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
 
 module SapHA
   module Wizard
@@ -31,28 +31,30 @@ module SapHA
     class HANAConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = model.hana
         @my_config = model
         @page_validator = @my_model.method(:validate)
+        eval_hana_installation
         prepare_contents
       end
 
       def set_contents
         super
-        help_file = @my_model.additional_instance ? 'hana_cost_optimized' : 'hana'
+        help_file = @my_model.additional_instance ? "hana_cost_optimized" : "hana"
         Yast::Wizard.SetContents(
-          _('HANA Configuration'),
+          _("HANA Configuration"),
           base_layout_with_label(
-            'Set HANA-specific parameters',
+            "Set HANA-specific parameters",
             @contents
           ),
-          #Helpers.load_help(help_file, @my_config.platform),
+          # Helpers.load_help(help_file, @my_config.platform),
           # The HANA Page instructions are generic for all the platforms.
           Helpers.load_help(help_file),
           true,
           true
         )
+        refresh_view
       end
 
       def update_model
@@ -114,19 +116,10 @@ module SapHA
         when :production_constraints
           update_model
           production_constraints = hana_production_constraints_popup(
-            @my_model.production_constraints)
+            @my_model.production_constraints
+          )
           return unless production_constraints
           @my_model.production_constraints = production_constraints
-        when :hook_script_params
-          update_model
-          unless @my_model.hook_generated?
-            hook_parameters = hook_script_popup(@my_model.hook_script_parameters)
-            return unless hook_parameters
-            @my_model.hook_script_parameters = hook_parameters
-          end
-          ret = generate_and_show_hook
-          return unless ret
-          @my_model.hook_script = ret[:hook_script]
         else
           super
         end
@@ -137,9 +130,9 @@ module SapHA
         base_popup_new(
           "Initial HANA Backup Settings",
           @my_model.method(:hana_backup_validator),
-          {create_key: method(:secure_store_key_popup)},
-          InputField(Id(:backup_file), 'Backup file name:', @my_model.backup_file),
-          InputField(Id(:backup_user), 'Secure store key:', @my_model.backup_user)
+          { create_key: method(:secure_store_key_popup) },
+          InputField(Id(:backup_file), "Backup file name:", @my_model.backup_file),
+          InputField(Id(:backup_user), "Secure store key:", @my_model.backup_user)
         )
       end
 
@@ -147,38 +140,14 @@ module SapHA
       def hana_production_constraints_popup(values)
         log.debug "--- #{self.class}.#{__callee__} --- "
         base_popup(
-          'Production system constraints',
+          "Production system constraints",
           @my_model.method(:production_constraints_validation),
-          MinWidth(20, InputField(Id(:global_alloc_limit), 'Global &allocation limit (in MB):',
-            values[:global_alloc_limit] || '')),
-          MinWidth(20, InputField(Id(:preload_column_tables), '&Preload column tables:',
-            values[:preload_column_tables] || ''))
-        )
-      end
-
-      def hook_script_popup(values)
-        log.debug "--- #{self.class}.#{__callee__} --- "
-        base_popup(
-          'Hook script parameters',
-          # TODO: write validators for the popups
-          @my_model.method(:hook_script_validation),
-          MinWidth(15, InputField(Id(:hook_execution_order), '&Execution order:',
-            values[:hook_execution_order] || '')),
-          InputField(Id(:hook_db_user_name), Opt(:hstretch), 'DB &user name:',
-            values[:hook_db_user_name] || ''),
-          Password(Id(:hook_db_password), Opt(:hstretch), 'DB &password:',
-            values[:hook_db_password] || ''),
-          InputField(Id(:hook_port_number), Opt(:hstretch), '&Port number:',
-            values[:hook_port_number] || '')
-        )
-      end
-
-      def generate_and_show_hook
-        txt = @my_model.hook_script
-        base_popup(
-          'Please review the script',
-          nil,
-          MinSize(75, 20, MultiLineEdit(Id(:hook_script), 'Hook script (Python):', txt))
+          MinWidth(20, InputField(Id(:global_alloc_limit_prod), "Productive DB global allocation limit (in MB):",
+            values[:global_alloc_limit_prod] || "")),
+          MinWidth(20, InputField(Id(:global_alloc_limit_non), "Non-productive DB global allocation limit (in MB):",
+            values[:global_alloc_limit_non] || "")),
+          MinWidth(20, InputField(Id(:preload_column_tables), "&Preload column tables:",
+            values[:preload_column_tables] || ""))
         )
       end
 
@@ -186,53 +155,49 @@ module SapHA
         # Production HANA
         @contents = VBox(
           two_widget_hbox(
-            InputField(Id(:hana_sid), Opt(:hstretch), 'System ID:', ''),
-            InputField(Id(:hana_inst), Opt(:hstretch), 'Instance number:', '')
+            InputField(Id(:hana_sid), Opt(:hstretch), "System ID:", @my_model.system_id),
+            InputField(Id(:hana_inst), Opt(:hstretch), "Instance number:", @my_model.instance)
           ),
           two_widget_hbox(
             ComboBox(Id(:hana_replication_mode), Opt(:hstretch, :notify),
-              'Replication mode:', @my_model.class::HANA_REPLICATION_MODES),
+              "Replication mode:", @my_model.class::HANA_REPLICATION_MODES),
             ComboBox(Id(:hana_operation_mode), Opt(:hstretch, :notify),
-              'Operation mode:', @my_model.class::HANA_OPERATION_MODES)
+              "Operation mode:", @my_model.class::HANA_OPERATION_MODES)
           ),
           two_widget_hbox(
-            InputField(Id(:hana_vip), Opt(:hstretch), 'Virtual IP address:', ''),
-            InputField(Id(:hana_vip_mask), Opt(:hstretch), 'Virtual IP mask:', '')
+            InputField(Id(:hana_vip), Opt(:hstretch), "Virtual IP address:", ""),
+            InputField(Id(:hana_vip_mask), Opt(:hstretch), "Virtual IP mask:", "")
           ),
           two_widget_hbox(
-            base_true_false_combo(:site_takover, 'Prefer site takeover:'),
-            base_true_false_combo(:auto_reg, 'Automatic registration:')
+            base_true_false_combo(:site_takover, "Prefer site takeover:"),
+            base_true_false_combo(:auto_reg, "Automatic registration:")
           ),
           two_widget_hbox(
-            InputField(Id(:site_name_1), Opt(:hstretch), 'Site name 1', ''),
-            InputField(Id(:site_name_2), Opt(:hstretch), 'Site name 2', '')
+            InputField(Id(:site_name_1), Opt(:hstretch), "Site name 1", ""),
+            InputField(Id(:site_name_2), Opt(:hstretch), "Site name 2", "")
           ),
           two_widget_hbox(
-            @my_model.additional_instance ? 
+            @my_model.additional_instance ?
             PushButton(Id(:production_constraints), Opt(:hstretch),
-              'Production system constraints...') : CheckBox(Id(:create_backup), 
-              Opt(:hstretch, :notify), 'Create initial backup'),
-            PushButton(Id(:configure_backup), Opt(:hstretch), 'Backup settings...')
+              "Production system constraints...") : CheckBox(Id(:create_backup),
+                Opt(:hstretch, :notify), "Create initial backup"),
+            PushButton(Id(:configure_backup), Opt(:hstretch), "Backup settings...")
           )
         )
         # Non-Production HANA
         if @my_model.additional_instance
           @contents << two_widget_hbox(
             Empty(),
-            CheckBox(Id(:create_backup), Opt(:hstretch, :notify), 'Create initial backup'),
+            CheckBox(Id(:create_backup), Opt(:hstretch, :notify), "Create initial backup"),
             2.49
           )
           @contents = VBox(
-            Frame('Production instance', Yast.deep_copy(@contents)),
-            Frame('Non-production instance',
+            Frame("Production instance", Yast.deep_copy(@contents)),
+            Frame("Non-production instance",
               VBox(
                 two_widget_hbox(
-                  InputField(Id(:np_hana_sid), Opt(:hstretch), 'System ID:', ''),
-                  InputField(Id(:np_hana_inst), Opt(:hstretch), 'Instance number:', '')
-                ),
-                two_widget_hbox(
-                  Empty(),
-                  PushButton(Id(:hook_script_params), Opt(:hstretch), 'Hook script...')
+                  InputField(Id(:np_hana_sid), Opt(:hstretch), "System ID:", ""),
+                  InputField(Id(:np_hana_inst), Opt(:hstretch), "Instance number:", "")
                 )
               )
             )
@@ -243,9 +208,29 @@ module SapHA
       def secure_store_key_popup
         log.debug "--- #{self.class}.#{__callee__} --- "
         base_popup(
-          'Create a secure store key',
+          "Create a secure store key",
           nil,
-          InputField(Id(:hook_db_user_name), Opt(:hstretch), 'DB &user name:', ''))
+          InputField(Id(:hook_db_user_name), Opt(:hstretch), "DB &user name:", "")
+        )
+      end
+
+      def eval_hana_installation
+        return if @my_model.system_id != ""
+        # Read hana installations created by the sap-installation wizard.
+        # In case of successfully installation this file(s) will be created.
+	# By changing the format of these summaray files the pattern should be adaptad also.
+        Dir.glob("/data/SAP_INST/*/installationSuccesfullyFinished.dat") do |f|
+          content = File.read(f)
+          result = content.scan(/SAP HANA System ID:\s+(\w{3}).*SAP HANA Instance:\s+(\w{2})/m)
+          log.info "HANAConfigurationPage found hana #{result} len: #{result.length} 0: #{result[0]}"
+          if result.length == 1
+            @my_model.system_id = result[0][0].upcase
+            @my_model.instance = result[0][1]
+            @my_model.perform_backup = !File.exist?("/usr/sap/#{@my_model.system_id}/HDB#{@my_model.instance}/backup/")
+            log.info "HANAConfigurationPage hana default #{@my_model.perform_backup} #{@my_model.system_id} #{@my_model.instance}"
+            break
+          end
+        end
       end
     end
   end

@@ -20,10 +20,10 @@
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 # Authors: Peter Varkoly <varkoly@suse.com>
 
-require 'yast'
+require "yast"
 require "yast/i18n"
-require 'sap_ha/helpers'
-require 'sap_ha/wizard/base_wizard_page'
+require "sap_ha/helpers"
+require "sap_ha/wizard/base_wizard_page"
 
 module SapHA
   module Wizard
@@ -31,7 +31,7 @@ module SapHA
     class WatchdogConfigurationPage < BaseWizardPage
       def initialize(model)
         super(model)
-	textdomain "hana-ha"
+        textdomain "hana-ha"
         @my_model = model.watchdog
         @page_validator = @my_model.method(:validate)
       end
@@ -39,22 +39,22 @@ module SapHA
       def set_contents
         super
         Yast::Wizard.SetContents(
-          _('Watchdog Setup'),
+          _("Watchdog Setup"),
           base_layout_with_label(
-            'Select appropriate watchdog modules to load at system startup',
+            "Select appropriate watchdog modules to load at system startup",
             VBox(
               SelectionBox(Id(:wd_to_configure), Opt(:notify, :immediate),
-                'Watchdogs to configure:', []),
+                "Watchdogs to configure:", []),
               HBox(
-                PushButton(Id(:add_wd), 'Add'),
-                PushButton(Id(:remove_wd), 'Remove')
+                PushButton(Id(:add_wd), "Add"),
+                PushButton(Id(:remove_wd), "Remove")
               ),
               SelectionBox(Id(:configured_wd), Opt(:notify, :immediate),
-                'Configured watchdogs:', []),
-              SelectionBox(Id(:loaded_wd), 'Loaded watchdogs:', [])
+                "Configured watchdogs:", []),
+              SelectionBox(Id(:loaded_wd), "Loaded watchdogs:", [])
             )
           ),
-          Helpers.load_help('watchdog'),
+          Helpers.load_help("watchdog"),
           true,
           true
         )
@@ -98,7 +98,7 @@ module SapHA
           "Select a module to add",
           nil,
           MinHeight(10,
-            SelectionBox(Id(:selected), 'Available modules:', @my_model.proposals))
+            SelectionBox(Id(:selected), "Available modules:", @my_model.proposals))
         )
       end
     end

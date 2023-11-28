@@ -20,7 +20,13 @@
     Please make sure that the provided IP addresses correspond to the network addresses of the rings.</p>
     <p><i>Note:</i> the number of nodes for HANA scale-up clusters is fixed and cannot be changed.</p>
 
-    <p><b>Enable Corosync Secure Authentication</b>:
+    <p>There are 3 possibility for the <b>Firewall configuration</b>:</p>
+    <ul>
+      <li><b>Firewall is configured</b> The firewall on all nodes is already configured. All necessary ports for cluster and SAP HANA are opened. In this case only port 8080 will be temporary opened on the slave node during the setup</li>
+      <li><b>Turn off Firewall</b> The firewall will be turned of on all nodes during the setup.</li>
+      <li><b>Configure Firewall</b> The firewall will be configured by using HANA-firewall and by enabling the cluster service.</li>
+    </ul>
+    <b>Enable Corosync Secure Authentication</b>:
     require the HMAC/SHA1 authentication for cluster messages authentication.
     This option reduces total throughput of the cluster messaging level and consumes extra CPU cycles for encryption.
     </p>

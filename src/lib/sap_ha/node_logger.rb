@@ -18,11 +18,11 @@
 # Summary: SUSE High Availability Setup for SAP Products: In-memory logger class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'singleton'
-require 'logger'
-require 'stringio'
-require 'socket'
+require "yast"
+require "singleton"
+require "logger"
+require "stringio"
+require "socket"
 
 module SapHA
   # Log info messages, warnings and errors into memory
@@ -100,12 +100,12 @@ module SapHA
     def to_html(txt)
       time_rex = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
       rules = [
-        { rex: /^\[(.*)\] (#{time_rex})\s+(OUTPUT): (.*)$/, color: '#808080'  }, # gray
-        { rex: /^\[(.*)\] (#{time_rex})\s+(DEBUG): (.*)$/,  color: '#808080'  }, # gray
-        { rex: /^\[(.*)\] (#{time_rex})\s+(INFO): (.*)$/,   color: '#009900'  }, # green
-        { rex: /^\[(.*)\] (#{time_rex})\s+(WARN): (.*)$/,   color: '#e6b800'  }, # yellow
-        { rex: /^\[(.*)\] (#{time_rex})\s+(ERROR): (.*)$/,  color: '#800000'  }, # error
-        { rex: /^\[(.*)\] (#{time_rex})\s+(FATAL): (.*)$/,  color: '#800000'  }, # fatal error
+        { rex: /^\[(.*)\] (#{time_rex})\s+(OUTPUT): (.*)$/, color: "#808080"  }, # gray
+        { rex: /^\[(.*)\] (#{time_rex})\s+(DEBUG): (.*)$/,  color: "#808080"  }, # gray
+        { rex: /^\[(.*)\] (#{time_rex})\s+(INFO): (.*)$/,   color: "#009900"  }, # green
+        { rex: /^\[(.*)\] (#{time_rex})\s+(WARN): (.*)$/,   color: "#e6b800"  }, # yellow
+        { rex: /^\[(.*)\] (#{time_rex})\s+(ERROR): (.*)$/,  color: "#800000"  }, # error
+        { rex: /^\[(.*)\] (#{time_rex})\s+(FATAL): (.*)$/,  color: "#800000"  }, # fatal error
       ]
       lines = txt.split("\n").map do |line|
         rule = rules.find { |r| r[:rex].match(line) }
@@ -148,7 +148,7 @@ module SapHA
       status
     end
 
-    private
+  private
 
     # # Proxy calls to the logger class if they are not found in NodeLogger
     # # @param [Symbol] method
