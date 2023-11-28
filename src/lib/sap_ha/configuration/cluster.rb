@@ -247,6 +247,13 @@ module SapHA
         ips
       end
 
+      # return all IPs of the first ring
+      def all_nodes
+        ips = @nodes.map { |_, n| n[:ip_ring1] }
+        return [] if ips.any?(&:empty?)
+        ips
+      end
+
       def set_host_password(ip, password)
         node = @nodes.values.find { |v| v[:ip_ring1] == ip }
         if node.nil?

@@ -95,8 +95,10 @@ module SapHA
       def additional_instance=(value)
         @additional_instance = value
         return unless value
+	@prefer_takeover = false
         @production_constraints = {
-          global_alloc_limit:    "0",
+          global_alloc_limit_prod:  "0",
+          global_alloc_limit_non:   "0",
           preload_column_tables: "false"
         }
       end
@@ -111,6 +113,7 @@ module SapHA
 
       def validate(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
+          check.hana_is_installed(@system_id, @global_config.cluster.all_nodes)
           check.ipv4(@virtual_ip, "Virtual IP")
           check.nonneg_integer(@virtual_ip_mask, "Virtual IP mask")
           check.integer_in_range(@virtual_ip_mask, 1, 32, "CIDR mask has to be between 1 and 32.",
@@ -137,6 +140,7 @@ module SapHA
               "There is no such HANA user store key detected.", "Secure store key")
           end
           if @additional_instance
+            check.hana_is_installed(@np_system_id,@global_config.cluster.other_nodes)
             check.sap_instance_number(@np_instance, nil, "Non-Production Instance Number")
             check.sap_sid(@np_system_id, nil, "Non-Production System ID")
             check.not_equal(@instance, @np_instance, "SAP HANA instance numbers should not collide",
@@ -195,7 +199,8 @@ module SapHA
       def production_constraints_validation(check, hash)
         check.element_in_set(hash[:preload_column_tables], ["true", "false"],
           "The field must contain a boolean value: 'true' or 'false'", "Preload column tables")
-        check.nonneg_integer(hash[:global_alloc_limit], "Global allocation limit")
+        check.not_equal(hash[:global_alloc_limit_prod], 0.to_s, "Global allocation limit production system must be adapted.")
+        check.not_equal(hash[:global_alloc_limit_non], 0.to_s, "Global allocation limit of non production system must be adapted.")
       end
 
       # Validator for the non-production instance constraints popup
@@ -209,7 +214,7 @@ module SapHA
 
       def apply(role)
         return false unless configured?
-        @nlog.info("Appying HANA Configuration")
+        @nlog.info("Applying HANA Configuration")
         config_firewall(role)
         if role == :master
           if @perform_backup
@@ -268,7 +273,7 @@ module SapHA
           @nlog.info("Firewall will be configured for HANA services.")
           instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
           instances << @instance
-          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
+          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances.join(" "))
           Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
           _s = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
           _s = exec_status("/usr/bin/firewall-cmd", "--reload")
@@ -294,27 +299,30 @@ module SapHA
       # Activates all necessary plugins based on role an scenario
       def adjust_global_ini(role)
         # SAPHanaSR is needed on all nodes
-        add_plugin_to_global_ini("SAPHANA_SR")
+        add_plugin_to_global_ini("SAPHANA_SR", @system_id)
         if @additional_instance
           # cost optimized
-          add_plugin_to_global_ini("SUS_COSTOPT") if role != :master
+          add_plugin_to_global_ini("SUS_COSTOPT", @system_id) if role != :master
+          add_plugin_to_global_ini("NON_PROD", @np_system_id) if role != :master
+          command = ["hdbnsutil", "-reloadHADRProviders"]
+          out, status = su_exec_outerr_status("#{@np_system_id.downcase}adm", *command)
         else
           # performance optimized
-          add_plugin_to_global_ini("SUS_CHKSRV")
-          add_plugin_to_global_ini("SUS_TKOVER")
+          add_plugin_to_global_ini("SUS_CHKSRV", @system_id)
+          add_plugin_to_global_ini("SUS_TKOVER", @system_id)
         end
         command = ["hdbnsutil", "-reloadHADRProviders"]
         out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
       end
 
       # Activates the plugin in global ini
-      def add_plugin_to_global_ini(plugin)
+      def add_plugin_to_global_ini(plugin, sid)
         sr_path = Helpers.data_file_path("GLOBAL_INI_#{plugin}")
         if File.exist?("#{sr_path}.erb")
           sr_path = Helpers.write_var_file(plugin, Helpers.render_template("GLOBAL_INI_#{plugin}.erb", binding))
         end
-        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", @system_id, sr_path]
-        out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
+        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", sid, sr_path]
+        out, status = su_exec_outerr_status("#{sid.downcase}adm", *command)
       end
     end
   end
