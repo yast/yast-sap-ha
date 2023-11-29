@@ -258,7 +258,13 @@ module SapHA
       def activating_msr
         msr = "msl_SAPHana_#{@system_id}_HDB#{@instance}"
         out, status = exec_outerr_status("crm", "resource", "refresh", msr)
+        @nlog.log_status(status.exitstatus == 0,
+          "#{msr} status refresh OK",
+          "Could not refresh status of #{msr}: #{out}")
         out, status = exec_outerr_status("crm", "resource", "maintenance", msr, "off")
+        @nlog.log_status(status.exitstatus == 0,
+          "#{msr} maintenance turned off.",
+          "Could turn of maintenance of #{msr}: #{out}")
       end
 
       def cleanup_hana_resources
@@ -326,14 +332,14 @@ module SapHA
           add_plugin_to_global_ini("SUS_COSTOPT", @system_id) if role != :master
           add_plugin_to_global_ini("NON_PROD", @np_system_id) if role != :master
           command = ["hdbnsutil", "-reloadHADRProviders"]
-          out, status = su_exec_outerr_status("#{@np_system_id.downcase}adm", *command)
+          _out, _status = su_exec_outerr_status("#{@np_system_id.downcase}adm", *command)
         else
           # performance optimized
           add_plugin_to_global_ini("SUS_CHKSRV", @system_id)
           add_plugin_to_global_ini("SUS_TKOVER", @system_id)
         end
         command = ["hdbnsutil", "-reloadHADRProviders"]
-        out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
+        _out, _status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
       end
 
       # Activates the plugin in global ini
@@ -342,8 +348,8 @@ module SapHA
         if File.exist?("#{sr_path}.erb")
           sr_path = Helpers.write_var_file(plugin, Helpers.render_template("GLOBAL_INI_#{plugin}.erb", binding))
         end
-        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", sid, sr_path]
-        out, status = su_exec_outerr_status("#{sid.downcase}adm", *command)
+        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--reconfigure", "--sid", sid, sr_path]
+        _out, _status = su_exec_outerr_status("#{sid.downcase}adm", *command)
       end
     end
   end
