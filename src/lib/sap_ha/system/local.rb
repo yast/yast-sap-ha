@@ -189,37 +189,6 @@ module SapHA
         raise "Not implemented"
       end
 
-      def config_firewall(fw_config, role)
-        case fw_config
-        when "done"
-          NodeLogger.info("Firewall is already configured")
-        when "off"
-          NodeLogger.info("Firewall will be turned off")
-	  systemd_unit(:stop, :service, "firewalld")
-        when "setup"
-          NodeLogger.info("Firewall will be configured for cluster services.")
-          out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--state")
-          return if status.exitstatus != 0
-          out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--add-service", "cluster")
-          NodeLogger.log_status(
-            status.exitstatus == 0,
-            "Open cluster service in firewall",
-            "Could not open cluster service in firewall",
-            out
-          )
-          out, status = exec_outerr_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", "cluster")
-          NodeLogger.log_status(
-            status.exitstatus == 0,
-            "Open cluster service permanent in firewall",
-            "Could not open cluster service permanent in firewall",
-            out
-          )
-          if role != :master
-             exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
-          end
-	end
-      end
-
       def change_password(user_name, password)
         cmd_string = "#{user_name}:#{password}"
         out, status = exec_outerr_status_stdin("chpasswd", cmd_string)

@@ -287,12 +287,12 @@ module SapHA
 
       def get_primary_on_primary
         SapHA::System::Network.ip_addresses.each do |my_ip|
-	  @nodes.each do |_, node|
-	    if node[:ip_ring1] == my_ip
-	      return node[:host_name]
-	    end
-	  end
-	end
+          @nodes.each do |_, node|
+            if node[:ip_ring1] == my_ip
+              return node[:host_name]
+            end
+          end
+        end
         return nil
       end
 
@@ -381,10 +381,7 @@ module SapHA
         @nlog.log_status(status, "Exported configuration for yast2-cluster",
           "Could not export configuration for yast2-cluster")
         flag &= status
-	#Handle firewall
-        SapHA::System::Local.config_firewall(@fw_config, role)
         flag &= SapHA::System::Local.start_cluster_services
-        flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
         flag
       end
