@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Wed Nov 29 07:52:36 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha setup workflow is bad (bsc#1217596)
+  Reworking the workflow:
+  1. Setting up SAP HANA System Replication
+  2. Setting up SAP HANA HA/DR providers
+  3. Confiugring the base cluster on all nodes
+  4. Configuring cluster properties and resources with the new function HANA.finalize
+  The whole class ClusterFinlizer was removed.
+- 4.4.7
+
+-------------------------------------------------------------------
 Thu Nov  9 08:31:53 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha wizard terminates abruptly when save configuration option
