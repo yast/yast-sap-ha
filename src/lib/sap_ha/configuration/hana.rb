@@ -95,7 +95,7 @@ module SapHA
       def additional_instance=(value)
         @additional_instance = value
         return unless value
-	@prefer_takeover = false
+        @prefer_takeover = false
         @production_constraints = {
           global_alloc_limit_prod:  "0",
           global_alloc_limit_non:   "0",
@@ -239,7 +239,8 @@ module SapHA
 
       def finalize
         configure_crm
-	activating_msr
+        wait_idle
+        activating_msr
       end
 
     private
@@ -255,6 +256,15 @@ module SapHA
           "Could not configure HANA cluster resources", out)
       end
 
+      def wait_idle
+        primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+        while true
+          out, status = exec_outerr_status("crmadmin","--quiet","--status",primary_host_name)
+          break if out == "S_IDLE"
+          log.info("wait_idle status of #{primary_host_name} is #{out}")
+          sleep 5
+        end
+      end
       def activating_msr
         msr = "msl_SAPHana_#{@system_id}_HDB#{@instance}"
         out, status = exec_outerr_status("crm", "resource", "refresh", msr)
@@ -264,7 +274,7 @@ module SapHA
         out, status = exec_outerr_status("crm", "resource", "maintenance", msr, "off")
         @nlog.log_status(status.exitstatus == 0,
           "#{msr} maintenance turned off.",
-          "Could turn of maintenance of #{msr}: #{out}")
+          "Could turn off maintenance on #{msr}: #{out}")
       end
 
       def cleanup_hana_resources
@@ -318,9 +328,9 @@ module SapHA
 
       # Creates the sudoers file
       def adapt_sudoers
-	if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb"))
-	  Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template("SUDOERS_HANASR.erb", binding))
-	end
+        if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb"))
+          Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template("SUDOERS_HANASR.erb", binding))
+        end
       end
 
       # Activates all necessary plugins based on role an scenario
