@@ -257,12 +257,15 @@ module SapHA
       end
 
       def wait_idle
-        primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+        primary_host_name = @global_config.cluster.get_primary_on_primary
+        counter = 0
         while true
           out, status = exec_outerr_status("crmadmin","--quiet","--status",primary_host_name)
           break if out == "S_IDLE"
           log.info("wait_idle status of #{primary_host_name} is #{out}")
-          sleep 5
+	  counter++
+	  break if counter > 10
+          sleep 6
         end
       end
       def activating_msr
