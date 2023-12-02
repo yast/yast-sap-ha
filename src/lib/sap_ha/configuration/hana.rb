@@ -263,7 +263,7 @@ module SapHA
           out, status = exec_outerr_status("crmadmin","--quiet","--status",primary_host_name)
           break if out == "S_IDLE"
           log.info("wait_idle status of #{primary_host_name} is #{out}")
-	  counter++
+	  counter += 1
 	  break if counter > 10
           sleep 6
         end
