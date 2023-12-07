@@ -239,7 +239,7 @@ module SapHA
 
       def finalize
         configure_crm
-        wait_idle
+        wait_idle(@global_config.cluster.get_primary_on_primary)
         activating_msr
       end
 
@@ -256,18 +256,19 @@ module SapHA
           "Could not configure HANA cluster resources", out)
       end
 
-      def wait_idle
-        primary_host_name = @global_config.cluster.get_primary_on_primary
+      # Wait until the node is in state S_IDLE but maximal 60 seconds
+      def wait_idle(node)
         counter = 0
         while true
-          out, status = exec_outerr_status("crmadmin","--quiet","--status",primary_host_name)
+          out, status = exec_outerr_status("crmadmin","--quiet","--status",node)
           break if out == "S_IDLE"
-          log.info("wait_idle status of #{primary_host_name} is #{out}")
+          log.info("wait_idle status of #{node} is #{out}")
 	  counter += 1
 	  break if counter > 10
           sleep 6
         end
       end
+
       def activating_msr
         msr = "msl_SAPHana_#{@system_id}_HDB#{@instance}"
         out, status = exec_outerr_status("crm", "resource", "refresh", msr)
