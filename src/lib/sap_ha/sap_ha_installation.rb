@@ -57,7 +57,7 @@ module SapHA
         next_node
         log.info "--- #{self.class}.#{__callee__}: finished configuring node #{node[:hostname]} ---"
       end
-      @config.cluster_finalizer.apply(:master)
+      @config.hana.finalize
       @ui.unblock if @ui
       NodeLogger.summary
       :next
