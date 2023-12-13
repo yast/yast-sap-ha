@@ -26,7 +26,6 @@ require "psych"
 require "sap_ha/helpers"
 require "sap_ha/node_logger"
 require "sap_ha/configuration/cluster"
-require "sap_ha/configuration/cluster_finalizer"
 require "sap_ha/configuration/fencing"
 require "sap_ha/configuration/watchdog"
 require "sap_ha/configuration/hana"
@@ -53,7 +52,6 @@ module SapHA
       :watchdog,
       :hana,
       :ntp,
-      :cluster_finalizer,
       :imported,
       :unattended,
       :completed,
@@ -80,7 +78,6 @@ module SapHA
       @scenario_summary = nil
       @yaml_configuration = load_scenarios
       @cluster = Configuration::Cluster.new(self)
-      @cluster_finalizer = Configuration::ClusterFinalizer.new(self)
       @fencing = Configuration::Fencing.new(self)
       @watchdog = Configuration::Watchdog.new(self)
       @hana = Configuration::HANA.new(self)

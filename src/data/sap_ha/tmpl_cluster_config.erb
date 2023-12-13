@@ -40,7 +40,7 @@ primitive rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHana \
     meta priority="100"
 
 ms msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> \
-    meta clone-max="2" clone-node-max="1" interleave="true"
+    meta clone-max="2" clone-node-max="1" interleave="true" maintenance="true"
 
 primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
     op monitor interval="10" timeout="20" \
