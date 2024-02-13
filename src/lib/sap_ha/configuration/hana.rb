@@ -95,8 +95,10 @@ module SapHA
       def additional_instance=(value)
         @additional_instance = value
         return unless value
+        @prefer_takeover = false
         @production_constraints = {
-          global_alloc_limit:    "0",
+          global_alloc_limit_prod:  "0",
+          global_alloc_limit_non:   "0",
           preload_column_tables: "false"
         }
       end
@@ -111,6 +113,7 @@ module SapHA
 
       def validate(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
+          check.hana_is_installed(@system_id, @global_config.cluster.all_nodes)
           check.ipv4(@virtual_ip, "Virtual IP")
           check.nonneg_integer(@virtual_ip_mask, "Virtual IP mask")
           check.integer_in_range(@virtual_ip_mask, 1, 32, "CIDR mask has to be between 1 and 32.",
@@ -137,6 +140,7 @@ module SapHA
               "There is no such HANA user store key detected.", "Secure store key")
           end
           if @additional_instance
+            check.hana_is_installed(@np_system_id,@global_config.cluster.other_nodes)
             check.sap_instance_number(@np_instance, nil, "Non-Production Instance Number")
             check.sap_sid(@np_system_id, nil, "Non-Production System ID")
             check.not_equal(@instance, @np_instance, "SAP HANA instance numbers should not collide",
@@ -195,7 +199,8 @@ module SapHA
       def production_constraints_validation(check, hash)
         check.element_in_set(hash[:preload_column_tables], ["true", "false"],
           "The field must contain a boolean value: 'true' or 'false'", "Preload column tables")
-        check.nonneg_integer(hash[:global_alloc_limit], "Global allocation limit")
+        check.not_equal(hash[:global_alloc_limit_prod], 0.to_s, "Global allocation limit production system must be adapted.")
+        check.not_equal(hash[:global_alloc_limit_non], 0.to_s, "Global allocation limit of non production system must be adapted.")
       end
 
       # Validator for the non-production instance constraints popup
@@ -209,8 +214,8 @@ module SapHA
 
       def apply(role)
         return false unless configured?
-        @nlog.info("Appying HANA Configuration")
-        config_firewall(role)
+        @nlog.info("Applying HANA Configuration")
+        configure_firewall(role)
         if role == :master
           if @perform_backup
             SapHA::System::Hana.make_backup(@system_id, @backup_user, @backup_file, @instance)
@@ -219,7 +224,6 @@ module SapHA
           secondary_password = @global_config.cluster.host_passwords[secondary_host_name]
           SapHA::System::Hana.copy_ssfs_keys(@system_id, secondary_host_name, secondary_password)
           SapHA::System::Hana.enable_primary(@system_id, @site_name_1)
-          configure_crm
         else # secondary node
           SapHA::System::Hana.hdb_stop(@system_id)
           primary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
@@ -231,6 +235,50 @@ module SapHA
         adapt_sudoers
         adjust_global_ini(role)
         true
+      end
+
+      def finalize
+        configure_crm
+        wait_idle(@global_config.cluster.get_primary_on_primary)
+        activating_msr
+      end
+
+    private
+
+      def configure_crm
+        primary_host_name = @global_config.cluster.get_primary_on_primary
+        secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
+        crm_conf = Helpers.render_template("tmpl_cluster_config.erb", binding)
+        file_path = Helpers.write_var_file("cluster.config", crm_conf)
+        out, status = exec_outerr_status("crm", "configure", "load", "update", file_path)
+        @nlog.log_status(status.exitstatus == 0,
+          "Configured necessary cluster resources for HANA System Replication",
+          "Could not configure HANA cluster resources", out)
+      end
+
+      # Wait until the node is in state S_IDLE but maximal 60 seconds
+      def wait_idle(node)
+        counter = 0
+        while true
+          out, status = exec_outerr_status("crmadmin","--quiet","--status",node)
+          break if out == "S_IDLE"
+          log.info("wait_idle status of #{node} is #{out}")
+	  counter += 1
+	  break if counter > 10
+          sleep 6
+        end
+      end
+
+      def activating_msr
+        msr = "msl_SAPHana_#{@system_id}_HDB#{@instance}"
+        out, status = exec_outerr_status("crm", "resource", "refresh", msr)
+        @nlog.log_status(status.exitstatus == 0,
+          "#{msr} status refresh OK",
+          "Could not refresh status of #{msr}: #{out}")
+        out, status = exec_outerr_status("crm", "resource", "maintenance", msr, "off")
+        @nlog.log_status(status.exitstatus == 0,
+          "#{msr} maintenance turned off.",
+          "Could turn off maintenance on #{msr}: #{out}")
       end
 
       def cleanup_hana_resources
@@ -245,22 +293,18 @@ module SapHA
         end
       end
 
-      def configure_crm
-        # TODO: move this to SapHA::System::Local.configure_crm
-        primary_host_name = @global_config.cluster.get_primary_on_primary
-        secondary_host_name = @global_config.cluster.other_nodes_ext.first[:hostname]
-        crm_conf = Helpers.render_template("tmpl_cluster_config.erb", binding)
-        file_path = Helpers.write_var_file("cluster.config", crm_conf)
-        out, status = exec_outerr_status("crm", "configure", "load", "update", file_path)
-        @nlog.log_status(status.exitstatus == 0,
-          "Configured necessary cluster resources for HANA System Replication",
-          "Could not configure HANA cluster resources", out)
-      end
-
-      def config_firewall(role)
+      # Adapt the firewall depending on the @global_config.cluster.fw_config
+      # Even if the firewall is already configured the TCP port 8080 will be opened for internal RPC communication during setup
+      # If the firewall should be stoped during cofiguration no other action is necessary
+      # If the firewall should be configured in the first step the HANA-Services will be generated by hana-firewall.
+      # After them the generated services and the service cluster will be added to the default zone.
+      def configure_firewall(role)
         case @global_config.cluster.fw_config
         when "done"
           @nlog.info("Firewall is already configured")
+          if role != :master
+             _s = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
+          end
         when "off"
           @nlog.info("Firewall will be turned off")
           SapHA::System::Local.systemd_unit(:stop, :service, "firewalld")
@@ -268,13 +312,15 @@ module SapHA
           @nlog.info("Firewall will be configured for HANA services.")
           instances = Yast::SCR.Read(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS")).split
           instances << @instance
-          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances)
+          Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall.HANA_INSTANCE_NUMBERS"), instances.join(" "))
           Yast::SCR.Write(Yast::Path.new(".sysconfig.hana-firewall"), nil)
           _s = exec_status("/usr/sbin/hana-firewall", "generate-firewalld-services")
           _s = exec_status("/usr/bin/firewall-cmd", "--reload")
           if role != :master
              _s = exec_status("/usr/bin/firewall-cmd", "--add-port", "8080/tcp")
           end
+          _s = exec_status("/usr/bin/firewall-cmd", "--add-service", "cluster")
+          _s = exec_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", "cluster")
           HANA_FW_SERVICES.each do |service|
             _s = exec_status("/usr/bin/firewall-cmd", "--add-service", service)
             _s = exec_status("/usr/bin/firewall-cmd", "--permanent", "--add-service", service)
@@ -286,35 +332,38 @@ module SapHA
 
       # Creates the sudoers file
       def adapt_sudoers
-	if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb"))
-	  Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template("SUDOERS_HANASR.erb", binding))
-	end
+        if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb"))
+          Helpers.write_file("/etc/sudoers.d/saphanasr.conf",Helpers.render_template("SUDOERS_HANASR.erb", binding))
+        end
       end
 
       # Activates all necessary plugins based on role an scenario
       def adjust_global_ini(role)
         # SAPHanaSR is needed on all nodes
-        add_plugin_to_global_ini("SAPHANA_SR")
+        add_plugin_to_global_ini("SAPHANA_SR", @system_id)
         if @additional_instance
           # cost optimized
-          add_plugin_to_global_ini("SUS_COSTOPT") if role != :master
+          add_plugin_to_global_ini("SUS_COSTOPT", @system_id) if role != :master
+          add_plugin_to_global_ini("NON_PROD", @np_system_id) if role != :master
+          command = ["hdbnsutil", "-reloadHADRProviders"]
+          _out, _status = su_exec_outerr_status("#{@np_system_id.downcase}adm", *command)
         else
           # performance optimized
-          add_plugin_to_global_ini("SUS_CHKSRV")
-          add_plugin_to_global_ini("SUS_TKOVER")
+          add_plugin_to_global_ini("SUS_CHKSRV", @system_id)
+          add_plugin_to_global_ini("SUS_TKOVER", @system_id)
         end
         command = ["hdbnsutil", "-reloadHADRProviders"]
-        out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
+        su_exec_outerr_status("#{@system_id.downcase}adm", *command)
       end
 
       # Activates the plugin in global ini
-      def add_plugin_to_global_ini(plugin)
+      def add_plugin_to_global_ini(plugin, sid)
         sr_path = Helpers.data_file_path("GLOBAL_INI_#{plugin}")
         if File.exist?("#{sr_path}.erb")
           sr_path = Helpers.write_var_file(plugin, Helpers.render_template("GLOBAL_INI_#{plugin}.erb", binding))
         end
-        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--sid", @system_id, sr_path]
-        out, status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
+        command = ["/usr/sbin/SAPHanaSR-manageProvider", "--add", "--reconfigure", "--sid", sid, sr_path]
+        _out, _status = su_exec_outerr_status("#{sid.downcase}adm", *command)
       end
     end
   end

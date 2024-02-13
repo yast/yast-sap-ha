@@ -12,8 +12,8 @@
         - ntp
         - watchdog
         - fencing
-        - cluster
         - hana
+        - cluster
       screen_sequence: &id002
         - prerequisites
         - communication_layer
