@@ -121,17 +121,6 @@ cluster: !ruby/object:SapHA::Configuration::Cluster
   - :@enable_csync2
   - :@keys
   - :@append_hosts
-cluster_finalizer: !ruby/object:SapHA::Configuration::ClusterFinalizer
-  global_config: *5
-  screen_name: Cluster Configuration Finalizer
-  exception_type: &6 !ruby/class 'SapHA::Exceptions::BaseConfigException'
-  yaml_exclude:
-  - :@nlog
-  instance_variables:
-  - :@global_config
-  - :@screen_name
-  - :@exception_type
-  - :@yaml_exclude
 fencing: !ruby/object:SapHA::Configuration::Fencing
   global_config: *5
   screen_name: Fencing Mechanism

@@ -22,6 +22,7 @@
 require "sap_ha/exceptions"
 require "yast"
 require "erb"
+require "sap_ha/system/shell_commands"
 
 Yast.import "IP"
 Yast.import "Hostname"
@@ -31,6 +32,7 @@ module SapHA
   class SemanticChecks
     include Singleton
     include Yast::Logger
+    include SapHA::System::ShellCommands
 
     attr_accessor :silent
     attr_reader :checks_passed
@@ -50,6 +52,7 @@ module SapHA
       @errors = []
       @checks_passed = true
       @silent = true
+      @no_test = ENV["Y2DIR"].nil?
     end
 
     # Check if the string is a valid IPv4 address
@@ -74,8 +77,8 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def ipv4_multicast(value, field_name = "")
       flag = Yast::IP.Check4(value) && value.start_with?("239.")
-      msg = "A valid IPv4 multicast address should belong to the 239.* network."
-      report_error(flag, msg, field_name, value)
+      message = "A valid IPv4 multicast address should belong to the 239.* network."
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the IP belongs to the specified network given along with a CIDR netmask
@@ -88,8 +91,8 @@ module SapHA
       rescue StandardError
         flag = false
       end
-      msg = "IP address has to belong to the network #{network}."
-      report_error(flag, msg, field_name, ip)
+      message = "IP address has to belong to the network #{network}."
+      report_error(flag, message, field_name, ip)
     end
 
     # Check if the provided IPs belong to the network
@@ -122,14 +125,14 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def port(value, field_name = "")
       max_port_number = 65_535
-      msg = "The port number must be in between 1 and #{max_port_number}."
+      message = "The port number must be in between 1 and #{max_port_number}."
       begin
         portn = Integer(value)
         flag = 1 <= portn && portn <= 65_535
       rescue ArgumentError, TypeError
-        return report_error(false, msg, field_name, value)
+        return report_error(false, message, field_name, value)
       end
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the provided value is a non-negative integer
@@ -264,17 +267,39 @@ module SapHA
       report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
     end
 
+    # Check if a HANA db with given sid is installed
+    def hana_is_installed(value, nodes)
+      flag = true
+      message = ''
+      my_ips = SapHA::System::Network.ip_addresses
+      if @no_test
+        nodes.each do |node|
+          log.debug("node #{node} #{my_ips}")
+	  if my_ips.include?(node)
+	    status = exec_status("test", "-d", "/usr/sap/#{value.upcase}")
+	  else
+	    status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "test", "-d", "/usr/sap/#{value.upcase}")
+	  end
+	  if status != 0
+	    flag = false
+	    message += "No SAP HANA #{value} is installed on #{node}\n"
+	  end
+	end
+      end
+      report_error(flag, message, 'SID', value)
+    end
+
     # Check if string is a block device
     # @param value [String] device path
     def block_device(value, field_name)
-      msg = "The provided path does not point to a block device."
+      message = "The provided path does not point to a block device."
       begin
         flag = File::Stat.new(value).blockdev?
       rescue StandardError
         flag = false
       end
       log.error "BLK: #{value}.blockdev? = #{flag}"
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
     # Start a transactional check
@@ -284,7 +309,7 @@ module SapHA
         false
       else
         true
-                end
+      end
       transaction_begin
       yield self
       return transaction_end if verbosity == :verbose

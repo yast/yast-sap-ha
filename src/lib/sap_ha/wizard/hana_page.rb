@@ -142,8 +142,10 @@ module SapHA
         base_popup(
           "Production system constraints",
           @my_model.method(:production_constraints_validation),
-          MinWidth(20, InputField(Id(:global_alloc_limit), "Global &allocation limit (in MB):",
-            values[:global_alloc_limit] || "")),
+          MinWidth(20, InputField(Id(:global_alloc_limit_prod), "Productive DB global allocation limit (in MB):",
+            values[:global_alloc_limit_prod] || "")),
+          MinWidth(20, InputField(Id(:global_alloc_limit_non), "Non-productive DB global allocation limit (in MB):",
+            values[:global_alloc_limit_non] || "")),
           MinWidth(20, InputField(Id(:preload_column_tables), "&Preload column tables:",
             values[:preload_column_tables] || ""))
         )
