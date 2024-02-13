@@ -8,7 +8,7 @@ Wed Nov 29 07:52:36 UTC 2023 - Peter Varkoly <varkoly@suse.com>
   3. Confiugring the base cluster on all nodes
   4. Configuring cluster properties and resources with the new function HANA.finalize
   The whole class ClusterFinlizer was removed.
-- 5.0.2
+- 6.0.0
 
 -------------------------------------------------------------------
 Thu Nov  9 08:31:53 UTC 2023 - Peter Varkoly <varkoly@suse.com>
