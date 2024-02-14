@@ -21,6 +21,7 @@
 
 require "yast"
 require "psych"
+require "sap_ha/configuration"
 require "sap_ha/helpers"
 require "sap_ha/node_logger"
 require "sap_ha/wizard/cluster_nodes_page"
@@ -36,7 +37,6 @@ require "sap_ha/wizard/gui_installation_page"
 require "sap_ha/wizard/list_selection"
 require "sap_ha/wizard/rich_text"
 require "sap_ha/wizard/scenario_selection_page"
-require "sap_ha/configuration"
 
 # YaST module
 module Yast
@@ -47,6 +47,7 @@ module Yast
     Yast.import "UI"
     Yast.import "Wizard"
     Yast.import "Sequencer"
+    Yast.import "Service"
     Yast.import "Popup"
     include Yast::UIShortcuts
     include Yast::Logger
@@ -54,7 +55,7 @@ module Yast
 
     def initialize
       log.warn "--- called #{self.class}.#{__callee__}: CLI arguments are #{WFM.Args} ---"
-      begin 
+      begin
         if WFM.Args.include?("readconfig")
           ix = WFM.Args.index("readconfig") + 1
           begin
@@ -65,7 +66,7 @@ module Yast
           @config.imported = true
           if WFM.Args.include?("unattended")
             @config.unattended = true
-          end  
+          end
         else
           @config = SapHA::HAConfiguration.new
         end
@@ -189,7 +190,7 @@ module Yast
             next:              :ws_finish
           }
         }
-        
+
         @unattended_sequence = {
           "ws_start"              => "product_check",
           "product_check"         =>  {
@@ -214,7 +215,6 @@ module Yast
           }
         }
 
-
         @aliases = {
           "product_check"         => -> { product_check },
           "file_import_check"    => -> { file_import_check },
@@ -235,7 +235,7 @@ module Yast
           "config_overview"       => -> { configuration_overview },
           "summary"               => -> { show_summary }
         }
-      end  
+      end
     end
 
     def main
@@ -245,32 +245,32 @@ module Yast
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
       begin
-        if @config.unattended 
-          Sequencer.Run(@aliases, @unattended_sequence) 
+        if @config.unattended
+          Sequencer.Run(@aliases, @unattended_sequence)
         else
-          Sequencer.Run(@aliases, @sequence)      
+          Sequencer.Run(@aliases, @sequence)
         end
       rescue StandardError => e
         # FIXME: y2start overrides the return code, therefore exit prematurely without
         # shutting down Yast properly, see bsc#1099871
         # If the error was not catched until here, we know that is a unattended installation.
         # exit!(1)
-        @unattended_error = "Error occurred during the unattended installation: #{e.message}" 
-        log.error @unattended_error 
+        @unattended_error = "Error occurred during the unattended installation: #{e.message}"
+        log.error @unattended_error
         puts @unattended_error
         Popup.TimedError(@unattended_error, 10)
       ensure
         Wizard.CloseDialog
         if @config.unattended
-          if @unattended_error.nil? 
-            success = SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
+          if @unattended_error.nil?
+            SapHA::Helpers.write_file("/var/log/YaST2/sap_ha_unattended_install_log.txt", SapHA::NodeLogger.text)
             log.info "Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt"
-            # FIXME: yast redirects stdout, therefore the usage of the CommanlineClass is needed to write on the stdout, but as the 
-            # the dependent modules we have (cluster, firewall, ntp) demands UI existence, we cannot call the module without creating the UI object. 
+            # FIXME: yast redirects stdout, therefore the usage of the CommanlineClass is needed to write on the stdout, but as the
+            # the dependent modules we have (cluster, firewall, ntp) demands UI existence, we cannot call the module without creating the UI object.
             # The best option is to presente a Timed Popup to the user.
             Popup.TimedMessage("Execution Finished: Please, verify the log /var/log/YaST2/sap_ha_unattended_install_log.txt", 10)
           end
-        end  
+        end
       end
     end
 
@@ -288,25 +288,23 @@ module Yast
         return :unknown
       end
       # TODO: here we should check if the symbol can be handled by th
-        #stat = Yast::Cluster.LoadClusterConfig
-        #Yast::Cluster.load_csync2_confe Sequencer
+      # stat = Yast::Cluster.LoadClusterConfig
+      # Yast::Cluster.load_csync2_confe Sequencer
       @config.product.fetch("id", "abort").downcase.to_sym
     end
 
     def file_import_check
-      begin
-        log.debug "--- called #{self.class}.#{__callee__} ---"
-        SapHA::SAPHAUnattendedInstall.new(@config).check_config
-      rescue StandardError => e
-        if @config.unattended
-          # Will be trated by the caller to collect the log.
-          raise e
-        else
-          # Adjust the WF to show the Summary with the problems.
-          return :unknown 
-        end 
+      log.debug "--- called #{self.class}.#{__callee__} ---"
+      SapHA::SAPHAUnattendedInstall.new(@config).check_config
+    rescue StandardError => e
+      if @config.unattended
+        # Will be trated by the caller to collect the log.
+        raise e
+      else
+        # Adjust the WF to show the Summary with the problems.
+        return :unknown
       end
-    end  
+    end
 
     def scenario_selection
       log.debug "--- called #{self.class}.#{__callee__} ---"
@@ -314,7 +312,9 @@ module Yast
       log.debug "--- called #{self.class}.#{__callee__}:: ret is #{selection.class} ---"
       if selection.is_a?(SapHA::HAConfiguration)
         @config = selection
+        log.debug "-- @config #{@config.to_yaml}"
         @config.refresh_all_proposals
+        log.debug "-- @config after refresh #{@config.to_yaml}"
         return :next
       end
       selection
@@ -436,6 +436,9 @@ module Yast
 
     def show_summary
       log.debug "--- called #{self.class}.#{__callee__} ---"
+      if File.exist?(SapHA::Helpers.var_file_path("need_to_start_firewalld"))
+        Service.Start("firewalld")
+      end
       SapHA::Wizard::SetupSummaryPage.new(@config).run
     end
 

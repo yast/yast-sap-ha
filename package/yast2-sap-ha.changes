@@ -1,7 +1,54 @@
 -------------------------------------------------------------------
+Wed Nov 29 07:52:36 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha setup workflow is bad (bsc#1217596)
+  Reworking the workflow:
+  1. Setting up SAP HANA System Replication
+  2. Setting up SAP HANA HA/DR providers
+  3. Confiugring the base cluster on all nodes
+  4. Configuring cluster properties and resources with the new function HANA.finalize
+  The whole class ClusterFinlizer was removed.
+- 4.6.2
+
+-------------------------------------------------------------------
+Thu Nov  9 08:31:53 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha wizard terminates abruptly when save configuration option
+  is selected post configuration (bsc#1214603)
+- yast2-sap-ha does not set global_allocation_limit for non productive database
+  (bsc#1216651)
+- Take care that the read values from the saved configuration will
+  not be overridden during initialization of the modules
+- Check if the required HANA systems are installed on the nodes.
+- 4.6.1
+
+-------------------------------------------------------------------
 Fri Sep 01 19:57:03 UTC 2023 - Josef Reidinger <jreidinger@suse.com>
 
 - Branch package for SP6 (bsc#1208913)
+- 4.6.0
+
+-------------------------------------------------------------------
+Mon Aug  7 05:13:47 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- Set default value for global_alloc_limit to "0"
+- Fix evaluation CustOpt settings. (bsc#1209204)
+- Remove superfluously BuildRequires: HANA-Firewall
+- 4.5.8
+
+-------------------------------------------------------------------
+Fri May 26 04:40:48 UTC 2023 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha for Cost-Opt scenario is not up-to-date with SR takeover in best practice guide (bsc#1209204)
+- yast2-sap-ha can not configure firewall (bsc#1211027)
+- Rework package sturcture to use the yast2 defaults
+- New function to get the primary hostname on the master.
+- Fix setting secondary and primary hostname for the template
+- Do not enbale and start csync2 by installing the package. This is unsecure.
+- The hook creation is deprecated. This was removed from wizard and from backend.
+  This functionality now will be provided by the susCostOpt.py delivered by SAPHanaSR
+  Now a key sus_<SID>_costopt must be created.
+- 4.5.7
 
 -------------------------------------------------------------------
 Thu Feb 23 11:22:27 UTC 2023 - Peter Varkoly <varkoly@suse.com>
@@ -9,7 +56,7 @@ Thu Feb 23 11:22:27 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 - L3: yast2-sap-ha error - Could not adjust global.ini for the production system
   (bsc#1207740)
 - Add csync2 to buildrequires
-- 4.5.6 
+- 4.5.6
 
 -------------------------------------------------------------------
 Thu Dec 29 11:09:12 UTC 2022 - Peter Varkoly <varkoly@suse.com>
@@ -34,7 +81,7 @@ Thu Sep  8 07:01:42 UTC 2022 - Michal Filka <mfilka@suse.com>
 
 - bsc#1203227
   - replaced fgrep by grep -F
-- 4.5.3 
+- 4.5.3
 
 -------------------------------------------------------------------
 Tue Aug  9 08:16:47 UTC 2022 - Peter Varkoly <varkoly@suse.com>
@@ -47,7 +94,7 @@ Mon Jun 13 14:32:45 UTC 2022 - Peter Varkoly <varkoly@suse.com>
 
 - YaST2 sap_ha tool does not allow digits at the beginning of site names
   (bsc#1200427)
-- 4.5.1 
+- 4.5.1
 
 -------------------------------------------------------------------
 Tue Jun  7 07:37:53 UTC 2022 - Peter Varkoly <varkoly@suse.com>
@@ -103,7 +150,7 @@ Tue Oct 12 16:08:26 UTC 2021 - Peter Varkoly <varkoly@suse.com>
 Wed Dec 11 11:07:47 UTC 2019 - Peter Varkoly <varkoly@suse.com>
 
 - bsc#1158843 hana-*: Broken gettext support
-- 1.0.9 
+- 1.0.9
 
 -------------------------------------------------------------------
 Mon Oct 21 08:55:32 UTC 2019 - Peter Varkoly <varkoly@suse.com>
@@ -141,7 +188,7 @@ Fri Sep 28 10:13:00 UTC 2018 - dakechi@suse.com
 - Version bump to 1.0.5;
 - Enhanced the module to be used on Azure with unattended mode
   support (fate#324542, fate#325956).
-    + Supports the SBD fencing based options documented on the 
+    + Supports the SBD fencing based options documented on the
     Azure best practices guide.
 
 -------------------------------------------------------------------
@@ -152,7 +199,7 @@ Mon Aug 20 16:00:00 UTC 2018 - lkrause@suse.com
   - Fix the rpc server error when Y2DIR variable is set
   - Fix the copy_ssfs_keys method to not fail when no password is
     informed but there is passwordless ssh access between the nodes
-    
+
 -------------------------------------------------------------------
 Fri Jul 27 09:00:37 UTC 2018 - dakechi@suse.com
 
@@ -165,15 +212,15 @@ Fri Jul 27 09:00:37 UTC 2018 - dakechi@suse.com
     + included the option "unattended" to start the configuration
     automatically based on the config file provided. Usage:
       yast2 sap_ha readconfig <config file path> unattended
-      
+
 -------------------------------------------------------------------
 Fri Mar 09 13:38:37 UTC 2018 - imanyugin@suse.com
 
 - Version bump to 1.0.2;
 - Adapt module for SLE-15 (bsc#1084712):
-    + firewalld rules are generated by yast2-cluster via Y2Firewall. 
+    + firewalld rules are generated by yast2-cluster via Y2Firewall.
       The user must enable the cluster service manually.
-    + it is left for the user to make sure that port 8080 is open for 
+    + it is left for the user to make sure that port 8080 is open for
       the RPC Server on the secondary node in order to provision it
 
 -------------------------------------------------------------------
@@ -223,7 +270,7 @@ Fri Sep 16 12:25:10 UTC 2016 - imanyugin@suse.com
 
 - Update version to 0.9.3;
 - Add Cost-Optimized scenario for SAP HANA (bsc#999276);
-- New dependencies: 
+- New dependencies:
     * ruby2.1-rubygem-cfa for configuration files parsing
     * sysvinit-tools for `pidof` binary
 

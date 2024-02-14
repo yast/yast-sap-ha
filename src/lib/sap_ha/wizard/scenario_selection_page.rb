@@ -19,8 +19,8 @@
 # Summary: SUSE High Availability Setup for SAP Products: Scenario Selection page
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'sap_ha/helpers'
+require "yast"
+require "sap_ha/helpers"
 
 module SapHA
   module Wizard
@@ -63,7 +63,7 @@ module SapHA
         :next
       end
 
-      protected
+    protected
 
       def previous_configs_popup(previous_configs)
         log.debug "--- #{self.class}.#{__callee__} ---"
@@ -72,7 +72,8 @@ module SapHA
           "Would you like to load a previous configuration?",
           nil,
           MinSize(55, 11,
-            SelectionBox(Id(:config_name), Opt(:vstretch, :notify), '', list_contents)))
+            SelectionBox(Id(:config_name), Opt(:vstretch, :notify), "", list_contents))
+        )
         log.debug "--- #{self.class}.#{__callee__}: ret from base_popup: #{ret.inspect} ---"
         @to_load = previous_configs.find { |e| e[0] == ret[:config_name] }[1] unless ret.nil?
       end
@@ -86,10 +87,10 @@ module SapHA
           log.debug "--- #{self.class}.#{__callee__}: event=#{event} ---"
           return :next unless event # allow for debugging
           # Allow for double-clicking the item in the list
-          input = event['ID']
+          input = event["ID"]
           case input
           when :selection_box
-            if event['EventReason'] == 'Activated'
+            if event["EventReason"] == "Activated"
               return update_model
             end
           when :next

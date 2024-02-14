@@ -18,12 +18,12 @@
 # Summary: SUSE High Availability Setup for SAP Products: Cluster setup class
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'xmlrpc/client'
-require 'sap_ha/system/ssh'
-require 'sap_ha/exceptions'
-require 'sap_ha/system/connectivity'
-require 'sap_ha/node_logger'
+require "yast"
+require "xmlrpc/client"
+require "sap_ha/system/ssh"
+require "sap_ha/exceptions"
+require "sap_ha/system/connectivity"
+require "sap_ha/node_logger"
 
 module SapHA
   # class that controls the cluster configuration
@@ -57,13 +57,13 @@ module SapHA
         next_node
         log.info "--- #{self.class}.#{__callee__}: finished configuring node #{node[:hostname]} ---"
       end
-      @config.cluster_finalizer.apply(:master)
+      @config.hana.finalize
       @ui.unblock if @ui
       NodeLogger.summary
       :next
     end
 
-    private
+  private
 
     def next_task
       log.debug "--- #{self.class}.#{__callee__} ---"
@@ -82,8 +82,8 @@ module SapHA
       SapHA::System::Connectivity.configure(node[:hostname]) do |rpc|
         begin
           rpc.connect
-          rpc.polling_call('sapha.import_config', @yaml_config)
-          rpc.polling_call('sapha.config.start_setup')
+          rpc.polling_call("sapha.import_config", @yaml_config)
+          rpc.polling_call("sapha.config.start_setup")
         rescue SapHA::Exceptions::RPCRecoverableException => e
           log.debug "--- #{self.class}.#{__callee__}(#{node}) :: caught RPCRecoverableException ---"
           NodeLogger.fatal "Could not connect to node #{node[:hostname]}. Cluster setup is interrupted."
@@ -96,9 +96,9 @@ module SapHA
           rpc.polling_call(component[:rpc_method], :slave)
           next_task
         end
-        rpc.polling_call('sapha.config.end_setup')
-        NodeLogger.import rpc.polling_call('sapha.config.collect_log')
-        rpc.polling_call('sapha.shutdown')
+        rpc.polling_call("sapha.config.end_setup")
+        NodeLogger.import rpc.polling_call("sapha.config.collect_log")
+        rpc.polling_call("sapha.shutdown")
       end
       true
     end
@@ -128,10 +128,10 @@ module SapHA
 
     def calculate_gui
       log.debug "--- #{self.class}.#{__callee__} ---"
-      tasks = ['Connecting']
+      tasks = ["Connecting"]
       tasks.concat(@config.config_sequence.map { |e| e[:screen_name] })
-      stages = ['Configure local node']
-      titles = ['Configuring local node']
+      stages = ["Configure local node"]
+      titles = ["Configuring local node"]
       @other_nodes.each do |n|
         stages << "Configure remote node [#{n[:hostname]}]"
         titles << "Configuring remote node [#{n[:hostname]}]"

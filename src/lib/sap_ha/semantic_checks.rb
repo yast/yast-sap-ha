@@ -22,6 +22,7 @@
 require "sap_ha/exceptions"
 require "yast"
 require "erb"
+require "sap_ha/system/shell_commands"
 
 Yast.import "IP"
 Yast.import "Hostname"
@@ -31,14 +32,15 @@ module SapHA
   class SemanticChecks
     include Singleton
     include Yast::Logger
+    include SapHA::System::ShellCommands
 
     attr_accessor :silent
     attr_reader :checks_passed
 
-    #Site identifier regexp. That is what SAP allows. All ASCII charactest from 33 until 125
-    #expect of '*' and '/'. The identifier can be 256 character long
-    #However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
-    #The identifier must not be longer than 30 characters and it must be minimum 2 long.
+    # Site identifier regexp. That is what SAP allows. All ASCII charactest from 33 until 125
+    # expect of '*' and '/'. The identifier can be 256 character long
+    # However, for security and technical reasons, we only allow alphanumeric characters as well as '-' and '_'.
+    # The identifier must not be longer than 30 characters and it must be minimum 2 long.
     IDENTIFIER_REGEXP = Regexp.new("^[a-zA-Z0-9][a-zA-Z0-9_\-]{1,29}$")
     SAP_SID_REGEXP = Regexp.new("^[A-Z][A-Z0-9]{2}$")
     SAP_INST_NUM_REGEX = Regexp.new("^[0-9]{2}$")
@@ -50,6 +52,7 @@ module SapHA
       @errors = []
       @checks_passed = true
       @silent = true
+      @no_test = ENV["Y2DIR"].nil?
     end
 
     # Check if the string is a valid IPv4 address
@@ -74,8 +77,8 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def ipv4_multicast(value, field_name = "")
       flag = Yast::IP.Check4(value) && value.start_with?("239.")
-      msg = "A valid IPv4 multicast address should belong to the 239.* network."
-      report_error(flag, msg, field_name, value)
+      message = "A valid IPv4 multicast address should belong to the 239.* network."
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the IP belongs to the specified network given along with a CIDR netmask
@@ -88,8 +91,8 @@ module SapHA
       rescue StandardError
         flag = false
       end
-      msg = "IP address has to belong to the network #{network}."
-      report_error(flag, msg, field_name, ip)
+      message = "IP address has to belong to the network #{network}."
+      report_error(flag, message, field_name, ip)
     end
 
     # Check if the provided IPs belong to the network
@@ -122,14 +125,14 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def port(value, field_name = "")
       max_port_number = 65_535
-      msg = "The port number must be in between 1 and #{max_port_number}."
+      message = "The port number must be in between 1 and #{max_port_number}."
       begin
         portn = Integer(value)
         flag = 1 <= portn && portn <= 65_535
       rescue ArgumentError, TypeError
-        return report_error(false, msg, field_name, value)
+        return report_error(false, message, field_name, value)
       end
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
     # Check if the provided value is a non-negative integer
@@ -153,7 +156,7 @@ module SapHA
     # @param field_name [String] name of the field in the form
     def element_in_set(element, set, message = "", field_name = "")
       flag = set.include? element
-      message = "The value must be in the set [#{set.join(', ')}]" if message.nil? || message.empty?
+      message = "The value must be in the set [#{set.join(", ")}]" if message.nil? || message.empty?
       report_error(flag, message, field_name, element)
     end
 
@@ -240,7 +243,7 @@ module SapHA
     def sap_sid(value, message = "", field_name = "")
       message = "A valid SAP System ID consists of three characters, starts with a letter, and "\
       " must not collide with one of the reserved IDs" if message.nil? || message.empty?
-      flag = !SAP_SID_REGEXP.match(value).nil? && !RESERVED_SAP_SIDS.include?(value)
+      flag = SAP_SID_REGEXP.match?(value) && !RESERVED_SAP_SIDS.include?(value)
       report_error(flag, message, field_name, value)
     end
 
@@ -264,27 +267,49 @@ module SapHA
       report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
     end
 
+    # Check if a HANA db with given sid is installed
+    def hana_is_installed(value, nodes)
+      flag = true
+      message = ''
+      my_ips = SapHA::System::Network.ip_addresses
+      if @no_test
+        nodes.each do |node|
+          log.debug("node #{node} #{my_ips}")
+	  if my_ips.include?(node)
+	    status = exec_status("test", "-d", "/usr/sap/#{value.upcase}")
+	  else
+	    status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "test", "-d", "/usr/sap/#{value.upcase}")
+	  end
+	  if status != 0
+	    flag = false
+	    message += "No SAP HANA #{value} is installed on #{node}\n"
+	  end
+	end
+      end
+      report_error(flag, message, 'SID', value)
+    end
+
     # Check if string is a block device
     # @param value [String] device path
     def block_device(value, field_name)
-      msg = "The provided path does not point to a block device."
+      message = "The provided path does not point to a block device."
       begin
         flag = File::Stat.new(value).blockdev?
       rescue StandardError
         flag = false
       end
       log.error "BLK: #{value}.blockdev? = #{flag}"
-      report_error(flag, msg, field_name, value)
+      report_error(flag, message, field_name, value)
     end
 
     # Start a transactional check
     def check(verbosity)
       old_silent = @silent
       @silent = if verbosity == :verbose
-                  false
-                else
-                  true
-                end
+        false
+      else
+        true
+      end
       transaction_begin
       yield self
       return transaction_end if verbosity == :verbose
@@ -335,7 +360,7 @@ module SapHA
       nil
     end
 
-    private
+  private
 
     def error_string(field_name, explanation, value = nil)
       field_name = field_name.strip

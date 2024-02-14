@@ -1,0 +1,9 @@
+# SAPHanaSR-ScaleUp entries for writing srHook cluster attribute
+<%= @system_id -%>adm ALL=(ALL) NOPASSWD: /usr/sbin/crm_attribute -n hana_<%= @system_id -%>_site_srHook_*
+
+# SAPHanaSR-ScaleUp entries for writing srHook cluster attribute
+Cmnd_Alias SOK_SITEA    = /usr/sbin/crm_attribute -n hana_<%= @system_id -%>_site_srHook_<%= @site_name_1 -%> -v SOK   -t crm_config -s SAPHanaSR
+Cmnd_Alias SFAIL_SITEA  = /usr/sbin/crm_attribute -n hana_<%= @system_id -%>_site_srHook_<%= @site_name_1 -%> -v SFAIL -t crm_config -s SAPHanaSR
+Cmnd_Alias SOK_SITEB    = /usr/sbin/crm_attribute -n hana_<%= @system_id -%>_site_srHook_<%= @site_name_2 -%> -v SOK   -t crm_config -s SAPHanaSR
+Cmnd_Alias SFAIL_SITEB  = /usr/sbin/crm_attribute -n hana_<%= @system_id -%>_site_srHook_<%= @site_name_2 -%> -v SFAIL -t crm_config -s SAPHanaSR
+<%= @system_id -%>adm ALL=(ALL) NOPASSWD: SOK_SITEA, SFAIL_SITEA, SOK_SITEB, SFAIL_SITEB

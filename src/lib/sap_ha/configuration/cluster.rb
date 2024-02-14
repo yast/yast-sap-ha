@@ -17,17 +17,18 @@
 # ------------------------------------------------------------------------------
 #
 # Summary: SUSE High Availability Setup for SAP Products: Cluster members configuration
+# Authors: Peter Varkoly <varkoly@suse.com>
 # Authors: Ilya Manyugin <ilya.manyugin@suse.com>
 
-require 'yast'
-require 'erb'
-require 'socket'
-require_relative 'base_config'
-require 'sap_ha/system/local'
-require 'sap_ha/system/network'
-require 'sap_ha/exceptions'
+require "yast"
+require "erb"
+require "socket"
+require_relative "base_config"
+require "sap_ha/system/local"
+require "sap_ha/system/network"
+require "sap_ha/exceptions"
 
-Yast.import 'UI'
+Yast.import "UI"
 
 module SapHA
   module Configuration
@@ -35,27 +36,27 @@ module SapHA
     class Cluster < BaseConfig
       attr_reader :nodes, :rings, :number_of_rings, :transport_mode, :fixed_number_of_nodes, :keys
       attr_accessor :cluster_name, :expected_votes, :enable_secauth, :enable_csync2, :append_hosts,
-                    :host_passwords
+        :host_passwords, :fw_config
 
       include Yast::UIShortcuts
       include SapHA::Exceptions
       include Yast::Logger
 
       CSYNC2_INCLUDED_FILES = [
-        '/etc/corosync/corosync.conf',
-        '/etc/corosync/authkey',
-        '/etc/sysconfig/pacemaker',
-        '/etc/drbd.d',
-        '/etc/drbd.conf',
-        '/etc/lvm/lvm.conf',
-        '/etc/multipath.conf',
-        '/etc/ha.d/ldirectord.cf',
-        '/etc/ctdb/nodes',
-        '/etc/samba/smb.conf',
-        '/etc/booth',
-        '/etc/sysconfig/sbd',
-        '/etc/csync2/csync2.cfg',
-        '/etc/csync2/key_hagroup'
+        "/etc/corosync/corosync.conf",
+        "/etc/corosync/authkey",
+        "/etc/sysconfig/pacemaker",
+        "/etc/drbd.d",
+        "/etc/drbd.conf",
+        "/etc/lvm/lvm.conf",
+        "/etc/multipath.conf",
+        "/etc/ha.d/ldirectord.cf",
+        "/etc/ctdb/nodes",
+        "/etc/samba/smb.conf",
+        "/etc/booth",
+        "/etc/sysconfig/sbd",
+        "/etc/csync2/csync2.cfg",
+        "/etc/csync2/key_hagroup"
       ].freeze
 
       def initialize(global_config)
@@ -71,13 +72,14 @@ module SapHA
         @number_of_rings = 1
         @expected_votes = 2
         @exception_type = ClusterConfigurationException
-        @cluster_name = 'hacluster'
-        @enable_secauth = false
+        @cluster_name = "hacluster"
+        @enable_secauth = true
         @enable_csync2 = false
         @keys = {}
-        @append_hosts = false
+        @append_hosts = true
         # host name to root passwd mapping
         @host_passwords = {}
+        @fw_config = "off"
         init_rings
         init_nodes
         @yaml_exclude << :@host_passwords
@@ -89,7 +91,7 @@ module SapHA
         @yaml_exclude = [:@nlog] unless @yaml_exclude.nil?
         # always exclude passwords from the configuration
         @yaml_exclude << :@host_passwords
-        @host_passwords = {} unless coder['instance_variables'].include?(:@host_passwords)
+        @host_passwords = {} unless coder["instance_variables"].include?(:@host_passwords)
       end
 
       def set_fixed_nodes(fixed, number)
@@ -114,14 +116,14 @@ module SapHA
         @rings = {}
         (1..@number_of_rings).each do |ix|
           key = "ring#{ix}".to_sym
-          if rings_old.key?(key)
-            @rings[key] = rings_old[key]
+          @rings[key] = if rings_old.key?(key)
+            rings_old[key]
           else
-            @rings[key] = {
-              address: '',
-              port:    '',
+            {
+              address: "",
+              port:    "",
               id:      ix,
-              mcast:   ''
+              mcast:   ""
             }
           end
         end
@@ -175,17 +177,17 @@ module SapHA
       end
 
       def render_csync2_config(group_name, includes, key_path, hosts)
-        SapHA::Helpers.render_template('tmpl_csync2_config.erb', binding)
+        SapHA::Helpers.render_template("tmpl_csync2_config.erb", binding)
       end
 
       def description(component = :both)
         def comm_description(dsc)
-          dsc.parameter('Transport mode', @transport_mode)
-          dsc.parameter('Cluster name', @cluster_name)
-          dsc.parameter('Expected votes', @expected_votes)
-          dsc.parameter('Corosync secure authentication', @enable_secauth)
-          dsc.parameter('Enable csync2', @enable_csync2)
-          dsc.list_begin('Rings')
+          dsc.parameter("Transport mode", @transport_mode)
+          dsc.parameter("Cluster name", @cluster_name)
+          dsc.parameter("Expected votes", @expected_votes)
+          dsc.parameter("Corosync secure authentication", @enable_secauth)
+          dsc.parameter("Enable csync2", @enable_csync2)
+          dsc.list_begin("Rings")
           @rings.each do |_, ring|
             str = "ring " << dsc.iparam(ring[:address]) << " : " << dsc.iparam(ring[:port])
             if multicast?
@@ -197,14 +199,14 @@ module SapHA
         end
 
         def nodes_description(dsc)
-          dsc.list_begin('')
+          dsc.list_begin("")
           @nodes.each do |_, node|
             str = "#{node[:host_name]}: " \
               << dsc.iparam([node[:ip_ring1], node[:ip_ring2]][0...@number_of_rings].join(", "))
             dsc.list_item(str)
           end
           dsc.list_end
-          dsc.parameter('Append /etc/hosts', @append_hosts)
+          dsc.parameter("Append /etc/hosts", @append_hosts)
         end
 
         prepare_description do |dsc|
@@ -245,6 +247,13 @@ module SapHA
         ips
       end
 
+      # return all IPs of the first ring
+      def all_nodes
+        ips = @nodes.map { |_, n| n[:ip_ring1] }
+        return [] if ips.any?(&:empty?)
+        ips
+      end
+
       def set_host_password(ip, password)
         node = @nodes.values.find { |v| v[:ip_ring1] == ip }
         if node.nil?
@@ -276,6 +285,17 @@ module SapHA
         end.compact
       end
 
+      def get_primary_on_primary
+        SapHA::System::Network.ip_addresses.each do |my_ip|
+          @nodes.each do |_, node|
+            if node[:ip_ring1] == my_ip
+              return node[:host_name]
+            end
+          end
+        end
+        return nil
+      end
+
       def validate(verbosity = :verbose)
         validate_comm_layer(verbosity).concat(validate_nodes(verbosity))
       end
@@ -283,21 +303,21 @@ module SapHA
       def validate_comm_layer(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
           check.equal(@rings.length, @number_of_rings,
-            'Number of table entries is not equal to the number of allowed rings.')
+            "Number of table entries is not equal to the number of allowed rings.")
           check.element_in_set(@transport_mode, [:unicast, :multicast],
-            'The value should be either Unicast or Multicast', 'Transport Mode')
+            "The value should be either Unicast or Multicast", "Transport Mode")
           check.element_in_set(@number_of_rings, [1, 2],
-            'The value should be either 1 or 2', 'Number of Rings')
-          check.identifier(@cluster_name, nil, 'Cluster Name')
+            "The value should be either 1 or 2", "Number of Rings")
+          check.identifier(@cluster_name, nil, "Cluster Name")
           check.element_in_set(@enable_secauth, [true, false], nil,
-            'Enable corosync secure authentication')
+            "Enable corosync secure authentication")
           check.element_in_set(@enable_csync2, [true, false], nil,
-            'Enable csync2')
+            "Enable csync2")
           @rings.each do |_, ring|
             ring_validator(check, ring)
           end
           check.unique(@rings.map { |_, r| r[:address] },
-            'IP addresses of the rings are not unique')
+            "IP addresses of the rings are not unique")
         end
       end
 
@@ -305,49 +325,49 @@ module SapHA
         SemanticChecks.instance.check(verbosity) do |check|
           @nodes.map { |_, node| node_validator(check, node) }
           check.integer_in_range(@expected_votes, 1, @number_of_nodes, nil,
-            'Expected votes')
+            "Expected votes")
           check.unique(@nodes.map { |_, v| v[:ip_ring1] },
-            'IP addresses in ring #1 are not unique')
+            "IP addresses in ring #1 are not unique")
           check.ipsv4_in_network_cidr(@nodes.map { |_, v| v[:ip_ring1] },
-            @rings[:ring1][:address], nil, 'IP addresses in ring #1')
+            @rings[:ring1][:address], nil, "IP addresses in ring #1")
           if @number_of_rings == 2
             check.unique(@nodes.map { |_, v| v[:ip_ring2] },
-              'IP addresses in ring #2 are not unique')
+              "IP addresses in ring #2 are not unique")
             check.ipsv4_in_network_cidr(@nodes.map { |_, v| v[:ip_ring2] },
-              @rings[:ring2][:address], nil, 'IP addresses in ring #2')
+              @rings[:ring2][:address], nil, "IP addresses in ring #2")
           end
           local_ips = SapHA::System::Network.ip_addresses
           # Local IPs can be empty if we're not running as root
           unless local_ips.empty?
             check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring1] }, local_ips,
               'Could not find local node\'s IP address among the configured nodes',
-              'IP addresses for ring 1')
+              "IP addresses for ring 1")
             check.intersection_not_empty(@nodes.map { |_, v| v[:ip_ring2] }, local_ips,
               'Could not find local node\'s IP address among the configured nodes',
-              'IP addresses for ring 2') if @number_of_rings == 2
+              "IP addresses for ring 2") if @number_of_rings == 2
           end
         end
       end
 
       def node_validator(check, node)
-        check.ipv4(node[:ip_ring1], 'IP Ring 1')
-        check.ipv4_in_network_cidr(node[:ip_ring1], @rings[:ring1][:address], 'IP Ring 1')
+        check.ipv4(node[:ip_ring1], "IP Ring 1")
+        check.ipv4_in_network_cidr(node[:ip_ring1], @rings[:ring1][:address], "IP Ring 1")
         if @number_of_rings == 2
-          check.ipv4(node[:ip_ring2], 'IP Ring 2')
-          check.ipv4_in_network_cidr(node[:ip_ring2], @rings[:ring2][:address], 'IP Ring 2')
+          check.ipv4(node[:ip_ring2], "IP Ring 2")
+          check.ipv4_in_network_cidr(node[:ip_ring2], @rings[:ring2][:address], "IP Ring 2")
         end
-        check.hostname(node[:host_name], 'Hostname')
+        check.hostname(node[:host_name], "Hostname")
         # check.nonneg_integer(node[:node_id], 'Node ID')
       end
 
       def ring_validator(check, ring)
-        check.ipv4(ring[:address], 'Ring IP Address')
-        check.port(ring[:port], 'Ring Port Number')
-        check.ipv4_multicast(ring[:mcast], 'Multicast Address') if multicast?
+        check.ipv4(ring[:address], "Ring IP Address")
+        check.port(ring[:port], "Ring Port Number")
+        check.ipv4_multicast(ring[:mcast], "Multicast Address") if multicast?
       end
 
       def apply(role)
-        @nlog.info('Applying Cluster Configuration')
+        @nlog.info("Applying Cluster Configuration")
         flag = true
         SapHA::System::Local.append_hosts_file(@nodes) if @append_hosts
         if role == :master
@@ -358,30 +378,22 @@ module SapHA
           SapHA::System::Local.write_csync2_key(@keys[:csync2]) if @enable_csync2
         end
         status = cluster_apply
-        @nlog.log_status(status, 'Exported configuration for yast2-cluster',
-          'Could not export configuration for yast2-cluster')
+        @nlog.log_status(status, "Exported configuration for yast2-cluster",
+          "Could not export configuration for yast2-cluster")
         flag &= status
         flag &= SapHA::System::Local.start_cluster_services
-        flag &= SapHA::System::Local.cluster_maintenance(:on) if role == :master
         flag &= SapHA::System::Local.add_stonith_resource if role == :master
-        # Do not touch firewalld settings on SLE-15, yast2-cluster will do it
-        @nlog.info('Please enable the cluster firewalld service manually')
-	# TODO clarify if this is neccessary
-        # status = SapHA::System::Local.open_ports(role, @rings, @number_of_rings)
-        # flag &= status
-        # @nlog.log_status(status, 'Opened necessary communication ports',
-        #   'Could not open necessary communication ports')
         flag
       end
 
       def html_errors(component = :both)
-        case component
+        errors = case component
         when :comm_layer
-          errors = validate_comm_layer(:verbose)
+          validate_comm_layer(:verbose)
         when :nodes
-          errors = validate_nodes(:verbose)
+          validate_nodes(:verbose)
         else
-          errors = validate(:verbose)
+          validate(:verbose)
         end
 
         tmpl = "<ul>
@@ -390,33 +402,33 @@ module SapHA
         <% end %>
         </ul>
         "
-        ERB.new(tmpl, nil, '-').result(binding)
+        ERB.new(tmpl, nil, "-").result(binding)
       end
 
-      private
+    private
 
       def init_nodes
         (1..@number_of_nodes).each do |i|
           @nodes["node#{i}".to_sym] = {
             host_name: "node#{i}",
-            ip_ring1:  '',
-            ip_ring2:  '',
+            ip_ring1:  "",
+            ip_ring2:  "",
             node_id:   i.to_s
           }
         end
       end
 
       def ip_split_mask(addr)
-        addr.split('/').first
+        addr.split("/").first
       end
 
       def init_rings
         (1..@number_of_rings).each do |ix|
           @rings["ring#{ix}".to_sym] = {
-            address: '',
-            port:    '5405',
+            address: "",
+            port:    "5405",
             id:      ix,
-            mcast:   ''
+            mcast:   ""
           }
         end
       end
@@ -434,7 +446,7 @@ module SapHA
       def cluster_apply
         cluster_export = generate_cluster_export
         SapHA::System::Local.yast_cluster_export(cluster_export)
-        SapHA::System::Local.change_password('hacluster', 'linux')
+        SapHA::System::Local.change_password("hacluster", "linux")
       end
 
       def generate_cluster_export
@@ -443,14 +455,14 @@ module SapHA
         host_names = @nodes.map { |_, e| e[:host_name] }
         cluster_configuration = {
           "secauth"        => @enable_secauth,
-          "transport"      => (multicast? ? 'udp' : "udpu"),
+          "transport"      => (multicast? ? "udp" : "udpu"),
           "bindnetaddr1"   => @rings[:ring1][:address_no_mask],
           "memberaddr"     => memberaddr,
           "mcastaddr1"     => @rings[:ring1][:mcast],
           "mcastport1"     => @rings[:ring1][:port],
           "cluster_name"   => @cluster_name,
           "expected_votes" => @expected_votes.to_s,
-          "two_node"       => (@nodes.length == 2 ? '1' : '0'),
+          "two_node"       => (@nodes.length == 2 ? "1" : "0"),
           "enable2"        => @number_of_rings == 2,
           "autoid"         => true,
           "rrpmode"        => "none",
@@ -464,11 +476,12 @@ module SapHA
         end
         cluster_configuration["csync2key"] = @keys[:csync2] if @keys[:csync2]
         cluster_configuration["corokey"] = @keys[:corosync] if @keys[:corosync]
-        if @number_of_rings == 2
+        log.info "--- generate_cluster_export.#{cluster_configuration} ---"
+        cluster_configuration["rrpmode"] = if @number_of_rings == 2
           # TODO: rrp mode
-          cluster_configuration['rrpmode'] = 'passive'
+          "passive"
         else
-          cluster_configuration['rrpmode'] = 'none'
+          "none"
         end
         cluster_configuration
       end
