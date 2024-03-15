@@ -42,8 +42,12 @@ module SapHA
       end
 
       def refresh_view
-        previous_configs = SapHA::Helpers.get_configuration_files(@model.product_id)
-        previous_configs_popup(previous_configs) if !previous_configs.empty?
+        begin
+          previous_configs = SapHA::Helpers.get_configuration_files(@model.product_id)
+          previous_configs_popup(previous_configs) if !previous_configs.empty?
+	rescue StandardError => e
+          log.info "Could not parse previous config files: #{e.message}"
+	end
       end
 
       def can_go_next?

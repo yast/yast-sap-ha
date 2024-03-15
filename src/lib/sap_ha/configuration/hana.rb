@@ -353,7 +353,7 @@ module SapHA
           add_plugin_to_global_ini("SUS_TKOVER", @system_id)
         end
         command = ["hdbnsutil", "-reloadHADRProviders"]
-        _out, _status = su_exec_outerr_status("#{@system_id.downcase}adm", *command)
+        su_exec_outerr_status("#{@system_id.downcase}adm", *command)
       end
 
       # Activates the plugin in global ini
