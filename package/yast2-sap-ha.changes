@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Mar 15 17:38:52 UTC 2024 - Peter Varkoly <varkoly@suse.com>
+
+- yast2-sap-ha: Error occurred during the unattended installation: undefined class/module SapHA::Configuration::ClusterFinalizer
+  (bsc#1221049)
+- 4.6.3
+
+-------------------------------------------------------------------
 Wed Nov 29 07:52:36 UTC 2023 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha setup workflow is bad (bsc#1217596)
