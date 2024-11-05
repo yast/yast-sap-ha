@@ -244,6 +244,10 @@ module Yast
       @sequence["product_check"][:hana] = "file_import_check" if @config.imported
       Wizard.CreateDialog
       Wizard.SetDialogTitle("HA Setup for SAP Products")
+      if not @config.hana.check_rsa_version
+        Popup.Error("There are no SUSE SAP Resource Agents installed.")
+	return
+      end
       begin
         if @config.unattended
           Sequencer.Run(@aliases, @unattended_sequence)
