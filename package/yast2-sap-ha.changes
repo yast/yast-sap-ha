@@ -1,7 +1,8 @@
 -------------------------------------------------------------------
 Mon Nov  4 21:34:50 UTC 2024 - Peter Varkoly <varkoly@suse.com>
 
-- Adapt to new SAPHanaSR-angi
+- yast-sap-ha does not support SAPHanaSR-angi (bsc#1232807) 
+  Adapt to new SAPHanaSR-angi
 - 6.0.2
 
 -------------------------------------------------------------------
