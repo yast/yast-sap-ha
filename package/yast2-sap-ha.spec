@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        4.5.11
+Version:        4.5.12
 Release:        0
 BuildArch:      noarch
 Source0:        %{name}-%{version}.tar.bz2
@@ -44,7 +44,6 @@ Requires:       openssh
 Requires:       HANA-Firewall >= 2.0.3
 %endif
 Requires:       util-linux
-Requires:       SAPHanaSR
 Requires:       kmod
 # for pidof
 Requires:       sysvinit-tools
