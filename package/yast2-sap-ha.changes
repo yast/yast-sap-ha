@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Nov  4 21:34:50 UTC 2024 - Peter Varkoly <varkoly@suse.com>
+
+- yast-sap-ha does not support SAPHanaSR-angi (bsc#1232807)
+- Adapt to new SAPHanaSR-angi
+- 4.5.12
+
+-------------------------------------------------------------------
 Fri Mar 15 17:38:52 UTC 2024 - Peter Varkoly <varkoly@suse.com>
 
 - yast2-sap-ha: Error occurred during the unattended installation: undefined class/module SapHA::Configuration::ClusterFinalizer
