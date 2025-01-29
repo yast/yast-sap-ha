@@ -341,7 +341,10 @@ module SapHA
       end
 
       def activating_msr
-        msr = "msl_SAPHana_#{@system_id}_HDB#{@instance}"
+        msr = "mst_SAPHanaCon_#{@system_id}_HDB#{@instance}"
+        if @rsa_version == "classic"
+           msr = "msl_SAPHana_#{@system_id}_HDB#{@instance}"
+        end
         out, status = exec_outerr_status("crm", "resource", "refresh", msr)
         @nlog.log_status(status.exitstatus == 0,
           "#{msr} status refresh OK",
@@ -403,8 +406,8 @@ module SapHA
 
       # Creates the sudoers file
       def adapt_sudoers
-        if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.erb"))
-          Helpers.write_file("/etc/sudoers.d/saphanasr.conf", Helpers.render_template("SUDOERS_HANASR.erb", binding))
+        if File.exist?(SapHA::Helpers.data_file_path("SUDOERS_HANASR.#{@rsa_version}.erb"))
+          Helpers.write_file("/etc/sudoers.d/saphanasr.conf", Helpers.render_template("SUDOERS_HANASR.#{@rsa_version}.erb", binding))
         end
       end
 
