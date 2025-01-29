@@ -39,7 +39,7 @@ primitive rsc_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%> ocf:suse:SAPHan
       DUPLICATE_PRIMARY_TIMEOUT=600 AUTOMATED_REGISTER="<%= @auto_register -%>" \
     meta priority="100"
 
-clone msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%> \
+clone mst_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%> rsc_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%> \
     meta clone-max=2 clone-node-max=1 interleave=true promotable=true
 
 primitive rsc_ip_<%= @system_id -%>_HDB<%= @instance -%> ocf:heartbeat:IPaddr2 \
@@ -63,17 +63,17 @@ group g_ip_<%= @system_id -%>_HDB<%= @instance -%> rsc_ip_<%= @system_id -%>_HDB
 #
 
 colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> <%= @additional_instance ? "3000" : "2000" -%>: g_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started \
-    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+    mst_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%>:Master
 
 <% else %>
 
 colocation col_saphana_ip_<%= @system_id -%>_HDB<%= @instance -%> <%= @additional_instance ? "3000" : "2000" -%>: rsc_ip_<%= @system_id -%>_HDB<%= @instance -%>:Started \
-    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:Master
+    mst_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%>:Master
 
 <% end %>
 
 order ord_SAPHana_<%= @system_id -%>_HDB<%= @instance -%> Optional: cln_SAPHanaTop_<%= @system_id -%>_HDB<%= @instance -%> \
-    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>
+    mst_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%>
 
 <% if @additional_instance %>
 
@@ -96,6 +96,6 @@ colocation col_<%= @np_system_id -%>_never_with_<%= @system_id -%>ip -inf: rsc_S
 
 order ord_<%= @np_system_id -%>_stop_before_<%= @system_id -%>-promote mandatory: \
     rsc_SAP_<%= @np_system_id -%>_HDB<%= @np_instance -%>:stop \
-    msl_SAPHana_<%= @system_id -%>_HDB<%= @instance -%>:promote
+    mst_SAPHanaCon_<%= @system_id -%>_HDB<%= @instance -%>:promote
 
 <% end %>
