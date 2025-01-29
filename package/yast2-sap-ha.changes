@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Jan 29 11:06:24 UTC 2025 - Peter Varkoly <varkoly@suse.com>
+
+- yast-sap-ha does not support SAPHanaSR-angi (bsc#1232807)
+  Fix used templates
+  Add missed distinguishing between classic and angi
+- 6.0.3
+
+-------------------------------------------------------------------
 Mon Nov  4 21:34:50 UTC 2024 - Peter Varkoly <varkoly@suse.com>
 
 - yast-sap-ha does not support SAPHanaSR-angi (bsc#1232807) 
