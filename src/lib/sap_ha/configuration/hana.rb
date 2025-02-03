@@ -117,6 +117,7 @@ module SapHA
       def validate(verbosity = :verbose)
         SemanticChecks.instance.check(verbosity) do |check|
           check.hana_is_installed(@system_id, @global_config.cluster.all_nodes)
+          check.hana_is_running(@system_id, @instance, @global_config.cluster.all_nodes)
           check.ipv4(@virtual_ip, "Virtual IP")
           check.nonneg_integer(@virtual_ip_mask, "Virtual IP mask")
           check.integer_in_range(@virtual_ip_mask, 1, 32, "CIDR mask has to be between 1 and 32.",
