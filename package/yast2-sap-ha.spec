@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        6.0.3
+Version:        6.0.4
 Release:        0
 BuildArch:      noarch
 Source0:        %{name}-%{version}.tar.bz2
