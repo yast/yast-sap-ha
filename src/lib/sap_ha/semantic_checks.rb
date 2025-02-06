@@ -282,11 +282,34 @@ module SapHA
 	  end
 	  if status != 0
 	    flag = false
-	    message += "No SAP HANA #{value} is installed on #{node}\n"
+	    message += "<br>No SAP HANA #{value} is installed on #{node}\n"
 	  end
 	end
       end
-      report_error(flag, message, 'SID', value)
+      report_error(flag, message, '', '')
+    end
+
+    # Check if a HANA db is running
+    def hana_is_running(system_id, instance_number, nodes)
+      flag = true
+      message = ''
+      my_ips = SapHA::System::Network.ip_addresses
+      procname = "hdb.sap#{system_id.upcase}_HDB#{instance_number}"
+      if @no_test
+        nodes.each do |node|
+          log.debug("node #{node} #{my_ips}")
+         if my_ips.include?(node)
+           status = exec_status("pidof", procname)
+         else
+           status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "pidof", procname)
+         end
+         if status != 0
+           flag = false
+           message += "<br>No SAP HANA #{system_id} is running on #{node}"
+         end
+       end
+      end
+      report_error(flag, message, '', '')
     end
 
     # Check if string is a block device
@@ -368,11 +391,10 @@ module SapHA
       explanation = explanation[0..-2] if explanation.end_with? "."
       explanation = explanation
       if field_name.empty?
-        "Invalid input: #{explanation}"
+        "Error detected: #{explanation}"
       elsif value.nil? || (value.is_a?(::String) && value.empty?)
         "Invalid entry for #{field_name}: #{explanation}."
       else
-
         "Invalid entry for #{field_name} (\"#{ERB::Util.html_escape(value)}\"): #{explanation}."
       end
     end
