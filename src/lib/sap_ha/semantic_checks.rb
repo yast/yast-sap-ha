@@ -22,6 +22,7 @@
 require "sap_ha/exceptions"
 require "yast"
 require "erb"
+require "sap_ha/system/shell_commands"
 
 Yast.import "IP"
 Yast.import "Hostname"
@@ -31,6 +32,7 @@ module SapHA
   class SemanticChecks
     include Singleton
     include Yast::Logger
+    include SapHA::System::ShellCommands
 
     attr_accessor :silent
     attr_reader :checks_passed
@@ -264,6 +266,28 @@ module SapHA
       report_error(flag, message || "The value must be a non-empty string", field_name, shown_value)
     end
 
+    def hana_is_running(system_id, instance_number, nodes)
+      flag = true
+      message = ''
+      my_ips = SapHA::System::Network.ip_addresses
+      procname = "hdb.sap#{system_id.upcase}_HDB#{instance_number}"
+      if @no_test
+        nodes.each do |node|
+          log.debug("node #{node} #{my_ips}")
+         if my_ips.include?(node)
+           status = exec_status("pidof", procname)
+         else
+           status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "pidof", procname)
+         end
+         if status != 0
+           flag = false
+           message += "<br>No SAP HANA #{system_id} is running on #{node}"
+         end
+       end
+      end
+      report_error(flag, message, '', '')
+    end
+
     # Check if string is a block device
     # @param value [String] device path
     def block_device(value, field_name)
@@ -343,11 +367,10 @@ module SapHA
       explanation = explanation[0..-2] if explanation.end_with? "."
       explanation = explanation
       if field_name.empty?
-        "Invalid input: #{explanation}"
+        "Error detected: #{explanation}"
       elsif value.nil? || (value.is_a?(::String) && value.empty?)
         "Invalid entry for #{field_name}: #{explanation}."
       else
-
         "Invalid entry for #{field_name} (\"#{ERB::Util.html_escape(value)}\"): #{explanation}."
       end
     end
