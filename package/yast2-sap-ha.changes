@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Feb  6 08:58:53 UTC 2025 - Peter Varkoly <varkoly@suse.com>
+
+- yast sap_ha should check if HDB is running on primary
+  (bsc#1235773) Build in a check if the DB is running on both nodes.
+- 4.4.11
+
+-------------------------------------------------------------------
 Wed Jan 29 10:54:19 UTC 2025 - Peter Varkoly <varkoly@suse.com>
 
 - #458 [doc] Issue in "Constraints for SAPHanaSR-angi"
