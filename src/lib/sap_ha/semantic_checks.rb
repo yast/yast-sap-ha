@@ -298,16 +298,16 @@ module SapHA
       if @no_test
         nodes.each do |node|
           log.debug("node #{node} #{my_ips}")
-         if my_ips.include?(node)
-           status = exec_status("pidof", procname)
-         else
-           status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "pidof", procname)
-         end
-         if status != 0
-           flag = false
-           message += "<br>No SAP HANA #{system_id} is running on #{node}"
-         end
-       end
+          if my_ips.include?(node)
+            status = exec_status("pidof", procname)
+          else
+            status = exec_status("ssh", "-o", "StrictHostKeyChecking=no", node, "pidof", procname)
+          end
+          if status != 0
+            flag = false
+            message += "<br>No SAP HANA #{system_id} is running on #{node}"
+          end
+        end
       end
       report_error(flag, message, '', '')
     end
