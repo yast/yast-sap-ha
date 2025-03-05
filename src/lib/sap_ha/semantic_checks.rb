@@ -52,6 +52,7 @@ module SapHA
       @errors = []
       @checks_passed = true
       @silent = true
+      @no_test = ENV["Y2DIR"].nil?
     end
 
     # Check if the string is a valid IPv4 address
