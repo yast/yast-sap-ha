@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 25 17:45:35 UTC 2026 - Michal Filka <mfilka@suse.com>
+
+- jsc#PED-14507
+  - Removed reference to update-desktop-files from spec file 
+  - 6.0.5
+-------------------------------------------------------------------
 Mon Feb  3 13:18:25 UTC 2025 - Peter Varkoly <varkoly@suse.com>
 
 - yast sap_ha should check if HDB is running on primary
