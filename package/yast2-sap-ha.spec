@@ -17,7 +17,7 @@
 
 
 Name:           yast2-sap-ha
-Version:        6.0.4
+Version:        6.0.5
 Release:        0
 BuildArch:      noarch
 Source0:        %{name}-%{version}.tar.bz2
@@ -56,7 +56,6 @@ BuildRequires:  rubygem(%{rb_default_ruby_abi}:rspec)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:xmlrpc)
 BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  sysvinit-tools
-BuildRequires:  update-desktop-files
 BuildRequires:  util-linux
 BuildRequires:  yast2
 BuildRequires:  yast2-cluster
